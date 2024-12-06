@@ -375,4 +375,4 @@ def test_abspath_relative_to_package_base_folder(
         )
     if isinstance(expectation, does_not_raise):
         relpath_actual = abspath_actual.relative_to(path_cwd)
-        assert str(relpath_actual) == expected_relpath
+        assert relpath_actual.as_posix() == expected_relpath

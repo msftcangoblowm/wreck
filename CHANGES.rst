@@ -20,12 +20,13 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   chore: bump gh workflow dependencies
-   fix(testsuite): rename requirement prod.shared.unlock to prod.unlock
-   test: each test folder descriptive and test for one thing
-   docs: add logo favicon and banner
-   fix: remove drain-swamp dependencies
-   chore: fork from drain-swamp
+   - fix: fix Windows test issues
+   - chore: bump gh workflow dependencies
+   - fix(testsuite): rename requirement prod.shared.unlock to prod.unlock
+   - test: each test folder descriptive and test for one thing
+   - docs: add logo favicon and banner
+   - fix: remove drain-swamp dependencies
+   - chore: fork from drain-swamp
 
 .. scriv-start-here
 

@@ -13,6 +13,7 @@ Unit test -- Module
 
 import logging
 import logging.config
+import os
 import shutil
 from collections.abc import Generator
 from contextlib import nullcontext as does_not_raise
@@ -217,7 +218,7 @@ testdata_compile_one = (
         ),
         "requirements/empty.in",
         "requirements/empty.out",
-        1,
+        1,  # len(os.linesep) is 2 on Windows
     ),
 )
 ids_compile_one = (
@@ -293,7 +294,9 @@ def test_compile_one_normal(
         if expected_file_size_bytes is not None:
             #    To confirm file size
             #    stat -c %s testfile.txt
-            assert optabspath_out.stat().st_size == expected_file_size_bytes
+            actual_size_bytes = optabspath_out.stat().st_size
+            expected_size_bytes = len(os.linesep)
+            assert actual_size_bytes == expected_size_bytes
 
 
 testdata_lock_file_paths_to_relpath = (
