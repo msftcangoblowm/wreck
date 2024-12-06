@@ -1,0 +1,2 @@
+importlib-metadata==8.5.1
+    # via -r requirements/unsynced_0.in

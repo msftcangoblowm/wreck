@@ -1,0 +1,25 @@
+# Yes setuptools-scm could automate this
+# This is a base package trying to minimize the depedendencies
+include .gitignore
+include .pre-commit-config.yaml
+include .readthedocs.yml
+include CHANGES.rst
+include Makefile
+include codecov.yml
+include howto.txt
+include tox-req.ini tox-test.ini tox.ini
+
+recursive-include .github *.yml
+graft requirements
+graft docs
+graft docs/_static
+graft docs/_templates
+graft tests
+
+# To document, where to place them
+# exclude .venv/.python-version  # normal default venv location
+exclude .doc/.python-version  # Sphinx requires py310+
+exclude .tox/.python-version  # list of all available py versions, not one
+exclude docs/.python-version  # Sphinx requires py310+
+
+prune tests/__pycache__

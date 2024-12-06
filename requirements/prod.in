@@ -1,0 +1,20 @@
+# Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
+# For details: https://github.com/msftcangoblowm/wreck/blob/master/NOTICE.txt
+
+# setuptools-scm --> setuptools --> pip. docs '<=24.2'; prod '>24.2'
+# setuptools-scm toml reading code vendored
+
+# entrypoints
+click
+
+# .in --> .lock file
+pip-tools
+
+# SpecifierSet
+packaging
+
+# requirements parser
+pip-requirements-parser
+
+# wreck._package_installed
+importlib-metadata>=8.5.0

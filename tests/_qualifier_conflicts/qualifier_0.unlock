@@ -1,0 +1,6 @@
+isort
+pip<24.2
+tomli
+typing-extensions<4.12.2
+colorama;os_name == "nt"
+dolorama;os_name == "nt"

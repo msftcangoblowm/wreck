@@ -1,0 +1,21 @@
+# Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
+# For details: https://github.com/msftcangoblowm/drain-swamp/blob/master/NOTICE.txt
+
+-c pins.shared.in
+-c pins-cffi.in
+-r prod.in
+
+black
+blackdoc
+isort
+flake8
+flake8-pyi
+flake8-pyproject
+mypy
+coverage
+twine
+validate-pyproject
+pytest>=7.1
+pytest-regressions
+types-setuptools
+logging-strict

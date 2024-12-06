@@ -1,0 +1,5 @@
+click
+importlib-metadata>=8.5.0
+packaging
+pip-requirements-parser
+pip-tools

@@ -1,0 +1,37 @@
+[build-system]
+requires = [
+    "setuptools>=70.0.0",
+    "wheel",
+    "build",
+    "setuptools_scm>=8",
+    "click",
+    "pluggy",
+    "drain-swamp-snippet",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "complete-awesome-perfect"
+dynamic = [
+    "optional-dependencies",
+    "dependencies",
+    "version",
+]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ['requirements/prod.unlock'] }
+optional-dependencies.various = { file = ['requirements/pip-ge.lock'] }
+optional-dependencies.conflicts = { file = ['requirements/pip-lt.lock'] }
+
+# Editted manually. From package base folder:
+# get tagged version, :code:`scm-version get`
+# get current version :code:`drain-swamp current`
+version = {attr = 'wreck._version.__version__'}
+
+# dependencies requirements/prod.unlock left out
+[[tool.venvs]]
+venv_base_path = '.venv'
+reqs = [
+    'requirements/pip-ge',
+    'requirements/pip-lt',
+]

@@ -1,0 +1,58 @@
+root: index
+subtrees:
+- entries:
+  - file: overview
+- entries:
+  - file: getting_started/index
+    entries:
+    - file: getting_started/installation
+    - file: getting_started/reqs
+- entries:
+  - file: api/index
+    entries:
+    - glob: api/*
+- entries:
+  - file: code/index
+    entries:
+    - file: code/cli_dependencies
+    - file: code/general/index
+      entries:
+      - file: code/general/version_file
+      - file: code/general/check_type
+      - file: code/general/constants
+      - file: code/general/exceptions
+      - file: code/general/pep518_read
+      - file: code/general/pep518_venvs
+      - file: code/general/run_cmd
+      - file: code/general/safe_path
+      - file: code/general/package_installed
+    - file: code/core/index
+      entries:
+      - file: code/core/lock_infile
+      - file: code/core/lock_collections
+      - file: code/core/lock_filepins
+      - file: code/core/lock_discrepancy
+      - file: code/core/lock_loader
+      - file: code/core/lock_datum
+      - file: code/core/lock_util
+    - file: code/monkey/index
+      entries:
+      - file: code/monkey/pyproject_reading
+      - file: code/monkey/patch_pyproject_reading
+- caption: Articles
+  entries:
+  - file: article-version-specifiers
+- entries:
+  - file: LICENSE/index
+    entries:
+    - file: LICENSE/donation
+    - file: LICENSE/closed-source-license
+- caption: Links
+  entries:
+  - file: mission
+  - file: contributing
+  - file: getting-help
+  - title: Contact
+    url: https://mastodon.social/@msftcangoblowme
+meta:
+  exclude_missing: true

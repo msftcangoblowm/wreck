@@ -1,0 +1,19 @@
+[build-system]
+requires = [
+    "setuptools>=70.0.0",
+    "wheel",
+    "build",
+    "setuptools_scm>=8",
+    "click",
+    "pluggy",
+    "drain-swamp-snippet",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "complete-awesome-perfect"
+# lacks version and not dynamic. Obviously invalid
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["complete_awesome_perfect*"]

@@ -1,0 +1,12 @@
+isort==5.13.2
+    # via -r qualifier_1.unlock
+pip==24.2
+    # via -r qualifier_1.unlock
+tomli==2.0.2 ; python_version < "3.11"
+    # via -r qualifier_1.unlock
+typing-extensions==4.12.2 ; python_version < "3.10"
+    # via -r qualifier_1.unlock
+# missing qualifier; both qualifiers are equivalents. Which qualifier gets used?!
+colorama==0.4.5
+# if same versions and missing or varying qualifiers **is not fixed**!
+dolorama==0.4.6

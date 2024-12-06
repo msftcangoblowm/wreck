@@ -1,0 +1,38 @@
+[build-system]
+requires = [
+    "setuptools>=70.0.0",
+    "wheel",
+    "build",
+    "setuptools_scm>=8",
+    "click",
+    "pluggy",
+    "drain-swamp-snippet",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "complete-awesome-perfect"
+dynamic = [
+    "optional-dependencies",
+    "dependencies",
+    "version",
+]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ['requirements/prod.unlock'] }
+optional-dependencies.various = { file = ['requirements/unsynced_0.lock'] }
+optional-dependencies.conflicts = { file = ['requirements/unsynced_1.lock'] }
+
+# Editted manually. From package base folder:
+# get tagged version, :code:`scm-version get`
+# get current version :code:`drain-swamp current`
+version = {attr = 'wreck._version.__version__'}
+
+# TOML format -- single quote path values <-- testing resolving resolvable conflicts
+# dependencies requirements/prod.unlock left out
+[[tool.venvs]]
+venv_base_path = '.venv'
+reqs = [
+    'requirements/unsynced_0',
+    'requirements/unsynced_1',
+]

@@ -1,0 +1,9 @@
+# Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
+# For details: https://github.com/msftcangoblowm/drain-swamp/blob/master/NOTICE.txt
+
+# called by tox.ini [testenv:mypy]
+
+-c pins.shared.in
+
+mypy
+types-setuptools

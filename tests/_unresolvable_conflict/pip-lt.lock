@@ -1,0 +1,2 @@
+# a real conflict **not** solvable with a nudge pin --> warning message; can't fix
+pip==24.1

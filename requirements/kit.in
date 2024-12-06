@@ -1,0 +1,19 @@
+# Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
+# For details: https://github.com/msftcangoblowm/wreck/blob/master/NOTICE.txt
+
+# Build has a windows-only dependency on colorama:
+# https://github.com/pypa/build/blob/main/setup.cfg#L32
+#   colorama;os_name == "nt"
+# We copy it here so it can get pinned.
+colorama>=0.4.6; platform_system=="Windows"
+
+# pip-tools --> build --> importlib-metadata
+importlib-metadata>=8.5.0
+
+# Things needed to make distribution kits.
+# "make upgrade" turns this into requirements/kit.pip.
+build
+setuptools>=75.1.0
+
+auditwheel
+cibuildwheel  # .github/workflows/kit.yml

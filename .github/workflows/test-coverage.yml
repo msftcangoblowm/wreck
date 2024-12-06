@@ -1,0 +1,160 @@
+# Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
+# For details: https://github.com/msftcangoblowm/wreck/blob/master/NOTICE.txt
+#
+# https://github.com/codecov/codecov-action
+# https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect
+
+name: "Codecov"
+
+on:
+  push:
+    branches:
+      - master
+      - msftcangoblowm/*
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  COVERAGE_IGOR_VERBOSE: 1
+  FORCE_COLOR: 1    # Get colored test output
+  LOCK_SUFFIX: '.lock'
+  DS_CONFIG_SETTINGS: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.ref_type }}-
+    ${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  get-toml-cov:
+    name: "Get config-settings"
+    runs-on: "${{ matrix.platform }}"
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-latest
+        python-version:
+          - "3.10"
+      fail-fast: false
+    outputs:
+      config_settings: '${{ steps.config-settings-output.outputs.config_settings }}'
+
+    steps:
+    - id: prepare-config-settings
+      name: >-
+        Build Plugin parameters
+      uses: 'msftcangoblowm/drain-swamp-action@1.0.2'
+      with:
+        plugin_parameters: '{"kind": "current"}'
+        checkout: true
+        python_version: "${{ matrix.python-version }}"
+
+    - name: "Download artifact"
+      uses: actions/download-artifact@v4.1.8
+      with:
+        name: config-settings-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
+        path: '${{ runner.temp }}'
+
+    - name: Trans jobs artifact -- upload
+      uses: actions/upload-artifact@v4.4.0
+      with:
+          name: config-settings-toml-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
+          path: '${{ env.DS_CONFIG_SETTINGS }}'
+          retention-days: 1
+          if-no-files-found: error
+
+    - id: config-settings-output
+      name: Trans jobs -- DS_CONFIG_SETTINGS --> outputs
+      shell: bash
+      run: |
+        echo 'config_settings=${{ env.DS_CONFIG_SETTINGS }}' >> "$GITHUB_OUTPUT"
+
+  codecov:
+    name: "${{ matrix.python-version }} on ${{ matrix.platform }}"
+    needs:
+      get-toml-cov
+    runs-on: "${{ matrix.platform }}"
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-latest
+        python-version:
+          - "3.10"
+      fail-fast: false
+
+    # Don't run tests if the branch name includes "-notests"
+    if: "!contains(github.ref, '-notests')"
+
+    steps:
+    - name: Trans jobs artifact -- upload
+      uses: actions/download-artifact@v4.1.8
+      with:
+        name: config-settings-toml-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
+        path: '${{ runner.temp }}'
+
+    - name: Trans jobs -- outputs --> DS_CONFIG_SETTINGS
+      shell: bash
+      run: |
+        echo 'DS_CONFIG_SETTINGS=${{ needs.get-toml-cov.outputs.config_settings }}' >> "$GITHUB_ENV"
+
+    - name: "Check out the repo"
+      uses: actions/checkout@v4.2.0
+      with:
+        repository: '${{ github.repository }}'
+        # fetch all branches and tags instead of only fetching the ref/SHA that triggered the workflow
+        fetch-depth: 0
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5.2.0
+      with:
+        python-version: "${{ matrix.python-version }}"
+        # cache: pip
+        # cache-dependency-path: |
+        #   requirements/*${{ env.LOCK_SUFFIX }}
+        allow-prereleases: true
+
+    - name: "Install dependencies"
+      run: |
+        set -xe
+        python -m pip install -r requirements/kit.lock -r requirements/dev.lock
+
+    - name: "Build sdist and whl"
+      run: |
+        # TOML file location ${{ runner.temp }}/${{ steps.outcome.inputs.toml_file_name }}
+        # env.DS_CONFIG_SETTINGS contains (OS independent) path to TOML file
+        cat '${{ env.DS_CONFIG_SETTINGS }}'
+        python -m build
+
+    - name: "Install"
+      run: |
+        set -xe
+        python -m pip install --disable-pip-version-check -q .
+
+    - name: "Run coverage"
+      run : |
+        set -xe
+        python -m coverage run --parallel -m pytest --showlocals --quiet tests
+        python -m coverage combine
+        python -m coverage xml --fail-under=95
+
+    - name: "Upload to Codecov"
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # 4.5.0
+      with:
+        name: unittest-py${{ matrix.python-version }}
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: msftcangoblowm/wreck
+        os: linux
+        flags: unittests
+        file: ./coverage.xml
+        env_vars: OS,PYTHON
+        fail_ci_if_error: true
+        verbose: true

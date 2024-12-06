@@ -1,0 +1,13 @@
+# Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
+# For details: https://github.com/msftcangoblowm/drain-swamp/blob/master/NOTICE.txt
+
+-c pins.shared.in
+
+# Build has a windows-only dependency on colorama:
+# https://github.com/pypa/build/blob/main/setup.cfg#L32
+#   colorama;os_name == "nt"
+# We copy it here so it can get pinned.
+colorama>=0.4.6 ;platform_system=="Windows"
+
+tox
+tox-gh-actions

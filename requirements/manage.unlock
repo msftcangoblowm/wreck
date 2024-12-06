@@ -1,0 +1,13 @@
+cffi>=1.17.1
+click
+importlib-metadata>=8.5.0
+packaging
+pip-requirements-parser
+pip-tools
+pre-commit
+readme_renderer<37
+restview
+tomli>=2.0.2; python_version<"3.11"
+twine
+typing-extensions; python_version<"3.10"
+readme-renderer>=44.0

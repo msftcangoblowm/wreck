@@ -1,0 +1,155 @@
+# Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
+# For details: https://github.com/msftcangoblowm/wreck/blob/master/NOTICE.txt
+# https://github.com/pyscaffold/pyscaffold/blob/master/src/pyscaffold/templates/github_ci_workflow.template
+# https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts#passing-data-between-jobs-in-a-workflow
+
+name: "Tests"
+
+on:
+  push:
+    branches:
+      - master
+      - msftcangoblowm/*
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  COVERAGE_IGOR_VERBOSE: 1
+  FORCE_COLOR: 1    # Get colored test output
+  LOCK_SUFFIX: '.lock'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.ref_type }}-
+    ${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: "${{ matrix.python-version }} on ${{ matrix.platform }}"
+    runs-on: "${{ matrix.platform }}"
+    # Don't run tests if the branch name includes "-notests"
+    if: "!contains(github.ref, '-notests')"
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        python-version:
+          # When changing this list, be sure to check the [gh] list in
+          # tox.ini so that tox will run properly. PYVERSIONS
+          # Available versions:
+          # https://github.com/actions/python-versions/blob/main/versions-manifest.json
+          # https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#available-versions-of-python-and-pypy
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          # - "3.14" not available yet
+          - "pypy-3.9"
+          - "pypy-3.10"
+        exclude:
+          # https://github.com/pypy/pypy/issues/4958
+          - platform: windows-latest
+            python-version: "pypy-3.9"
+      fail-fast: false
+
+    steps:
+    - id: prepare-config-settings
+      name: >-
+        Build Plugin parameters
+      uses: 'msftcangoblowm/drain-swamp-action@1.0.2'
+      with:
+        plugin_parameters: '{"kind": "current"}'
+        checkout: true
+        python_version: "${{ matrix.python-version }}"
+
+    - name: "Download artifact"
+      uses: actions/download-artifact@v4.1.8
+      with:
+        name: config-settings-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
+        path: '${{ runner.temp }}'
+
+    - name: "Check out the repo"
+      uses: actions/checkout@v4.2.0
+      with:
+        repository: '${{ github.repository }}'
+        # fetch all branches and tags instead of only fetching the ref/SHA that triggered the workflow
+        fetch-depth: 0
+
+    - name: "Set up Python"
+      uses: actions/setup-python@v5.2.0
+      with:
+        python-version: "${{ matrix.python-version }}"
+        allow-prereleases: true
+        # At a certain point, installing dependencies failed on pypy 3.9 and
+        # 3.10 on Windows.  Commenting out the cache here fixed it.  Someday
+        # try using the cache again.
+        # cache: pip
+        # cache-dependency-path: |
+        #   requirements/*${{ env.LOCK_SUFFIX }}
+
+    - name: "Show environment"
+      run: |
+        set -xe
+        python -VV
+        python -m site
+        # For extreme debugging:
+        # python -c "import urllib.request as r; exec(r.urlopen('https://bit.ly/pydoctor').read())"
+        env
+
+    - name: "Install dependencies"
+      run: |
+        python -m pip install -r requirements/tox.lock -r requirements/prod.shared.unlock -r requirements/kit.lock
+
+    # Create generated files: version file and .lnk files. sdist tarball ignored
+    - name: "Build sdist to run plugins. Create generated files"
+      run: |
+        # TOML file location ${{ runner.temp }}/${{ steps.outcome.inputs.toml_file_name }}
+        # env.DS_CONFIG_SETTINGS contains (OS independent) path to TOML file
+        cat '${{ env.DS_CONFIG_SETTINGS }}'
+        python -m build
+
+    - name: get-os-short
+      # tox needs just the OS; platform is `{OS}-{OS version}`
+      # matrix.os-short side effect, more matrix runs; total * [OS count]
+      run: |
+        python -c 'import os; lst="${{ matrix.platform }}".split("-"); os_short = lst[0]; env_file = os.environ.get("GITHUB_ENV"); f = open(env_file, "a"); print(f"OS_SHORT={os_short}", file=f); f.close();'
+
+    - name: Test with tox
+      run: |
+        echo "env.OS_SHORT ${{ env.OS_SHORT }}"
+        python -m tox -vv -c tox-test.ini -e ${{ matrix.python-version }}-${{ env.OS_SHORT }}
+
+    - name: "Retry ${{ matrix.python-version }}-${{ matrix.platform }}"
+      if: failure()
+      run: |
+        echo "env.OS_SHORT ${{ env.OS_SHORT }}"
+        # `exit 1` makes sure that the job remains red with flaky runs
+        python -m tox -vv -c tox-test.ini -e ${{ matrix.python-version }}-${{ env.OS_SHORT }} && exit 1
+
+  # This job aggregates test results. It's the required check for branch protection.
+  # https://github.com/marketplace/actions/alls-green#why
+  # https://github.com/orgs/community/discussions/33579
+  success:
+    name: Tests successful
+    # The tests didn't run if the branch name includes "-notests"
+    if: "!contains(github.ref, '-notests')"
+    needs:
+      - tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe
+        with:
+          jobs: ${{ toJSON(needs) }}
