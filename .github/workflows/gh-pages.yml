@@ -43,7 +43,7 @@ jobs:
         sudo update-locale
 
     - name: Checkout the repo
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4.2.2
       with:
         # fetch all branches and tags instead of only fetching the ref/SHA that triggered the workflow
         fetch-depth: 0

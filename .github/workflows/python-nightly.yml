@@ -65,7 +65,7 @@ jobs:
 
     steps:
     - name: "Check out the repo"
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4.2.2
 
     - name: Get latest tag
       id: vars

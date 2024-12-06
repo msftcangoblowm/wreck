@@ -107,7 +107,7 @@ jobs:
         echo 'DS_CONFIG_SETTINGS=${{ needs.get-toml-cov.outputs.config_settings }}' >> "$GITHUB_ENV"
 
     - name: "Check out the repo"
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4.2.2
       with:
         repository: '${{ github.repository }}'
         # fetch all branches and tags instead of only fetching the ref/SHA that triggered the workflow
