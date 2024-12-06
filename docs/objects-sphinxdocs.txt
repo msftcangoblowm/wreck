@@ -1,0 +1,5 @@
+# Sphinx inventory version 2
+# Project: Sphinx 8.1.3
+# Version: 8.1.3
+sphinx-ext-napoleon std:doc -1 usage/extensions/napoleon.html sphinx.ext.napoleon
+sphinx-ext-napoleon:overview std:label -1 usage/extensions/napoleon.html#overview Overview

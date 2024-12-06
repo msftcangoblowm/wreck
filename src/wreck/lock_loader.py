@@ -252,9 +252,6 @@ def _from_loader_pindatum(
 ):
     """Factory. From a venv, get all Pins.
 
-    This is compatable with
-    :py:meth:`Pins.from_loader <wreck.lock_inspect.Pins.from_loader>`
-
     Disadvantage(only affects .in files): Loss of FilePins benefits
     Advantage: can be used as-is for processing .unlock and .lock files
 

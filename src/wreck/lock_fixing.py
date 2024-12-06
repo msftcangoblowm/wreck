@@ -141,7 +141,7 @@ def _load_once(
     dotted_path = f"{g_app_name}.lock_fixing._load_once"
     """REMOVE duplicates from same requirements file.
     Use ``dict[str, set[PinDatum]]``, not a ``dict[str, list[PinDatum]]``
-    Mimics lock_inspect.Pins._wrapper_pins_by_pkg
+    Mimics Pins._wrapper_pins_by_pkg
     """
     # Group notable locks (PinDatum) by pkg_name --> PinsByPkg
     d_subset_notables = {}
@@ -199,7 +199,7 @@ def _load_once(
                 d_subset_all_lock.update({pkg_name: set_pindatums})
 
     """In .lock files search for version discrepencies
-    See lock_inspect.Pins.by_pkg_with_issues
+    See Pins.by_pkg_with_issues
     """
     locks_pkg_by_versions = has_discrepancies_version(d_subset_all_lock)
 
@@ -219,7 +219,7 @@ def _load_once(
         if k in locks_pkg_by_versions.keys() and k not in locks_by_pkg_w_issues.keys()
     }
 
-    # lock_inspect.get_issues --> lock_inspect.Pins.qualifiers_by_pkg
+    # get_issues --> Pins.qualifiers_by_pkg
     #    From d_subset_notables (filtered .in files)
     d_qualifiers_in = _get_qualifiers(d_subset_notables)
 
@@ -329,7 +329,7 @@ def _fix_resolvables(
 
        Unordered list of Resolvable. Use to fix ``.unlock`` and ``.lock`` files
 
-    :type resolvables: collections.abc.Sequence[wreck.lock_inspect.Resolvable]
+    :type resolvables: collections.abc.Sequence[wreck.lock_datum.Resolvable]
     :param locks: .lock file PinDatum collection
     :type locks: wreck.lock_collections.Ins
     :param venv_relpath: venv relative path
@@ -350,7 +350,7 @@ def _fix_resolvables(
        Wrote messages. For shared, tuple of suffix, resolvable, and Pin (of .lock file).
        This is why the suffix is provided and first within the tuple
 
-    :rtype: tuple[list[wreck.lock_inspect.ResolvedMsg], list[tuple[str, str, wreck.lock_inspect.Resolvable, wreck.lock_datum.Pin]]]
+    :rtype: tuple[list[wreck.lock_datum.ResolvedMsg], list[tuple[str, str, wreck.lock_datum.Resolvable, wreck.lock_datum.Pin]]]
     :raises:
 
        - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --

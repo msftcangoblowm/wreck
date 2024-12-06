@@ -147,6 +147,10 @@ intersphinx_mapping = {
         "https://github.com/psf/black",
         ("objects-black.inv", "objects-black.txt"),
     ),
+    "sphinxdocs": (
+        "https://www.sphinx-doc.org/en/master",
+        ("objects-sphinxdocs.inv", "objects-sphinxdocs.txt"),
+    ),
 }
 intersphinx_disabled_reftypes = ["std:doc"]
 autodoc_type_aliases = {

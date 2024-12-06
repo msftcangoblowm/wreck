@@ -31,21 +31,40 @@ Caters to authors of apps (lock) and packages (lock and unlock).
 Gauge the demand
 -----------------
 
-Resolving dependency conflicts is the \#1 nightmare that leaves Python
-coders in a permanent state of trauma
+Frustrating
+""""""""""""
 
-Often don't consider will need multiple venv and the needs of an app and
-a package author cannot be solved by a tool that caters towards only
-app authors.
+GIL and multithreading UX aside, resolving dependency conflicts is the next
+most frustrating issue facing Python coders
 
-Need a tool that has no learning curve, minimal configuration, and
-doesn't try to be a venv manager or a build backend.
+multiple venv
+""""""""""""""
+
+Often don't consider there will be multiple venv, not always just one.
+So all requirements don't apply to all venv
+
+Easy learning curve
+""""""""""""""""""""
+
+Configuration read from pyproject.toml. There is one section per venv. Then
+run one cli command per venv.
+
+Unlike other packages, per .in file, produces two files: .unlock and .lock
+
+For a particular venv, **fixes all** requirement files, rather than one
+file at a time
+
+app and package authors
+""""""""""""""""""""""""
+
+The needs of an app and a package author cannot be solved by a tool
+that caters only towards app authors
 
 Not automatically resolved
 ---------------------------
 
-For dependency conflicts, that can't be automagically resolved, fall
-into these categories:
+For dependency conflicts, that can't be automagically resolved,
+falls into these categories:
 
 - unresolvable
 
@@ -249,10 +268,20 @@ Market research
    :widths: auto
 
    "pip-compile-multi", "sync multiple calls produces lock files"
-   "pip-tools", "does not sync multiple calls"
-   "pip", "present actionable info. Includes an ugly traceback"
    "uv", "A venv manager. Offers cli options to resolve conflicts"
    "poetry", "venv manager and build backend. Complex config within pyproject.toml"
+
+.. csv-table:: base packages
+   :header: package, description
+   :widths: auto
+
+   "pip-tools", "does not sync multiple calls"
+   "pip", "present actionable info. Includes an ugly traceback"
+
+.. csv-table:: not useful
+   :header: package, description
+   :widths: auto
+
    "pyp2req", "| venv unaware. Fixes nothing.
    | Prints backend requires and top level dependencies to stdout"
 
@@ -270,13 +299,11 @@ an issue. Recommend a 1-2 line description
 Known issues
 -------------
 
-Any/all known shortcomings should be tracked within ``CHANGES.rst`` section
+Any/all known shortcomings are tracked within ``CHANGES.rst`` section
 ``Known regressions``.
 
 Accepted feature requests are tracked within ``CHANGES.rst`` section ``Feature request``.
 There should also be a cooresponding issue.
-
-PRs should come with complete documentation and sufficient unittests.
 
 License
 --------

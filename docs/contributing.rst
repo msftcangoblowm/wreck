@@ -10,6 +10,8 @@ and there is no shame in that.
 End of the day, world+dog wants featureful well written packages which
 stay on mission and within the resources and talent at the teams disposal.
 
+.. _contributing-issues-and-prs:
+
 Issues and PRs
 ---------------
 
@@ -17,6 +19,15 @@ Create an issue first. Get feedback. And if the feedback is favorable,
 do the work and submit a PR, in a branch, with a mention to the issue.
 
 The trick is to keep the commit scope as small as possible. Ideally should do only one thing.
+
+PR should come with:
+
+- unittests
+
+- Sphinx in-code documentation. Not dependent upon :ref:`sphinx-ext-napoleon:overview`
+
+If an issue or PR is not dealt with in a
+timely manner, optionally can send a reminder to maintainer on mastodon
 
 New features
 """""""""""""
