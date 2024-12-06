@@ -65,7 +65,7 @@ jobs:
 
     steps:
     - name: "Check out the repo"
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4.2.2
 
     - name: Get latest tag
       id: vars
@@ -79,7 +79,7 @@ jobs:
         python-version: "${{ matrix.python-version }}"
 
     - name: "Install ${{ matrix.python-version }} with setup-python"
-      uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
+      uses: actions/setup-python@v5.3.0
       if: "startsWith(matrix.python-version, 'pypy-')"
       with:
         python-version: "${{ matrix.python-version }}"
