@@ -20,7 +20,7 @@ and can be installed from ``pip`` or source as follows.
             . .venv/bin/activate
             python -m pip install -r requirements/kit.lock -r requirements/prod.lock
             python -m build
-            python -m pip install --force-reinstall --no-deps dist/wreck-0.0.1-py3-none-any.whl
+            python -m pip install --force-reinstall --no-deps dist/wreck-0.1.0-py3-none-any.whl
 
 .. raw:: html
 

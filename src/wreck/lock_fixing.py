@@ -23,6 +23,8 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
+from packaging.specifiers import InvalidSpecifier
+
 from .check_type import is_ok
 from .constants import (
     SUFFIX_LOCKED,
@@ -39,8 +41,10 @@ from .lock_discrepancy import (
     Resolvable,
     ResolvedMsg,
     UnResolvable,
+    filter_acceptable,
+    get_ss_set,
+    get_the_fixes,
     has_discrepancies_version,
-    tunnel_blindness_suffer_chooses,
     write_to_file_nudge_pin,
 )
 from .lock_util import (
@@ -126,7 +130,7 @@ def _load_once(
     :param venv_relpath: venv relative path
     :type venv_relpath: str
     :returns: list of resolvables and list of unresolvables
-    :rtype: tuple[list[Resolvable], list[UnResolvable]]
+    :rtype: tuple[list[wreck.lock_discrepancy.Resolvable], list[wreck.lock_discrepancy.UnResolvable]]
     """
     if TYPE_CHECKING:
         d_subset_notables: DatumByPkg
@@ -266,15 +270,46 @@ def _load_once(
         highest = locks_pkg_by_versions[pkg_name]["highest"]
         others = locks_pkg_by_versions[pkg_name]["others"]
 
-        t_chosen = tunnel_blindness_suffer_chooses(
+        # DRY. Needed when UnResolvable
+        try:
+            set_ss = get_ss_set(set_pindatum)
+        except InvalidSpecifier:
+            # nonsense version identifier e.g. ``~~24.2``
+            set_ss = set()
+            unresolvables.append(
+                UnResolvable(
+                    venv_relpath,
+                    pkg_name,
+                    str_pkg_qualifiers,
+                    set_ss,
+                    highest,
+                    others,
+                    set_pindatum,
+                )
+            )
+            continue
+
+        is_ss_count_zero = len(set_ss) == 0
+
+        t_acceptable = filter_acceptable(
             set_pindatum,
+            set_ss,
             highest,
             others,
         )
-        assert isinstance(t_chosen, tuple)
-        set_ss, str_operator, found = t_chosen
+        set_acceptable, lsts_specifiers, is_eq_affinity_value = t_acceptable
 
-        if found is None:
+        t_chosen = get_the_fixes(
+            set_acceptable,
+            lsts_specifiers,
+            highest,
+            is_eq_affinity_value,
+            is_ss_count_zero,
+        )
+        assert isinstance(t_chosen, tuple)
+        lock_nudge_pin, unlock_nudge_pin, is_found = t_chosen
+
+        if not is_found:
             # unresolvable conflict --> warning
             unresolvables.append(
                 UnResolvable(
@@ -289,8 +324,8 @@ def _load_once(
             )
         else:
             # resolvable
-            nudge_pin_unlock = f"{pkg_name}{str_operator}{found!s}"
-            nudge_pin_lock = f"{pkg_name}=={found!s}"
+            nudge_pin_unlock = f"{pkg_name}{unlock_nudge_pin}"
+            nudge_pin_lock = f"{pkg_name}{lock_nudge_pin}"
 
             msg_warn = (
                 f"{dotted_path} resolveable conflict. "
@@ -350,7 +385,7 @@ def _fix_resolvables(
        Wrote messages. For shared, tuple of suffix, resolvable, and Pin (of .lock file).
        This is why the suffix is provided and first within the tuple
 
-    :rtype: tuple[list[wreck.lock_datum.ResolvedMsg], list[tuple[str, str, wreck.lock_datum.Resolvable, wreck.lock_datum.Pin]]]
+    :rtype: tuple[list[wreck.lock_discrepancy.ResolvedMsg], list[tuple[str, str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.Pin]]]
     :raises:
 
        - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
@@ -557,7 +592,7 @@ class Fixing:
         """Identify resolvable and unresolvable issues.
 
         :returns: lists of resolvable and unresolvable issues
-        :rtype: tuple[list[Resolvable], list[UnResolvable]]
+        :rtype: tuple[list[wreck.lock_discrepancy.Resolvable], list[wreck.lock_discrepancy.UnResolvable]]
         """
         ret = _load_once(self._ins, self._locks, self._venv_relpath)
         self._resolvables = ret[0]

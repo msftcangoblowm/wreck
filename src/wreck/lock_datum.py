@@ -24,15 +24,16 @@
    Store by pkg_name. Either all or notable (has specifiers or qualifiers)
 
 .. py:data:: __all__
-   :type: tuple[str, str, str, str, str, str, str, str]
-   :value: ("InFileType", "Pin", "PinDatum", "in_generic", "is_pin", \
-   "has_qualifiers", "DATUM", "DatumByPkg")
+   :type: tuple[str, str, str, str, str, str, str, str, str]
+   :value: ("DATUM", "DatumByPkg", "InFileType", "Pin", "PinDatum", \
+   "in_generic", "is_pin", "has_qualifiers", "pprint_pins")
 
    Module exports
 
 """
 
 import enum
+import io
 import sys
 from collections.abc import Hashable
 from dataclasses import (
@@ -43,6 +44,7 @@ from pathlib import (
     Path,
     PurePath,
 )
+from pprint import pprint
 from typing import (
     TypeVar,
     Union,
@@ -56,14 +58,15 @@ else:  # pragma: no cover py-gte-310
     DC_SLOTS = {}
 
 __all__ = (
+    "DATUM",
+    "DatumByPkg",
     "InFileType",
     "Pin",
     "PinDatum",
     "in_generic",
     "is_pin",
     "has_qualifiers",
-    "DATUM",
-    "DatumByPkg",
+    "pprint_pins",
 )
 
 
@@ -398,6 +401,21 @@ class PinDatum(Hashable):
 
 DATUM = TypeVar("DATUM", bound=Union[Pin, PinDatum])
 DatumByPkg = dict[str, set[Union[Pin, PinDatum]]]
+
+
+def pprint_pins(pins):
+    """Capture pprint and return it.
+
+    :param pins: set of Pins
+    :type pins: collections.abc.Iterable[wreck.lock_datum.DATUM]
+    :returns: pretty printed representation of the pins
+    :rtype: str
+    """
+    with io.StringIO() as f:
+        pprint(pins, stream=f)
+        ret = f.getvalue()
+
+    return ret
 
 
 class InFileType(enum.Enum):

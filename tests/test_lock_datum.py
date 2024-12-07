@@ -32,6 +32,7 @@ from wreck.lock_datum import (
     has_qualifiers,
     in_generic,
     is_pin,
+    pprint_pins,
 )
 from wreck.lock_filepins import FilePins
 from wreck.pep518_venvs import VenvMapLoader
@@ -244,7 +245,7 @@ def test_pin_methods(
     testdata_pin_methods,
     ids=ids_pin_methods,
 )
-def test_pindatum(
+def test_pindatum_type(
     abspath_req_src,
     dest_relpath,
     pkg_name,
@@ -255,7 +256,7 @@ def test_pindatum(
     path_project_base,
 ):
     """Test PinDatum"""
-    # pytest --showlocals --log-level INFO -k "test_pindatum" tests
+    # pytest --showlocals --log-level INFO -k "test_pindatum_type" tests
     path_cwd = path_project_base()
     # prepare
     #    empty folders
@@ -269,6 +270,7 @@ def test_pindatum(
 
     fp = FilePins(abspath_dest)
     lst_pins_pip = fp.by_pkg(pkg_name)
+    assert len(lst_pins_pip) == 1
     pin_pip = lst_pins_pip[0]
     assert isinstance(pin_pip, PinDatum)
 
@@ -447,3 +449,44 @@ def test_in_generic(
             is_abspath_ok=invalid,
         )
         assert is_in is False
+
+
+def test_pprint_pindatum(path_project_base):
+    """Create a set of PinDatum to pprint"""
+    # pytest --showlocals --log-level INFO -k "test_pprint_pindatum" tests
+    path_f = Path(__file__).parent.joinpath(
+        "_qualifier_conflicts",
+        "qualifier_1.unlock",
+    )
+
+    # prepare
+    set_pins = set()
+    pin_colorama = PinDatum(
+        path_f,
+        "colorama",
+        'colorama>=0.4.5 ;platform_system=="Windows"',
+        [">=0.4.5"],
+        ['platform_system=="Windows"'],
+    )
+
+    pin_pip = PinDatum(
+        path_f,
+        "pip",
+        "pip>=24.2",
+        [">=24.2"],
+        [],
+    )
+
+    set_pins.add(pin_colorama)
+    set_pins.add(pin_pip)
+
+    # act
+    valids = (
+        set_pins,
+        list(set_pins),
+        tuple(set_pins),
+    )
+    for valid in valids:
+        str_pretty = pprint_pins(set_pins)
+        # verify
+        assert isinstance(str_pretty, str)

@@ -14,6 +14,7 @@ Unit test -- Module
 import logging
 import logging.config
 import shutil
+from collections.abc import Sequence  # noqa: F401
 from pathlib import Path
 
 import pytest
@@ -223,7 +224,6 @@ def test_locks_before_fix(
     lst_resolvables = fixing.resolvables
     lst_unresolvables = fixing.unresolvables
 
-    """
     func_path = f"{g_app_name}.lock_fixing._load_once"
     args = (fixing._ins, fixing._locks, fixing._venv_relpath)
     kwargs = {}
@@ -231,8 +231,6 @@ def test_locks_before_fix(
     assert isinstance(t_ret, Sequence)
     assert len(t_ret) == 2
     t_out, t_locals = t_ret
-    """
-    pass
 
     actual_unresolvables_count = len(lst_unresolvables)
     actual_resolvables_count = len(lst_resolvables)

@@ -8,18 +8,24 @@ Changelog
    Feature request
    .................
 
+   - Review everywhere a subprocess occurs. Sanitize user input.
+     e.g. --venv-relpath should only contain alphanumeric hyphen underscore forwardslash
+     https://github.com/ultralytics/ultralytics/issues/18027#issuecomment-2521308429
+     https://matklad.github.io/2021/07/30/shell-injection.html
+
    - remove module wreck.lock_infile and support via functools.singledispatch
 
    Known regressions
    ..................
-
-   - add support for ``~=``
 
    - add support for package url
 
    Commit items for NEXT VERSION
    ..............................
 
+   - feat: add support for compatiable release operator (#6)
+   - fix(lock_discrepancy): catch invalid SpecifierSet early. Fcn get_ss_set separated out
+   - refactor: move fcn pprint_pins to module lock_datum
    - docs: remove mentions to nonexistent module wreck.lock_inspect
    - docs: sync README.rst and docs/overview.rst
    - ci: add release drafter gh workflow

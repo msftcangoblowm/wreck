@@ -23,8 +23,10 @@ __all__ = (
     "Resolvable",
     "ResolvedMsg",
     "UnResolvable",
+    "filter_acceptable",
+    "get_ss_set",
     "has_discrepancies_version",
-    "tunnel_blindness_suffer_chooses",
+    "get_the_fixes",
     "write_to_file_nudge_pin",
 )
 
@@ -35,12 +37,24 @@ _logger: Final[logging.Logger]
 PkgsWithIssues: TypeAlias = dict[str, dict[str, Version | set[Version]]]
 
 def has_discrepancies_version(d_by_pkg: DatumByPkg) -> PkgsWithIssues: ...
-def _get_ss_set(set_pindatum: set[Pin | PinDatum]) -> set[SpecifierSet]: ...
-def tunnel_blindness_suffer_chooses(
+def get_ss_set(set_pindatum: set[Pin | PinDatum]) -> set[SpecifierSet]: ...
+def _get_specifiers(set_pindatum: set[Pin | PinDatum]) -> list[Pin | PinDatum]: ...
+def _parse_specifiers(specifiers: list[str]) -> str | None: ...
+def nudge_pin_unlock_v1(str_operator: str, found: Version) -> str: ...
+def nudge_pin_lock_v1(found: Version) -> str: ...
+def filter_acceptable(
     set_pindatum: set[Pin | PinDatum],
+    ss_set: set[SpecifierSet],
     highest: Version,
     others: set[Version],
-) -> tuple[set[SpecifierSet], str, bool]: ...
+) -> tuple[set[SpecifierSet], list[list[str]], Version | None]: ...
+def get_the_fixes(
+    set_acceptable: set[SpecifierSet],
+    lsts_specifiers: list[list[str]],
+    highest: Version,
+    is_eq_affinity_value: Version | None,
+    is_ss_count_zero: bool,
+) -> tuple[str, str, bool]: ...
 @dataclass(**DC_SLOTS)
 class Resolvable:
     venv_path: str | Path
@@ -58,8 +72,6 @@ class UnResolvable:
     v_highest: Version
     v_others: set[Version]
     pins: set[Pin] | set[PinDatum]
-
-    def pprint_pins(self) -> str: ...
 
 @dataclass(**DC_SLOTS)
 class ResolvedMsg:

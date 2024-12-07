@@ -1,6 +1,9 @@
 import enum
 import sys
-from collections.abc import Hashable
+from collections.abc import (
+    Hashable,
+    Iterable,
+)
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
@@ -16,13 +19,14 @@ else:  # pragma: no cover py-gte-310
 DC_SLOTS: dict[str, bool]
 
 __all__ = (
+    "DATUM",
+    "DatumByPkg",
     "InFileType",
     "Pin",
     "PinDatum",
     "is_pin",
     "has_qualifiers",
-    "DATUM",
-    "DatumByPkg",
+    "pprint_pins",
 )
 
 @dataclass(**DC_SLOTS)
@@ -58,6 +62,8 @@ class PinDatum(Hashable):
 # public, not private TypeVar
 DATUM = TypeVar("DATUM", bound=Pin | PinDatum)  # noqa: Y001
 DatumByPkg: TypeAlias = dict[str, set[Pin | PinDatum]]
+
+def pprint_pins(pins: Iterable[DATUM]) -> str: ...
 
 class InFileType(enum.Enum):
     FILES = "_files"

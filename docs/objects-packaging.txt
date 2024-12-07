@@ -1,6 +1,7 @@
 # Sphinx inventory version 2
-# Project: packaging 24.0
-# Version: 24.0
+# Project: packaging 24.2
+# Version: 24.2
 # The remainder of this file is compressed using zlib.
 packaging.version.Version py:class 1 version.html#$ -
 packaging.specifiers.SpecifierSet py:class 1 specifiers.html#$ -
+packaging.specifiers.InvalidSpecifier py:class 1 specifiers.html#$ -

@@ -10,10 +10,10 @@
    Packages by a dict containing highest version and other versions
 
 .. py:data:: __all__
-   :type: tuple[str, str, str, str, str, str, str]
+   :type: tuple[str, str, str, str, str, str, str, str, str]
    :value: ("PkgsWithIssues", "Resolvable", "ResolvedMsg", "UnResolvable", \
-   "has_discrepancies_version", "tunnel_blindness_suffer_chooses", \
-   "write_to_file_nudge_pin")
+   "get_ss_set", "filter_acceptable", "has_discrepancies_version", \
+   "get_the_fixes", "write_to_file_nudge_pin")
 
    Module exports
 
@@ -40,14 +40,16 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from pprint import pprint
 from typing import (
     TYPE_CHECKING,
     Union,
     cast,
 )
 
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import (
+    InvalidSpecifier,
+    SpecifierSet,
+)
 from packaging.version import Version
 
 from .constants import g_app_name
@@ -55,6 +57,7 @@ from .lock_datum import (
     DatumByPkg,
     Pin,
     PinDatum,
+    pprint_pins,
 )
 
 if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
@@ -62,7 +65,7 @@ if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
 else:  # pragma: no cover py-gte-310
     DC_SLOTS = {}
 
-is_module_debug = False
+is_module_debug = True
 _logger = logging.getLogger(f"{g_app_name}.lock_discrepancy")
 
 __all__ = (
@@ -70,12 +73,45 @@ __all__ = (
     "Resolvable",
     "ResolvedMsg",
     "UnResolvable",
+    "filter_acceptable",
+    "get_ss_set",
     "has_discrepancies_version",
-    "tunnel_blindness_suffer_chooses",
+    "get_the_fixes",
     "write_to_file_nudge_pin",
 )
 
 PkgsWithIssues = dict[str, dict[str, Union[Version, set[Version]]]]
+
+
+def _specifier_length(specifier):
+    """Determine length of operator within specifier
+
+    :param specifier: Format ``[operator][version]``
+    :type specifier: str
+    :returns: Operator str length
+    :rtype: int
+    :raises:
+
+       - :py:exc:`ValueError` -- Unknown specifier
+
+    """
+    t_len_1 = ("<", ">")
+    t_len_2 = ("<=", ">=", "~=", "==", "!=")
+    t_len_3 = "==="
+    t_negatives = ("!==",)
+    if specifier.startswith(t_len_3):
+        # === artibrary equality
+        # https://peps.python.org/pep-0440/#arbitrary-equality
+        specifier_len = 3
+    elif specifier.startswith(t_len_2) and not specifier.startswith(t_negatives):
+        specifier_len = 2
+    elif specifier.startswith(t_len_1) and not specifier.startswith(t_negatives):
+        specifier_len = 1
+    else:
+        msg_warn = f"Unknown specifier {specifier!r}"
+        raise ValueError(msg_warn)
+
+    return specifier_len
 
 
 def has_discrepancies_version(d_by_pkg: DatumByPkg):
@@ -93,7 +129,7 @@ def has_discrepancies_version(d_by_pkg: DatumByPkg):
     :rtype: wreck.lock_discrepancy.PkgsWithIssues
     """
     if TYPE_CHECKING:
-        d_out: dict[str, Version]
+        d_out: PkgsWithIssues
         pkg_name: str
         highest: Version | None
 
@@ -107,7 +143,8 @@ def has_discrepancies_version(d_by_pkg: DatumByPkg):
             """Get version. Since a ``.lock`` file, there will only be one
             specifer ``==[sem version]``"""
             specifier = pin.specifiers[0]
-            pkg_sem_version = specifier[2:]
+            specifier_len = _specifier_length(specifier)
+            pkg_sem_version = specifier[specifier_len:]
             ver = Version(pkg_sem_version)
 
             if highest is None:
@@ -141,24 +178,35 @@ def has_discrepancies_version(d_by_pkg: DatumByPkg):
     return d_out
 
 
-def _get_ss_set(set_pindatum):
+def get_ss_set(set_pindatum):
     """Create a set of all SpecifierSet
 
     :param set_pindatum: PinDatum for the same package, from all ``.lock`` files
     :type set_pindatum: set[wreck.lock_datum.Pin | wreck.lock_datum.PinDatum]
     :returns: set of SpecifierSet
     :rtype: set[packaging.specifiers.SpecifierSet]
+
+    :raises:
+
+        - :py:exc:`packaging.specifiers.InvalidSpecifier` -- In
+          SpecifierSet unsupported operator
+
     """
     set_ss = set()
-    for pin in set_pindatum:
-        # ss_pre = SpecifierSet(",".join(pin.specifiers), prereleases=True)
-        ss_release = SpecifierSet(",".join(pin.specifiers))
-        set_ss.add(ss_release)
+    try:
+        for pin in set_pindatum:
+            # ss_pre = SpecifierSet(",".join(pin.specifiers), prereleases=True)
+            ss_release = SpecifierSet(",".join(pin.specifiers))
+            set_ss.add(ss_release)
+    except InvalidSpecifier:
+        raise
 
     # An empty SpecifierSet is worthless and annoying cuz throws off count
     ss_empty = SpecifierSet("")
     if ss_empty in set_ss:
         set_ss.discard(ss_empty)
+    else:  # pragma: no cover
+        pass
 
     return set_ss
 
@@ -178,7 +226,7 @@ def _get_specifiers(set_pindatum):
     return lst
 
 
-def _parse_specifiers(specifiers: list[str]):
+def _parse_specifiers(specifiers):
     """Extract specifers, operator and version ignore ``!=`` specifiers.
 
     :param specifiers:
@@ -197,7 +245,7 @@ def _parse_specifiers(specifiers: list[str]):
     """
     dotted_path = f"{g_app_name}.lock_discrepancy._parse_specifiers"
     # Assume does not contain comma separators
-    pattern = r"^(\s)*(==|<=|>=|<|>|~=|!=)(\S+)"
+    pattern = r"^(\s)*(===|==|<=|>=|<|>|~=|!=)(\S+)"
 
     lst = []
     for spec in specifiers:
@@ -221,41 +269,63 @@ def _parse_specifiers(specifiers: list[str]):
     return lst
 
 
-def tunnel_blindness_suffer_chooses(
+def nudge_pin_unlock_v1(str_operator, found):
+    """Assumes found is not None aka unresolvable.
+
+    Will later need to prepend pkg_name
+
+    :param str_operator: Operator
+    :type str_operator: str
+    :param str_operator: Semantic version
+    :type str_operator: packaging.version.Version
+    :returns: unlock nudge pin
+    :rtype: str
+    """
+    nudge_pin_unlock = f"{str_operator}{found!s}"
+    return nudge_pin_unlock
+
+
+def nudge_pin_lock_v1(found):
+    """Assumes found is not None aka unresolvable
+
+    Will later need to prepend pkg_name
+
+    :param str_operator: Semantic version
+    :type str_operator: packaging.version.Version
+    :returns: lock nudge pin
+    :rtype: str
+    """
+    nudge_pin_lock = f"=={found!s}"
+
+    return nudge_pin_lock
+
+
+def filter_acceptable(
     set_pindatum,
+    set_ss,
     highest,
     others,
 ):
-    """When a ``.lock`` file is created, it is built from:
+    """:py:class:`~packaging.specifiers.SpecifierSet` does the heavy
+    lifting, filtering out unacceptable possibilities
 
-    - one ``.in`` file
-    - recursively resolved constraints and requirements files
-
-    But not all. Therein lies the rub. Trying to choose based on the
-    limited info at hand.
-
-    This algo will fail when there is an unnoticed pin that limits
-    the version.
+    :py:meth:`~wreck.lock_discrepancy.get_ss_set` has already filtered invalid operators
 
     :param set_pindatum: PinDatum for the same package, from all ``.lock`` files
     :type set_pindatum: set[wreck.lock_datum.Pin | wreck.lock_datum.PinDatum]
+    :param set_ss: set of all SpecifierSet
+    :type set_ss: set[packaging.specifiers.SpecifierSet]
     :param highest: Highest Version amongst the choices
     :type highest: packaging.version.Version
     :param others: Other known Version detected within (same venv) ``.lock`` files
     :type others: set[packaging.version.Version]
     :returns:
 
-       set[SpecifierSet] and operator str, and
-       whether an acceptable version was found
+        set_acceptable, lst_specifiers, is_eq_affinity
 
-       Operator str is only applicable for unlock nudge pins, not for
-       .lock package version fixes.
-
-    :rtype: tuple[set[packaging.specifiers.SpecifierSet], str, str]
+    :rtype: tuple[set[packaging.specifiers.SpecifierSet], list[list[str]], packaging.version.Version | None]
     """
-    dotted_path = f"{g_app_name}.lock_discrepancy.tunnel_blindness_suffer_chooses"
-    # Create a set of all SpecifierSet. Discarded empty {SpecifierSet('')}
-    set_ss = _get_ss_set(set_pindatum)
+    dotted_path = f"{g_app_name}.lock_discrepancy.filter_acceptable"
 
     def acceptable_version(set_ss: set[SpecifierSet], v_test: Version) -> bool:
         """Satisfies all SpecifierSet"""
@@ -264,7 +334,8 @@ def tunnel_blindness_suffer_chooses(
 
     # Discard unacceptable versions (from .lock)
     set_highest = set()
-    set_highest.add(highest)
+    if highest is not None:
+        set_highest.add(highest)
     set_all = others.union(set_highest)
     set_acceptable = set()
     for ver in set_all:
@@ -302,6 +373,7 @@ def tunnel_blindness_suffer_chooses(
     # remove from set_acceptable any '!='
     # '==' exclude all other versions
     is_eq_affinity = False
+    is_eq_affinity_value = None
     for idx, lst_specifiers in enumerate(lsts_specifiers):
         specifiers = _parse_specifiers(lst_specifiers)
         if is_module_debug:  # pragma: no cover
@@ -323,6 +395,7 @@ def tunnel_blindness_suffer_chooses(
                 # Discard all except ver
                 is_eq_affinity = True
                 unlock_ver = ver_version
+                is_eq_affinity_value = unlock_ver
                 set_remove_these = set()
                 for ver_acceptable in set_acceptable:
                     if is_module_debug:  # pragma: no cover
@@ -343,7 +416,8 @@ def tunnel_blindness_suffer_chooses(
                 if is_module_debug:  # pragma: no cover
                     msg_info = (
                         f"{dotted_path} {oper!s} {ver_version!r} "
-                        f"is_eq_affinity {is_eq_affinity!r} "
+                        f"is_eq_affinity {is_eq_affinity} "
+                        f"is_eq_affinity_value {is_eq_affinity_value!r} "
                         f"set_acceptable {set_acceptable!r}"
                     )
                     _logger.info(msg_info)
@@ -358,20 +432,121 @@ def tunnel_blindness_suffer_chooses(
     else:  # pragma: no cover
         pass
 
+    t_ret = set_acceptable, lsts_specifiers, is_eq_affinity_value
+
+    return t_ret
+
+
+def get_compatiable_release(
+    highest: Version,
+    lsts_specifiers: list[list[str]],
+):
+    """
+    .. code-block:: text
+
+       highest    = <Version('25.3')>
+       lst_specifiers = ['~=25.0']
+       lsts_specifiers = [['<=25.3'], ['~=25.0']]
+       set_acceptable = {<Version('25.0')>, <Version('25.3')>}
+
+    For nudge pin lock
+
+    Since ``~=25.0`` is equivalent to ``>= 25.0, == 25.*``
+    Any other limiter would be on the upper limit Version
+
+    ``highest`` acceptable Version is correct
+
+    For nudge pin unlock
+
+    In the unlock nudge pin, would be nice to take into account all
+    lsts_specifiers. Create a set. Combine all and comma separate
+
+    :param highest: Highest Version amongst the choices
+    :type highest: packaging.version.Version
+    :param lsts_specifiers: specifiers
+    :type lsts_specifiers: list[list[str]]
+    """
+    nudge_pin_lock = nudge_pin_lock_v1(highest)
+
+    set_v_identifiers = set()
+    for l_specifiers in lsts_specifiers:
+        for specifier in l_specifiers:
+            set_v_identifiers.add(specifier)
+    l_v_identifiers = list(set_v_identifiers)
+    nudge_pin_unlock = ", ".join(l_v_identifiers)
+
+    t_ret_v2 = (nudge_pin_lock, nudge_pin_unlock, True)
+
+    return t_ret_v2
+
+
+def get_the_fixes(
+    set_acceptable,
+    lsts_specifiers,
+    highest,
+    is_eq_affinity_value,
+    is_ss_count_zero,
+):
+    """When a ``.lock`` file is created, it is built from:
+
+    - one ``.in`` file
+    - recursively resolved constraints and requirements files
+
+    But not all. Therein lies the rub. Trying to choose based on the
+    limited info at hand.
+
+    This algo will fail when there is an unnoticed pin that limits
+    the version.
+
+    :py:meth:`~wreck.lock_discrepancy.get_ss_set` has already filtered invalid operators
+
+    :param set_acceptable: Set of acceptable
+    :type set_acceptable: set[packaging.specifiers.SpecifierSet]
+    :param lsts_specifiers: specifiers
+    :type lsts_specifiers: list[list[str]]
+    :param highest: Highest Version amongst the choices
+    :type highest: packaging.version.Version
+    :param is_eq_affinity_value: A Specifier explicitly limits to one version
+    :type is_eq_affinity_value: packaging.version.Version | None
+    :param is_ss_count_zero: True if set_ss is empty otherwise False
+    :type is_ss_count_zero: bool
+    :returns:
+
+       lock nudge pin w/o preceding pkg_name
+       unlock nudge pin w/o preceding pkg_name
+       bool False if unresolvable otherwise True
+
+    :rtype: tuple[str | None, str | None, bool]
+    """
+    dotted_path = f"{g_app_name}.lock_discrepancy.get_the_fixes"
+
+    t_ret = None
+
     # Test highest
-    is_ss_count_zero = len(set_ss) == 0
-    if is_eq_affinity is True:
+    if is_eq_affinity_value is not None:
         # A specifier explicitly limits to only one version
-        found = unlock_ver
         unlock_operator = "=="
+        nudge_pin_unlock = nudge_pin_unlock_v1(unlock_operator, is_eq_affinity_value)
+        nudge_pin_lock = nudge_pin_lock_v1(is_eq_affinity_value)
+        t_ret = (nudge_pin_lock, nudge_pin_unlock, True)
     elif is_ss_count_zero:
         # No specifiers limiting versions. Choose highest
         found = highest
         unlock_operator = ">="
-        t_ret = (set_ss, unlock_operator, found)
+        nudge_pin_unlock = nudge_pin_unlock_v1(unlock_operator, found)
+        nudge_pin_lock = nudge_pin_lock_v1(found)
+        t_ret = (nudge_pin_lock, nudge_pin_unlock, True)
+    elif len(set_acceptable) == 0:
+        # Unresolvable. No acceptable choices
+        t_ret = (None, None, False)
+    else:  # pragma: no cover
+        pass
+
+    if t_ret is not None:
+        return t_ret
     else:
         # Trying to find affinity tuple (operator, ver)
-        #    Default unlock operator is "=="
+        # Defaults:
         unlock_operator = "=="
         unlock_ver = None
 
@@ -390,17 +565,19 @@ def tunnel_blindness_suffer_chooses(
                     t_spec = specifiers[0]
                     oper, ver = t_spec
 
-                    if oper == "~=":
-                        msg_warn = "~= operator is not yet implemented"
-                        raise NotImplementedError(msg_warn)
-                    else:  # pragma: no cover
-                        pass
-
                     if oper in ("!=", "=="):
                         # ``!=`` -- acceptable_version filtered out {ver}
                         # ``==`` -- default unlock operator
                         continue
+                    elif oper in ("~="):
+                        # (nudge_pin_lock, nudge_pin_unlock, True)
+                        t_ret_v2 = get_compatiable_release(
+                            highest,
+                            lsts_specifiers,
+                        )
+                        return t_ret_v2
                     else:
+                        # ``>``, ``>=``, ``<``, ``<=``
                         unlock_operator = oper
                         unlock_ver = ver
                         continue
@@ -416,10 +593,14 @@ def tunnel_blindness_suffer_chooses(
                 # ``~=`` operator --> NotImplementedError
                 two_opers = (oper_0, oper_1)
                 if "~=" in two_opers:
-                    msg_warn = (
-                        f"~= operator is not yet implemented {t_spec_0!r} {t_spec_1!r}"
+                    # Combine (union) all version identifiers
+                    # nudge_pin_lock = nudge_pin_lock_v1(unlock_ver)
+                    # nudge_pin_unlock = f"{oper_0}{ver_0!s}, {oper_1}{ver_1!s}"
+                    t_ret_v2 = get_compatiable_release(
+                        highest,
+                        lsts_specifiers,
                     )
-                    raise NotImplementedError(msg_warn)
+                    return t_ret_v2
                 else:  # pragma: no cover
                     pass
 
@@ -461,58 +642,79 @@ def tunnel_blindness_suffer_chooses(
             # Take highest from amongst the acceptable versions
             lst_sorted = sorted(list(set_acceptable))
             found = lst_sorted[-1]
-        else:
-            if unlock_operator in "==":
-                func = None
-                idx_from_list = None
-                found = unlock_ver
-            if unlock_operator in "<=":
-                # version le and closest to
-                # remove versions > unlock_ver. Then take lowest
-                func = operator.le
-                idx_from_list = 0
-            elif unlock_operator in "<":
-                # version lt unlock_ver and closest to unlock_ver
-                # remove versions >= unlock_ver. Then take lowest
-                func = operator.lt
-                idx_from_list = 0
-            elif unlock_operator in ">=":
-                # version ge and closest to unlock_ver
-                # remove versions < unlock_ver. Then take highest
-                func = operator.ge
-                idx_from_list = -1
-            elif unlock_operator in ">":
-                # version gt unlock_ver and closest to unlock_ver
-                # remove versions <= unlock_ver. Then take highest
-                func = operator.gt
-                idx_from_list = -1
+            # unlock_operator = "=="
+            # t_ret = (set_ss, unlock_operator, found)
+            nudge_pin_lock = nudge_pin_lock_v1(found)
+            t_ret_v2 = (nudge_pin_lock, nudge_pin_lock, True)
+            return t_ret_v2
+        else:  # pragma: no cover
+            pass
+
+        if is_module_debug:  # pragma: no cover
+            msg_info = (
+                f"{dotted_path} (before operator func chooser) "
+                f"unlock operator {unlock_operator} "
+                f"unlock_ver {unlock_ver} highest {highest}"
+            )
+            _logger.info(msg_info)
+        else:  # pragma: no cover
+            pass
+
+        specifier_len = _specifier_length(unlock_operator)
+        if specifier_len == 3 and unlock_operator == "===":
+            msg_info = f"{dotted_path} operator not implemented {unlock_operator}"
+            raise NotImplementedError(msg_info)
+        elif specifier_len == 2 and unlock_operator == "==":
+            # unlock_ver is Non-None
+            func = None
+            idx_from_list = None
+            found = unlock_ver
+        elif (specifier_len == 2 and unlock_operator in "<=") or (
+            specifier_len == 1 and unlock_operator in "<"
+        ):
+            # le or lt
+            found = highest
+            nudge_pin_lock = nudge_pin_lock_v1(found)
+            nudge_pin_unlock = nudge_pin_unlock_v1(unlock_operator, unlock_ver)
+            t_ret_v2 = (nudge_pin_lock, nudge_pin_unlock, True)
+            return t_ret_v2
+        elif specifier_len == 2 and unlock_operator in ">=":
+            # version ge and closest to unlock_ver
+            # remove versions < unlock_ver. Then take highest
+            func = operator.ge
+            idx_from_list = -1
+        elif specifier_len == 1 and unlock_operator in ">":
+            # version gt unlock_ver and closest to unlock_ver
+            # remove versions <= unlock_ver. Then take highest
+            func = operator.gt
+            idx_from_list = -1
+        else:  # pragma: no cover
+            # Invalid operators already filtered out by call to get_ss_set
+            pass
+
+        if func is not None:
+            lst = [
+                ver_test
+                for ver_test in set_acceptable
+                if func(ver_test, Version(unlock_ver))
+            ]
+            if len(lst) != 0:
+                lst_sorted = sorted(lst)
+                found = lst_sorted[idx_from_list]
+                nudge_pin_unlock = nudge_pin_unlock_v1(unlock_operator, found)
+                nudge_pin_lock = nudge_pin_lock_v1(found)
+                t_ret_v2 = (nudge_pin_lock, nudge_pin_unlock, True)
             else:
-                if is_module_debug:  # pragma: no cover
-                    msg_info = (
-                        f"{dotted_path} unexpected unlock operator {unlock_operator}"
-                    )
-                    _logger.info(msg_info)
-                else:  # pragma: no cover
-                    pass
-                raise AssertionError(msg_info)
+                # Unresolvable
+                found = None
+                t_ret_v2 = (None, None, False)
+        else:
+            # ==
+            nudge_pin_lock = nudge_pin_lock_v1(found)
+            t_ret_v2 = (nudge_pin_lock, nudge_pin_lock, True)
 
-            if func is not None:
-                lst = [
-                    ver_test
-                    for ver_test in set_acceptable
-                    if func(ver_test, Version(unlock_ver))
-                ]
-                if len(lst) != 0:
-                    lst_sorted = sorted(lst)
-                    found = lst_sorted[idx_from_list]
-                else:
-                    found = None
-            else:  # pragma: no cover
-                pass
-
-    t_ret = (set_ss, unlock_operator, found)
-
-    return t_ret
+    # t_ret = (set_ss, unlock_operator, found)
+    return t_ret_v2
 
 
 @dataclass(**DC_SLOTS)
@@ -642,18 +844,6 @@ class UnResolvable:
     v_others: set[Version]
     pins: set[Pin] | set[PinDatum]
 
-    def pprint_pins(self):
-        """Capture pprint and return it.
-
-        :returns: pretty printed representation of the pins
-        :rtype: str
-        """
-        with io.StringIO() as f:
-            pprint(self.pins, stream=f)
-            ret = f.getvalue()
-
-        return ret
-
     def __repr__(self):
         """Emphasis is on presentation, not reproducing an instance.
 
@@ -666,7 +856,7 @@ class UnResolvable:
         )
         ret += f"qualifiers='{self.qualifiers}' sss={self.sss!r} \n"
         ret += f"v_highest={self.v_highest!r} v_others={self.v_others!r} \n"
-        ret += f"pins={self.pprint_pins()}>"
+        ret += f"pins={pprint_pins(self.pins)}>"
 
         return ret
 
