@@ -25,9 +25,9 @@ copyright = "2024–2025, Dave Faulkmore"
 # The short X.Y.Z version.
 version = version_xyz
 # The full version, including alpha/beta/rc tags.
-release = "0.1.0"
+release = "0.2.0"
 # The date of release, in "monthname day, year" format.
-release_date = "December 6, 2024"
+release_date = "December 8, 2024"
 # @@@ end
 
 v = parse(release)
@@ -150,6 +150,14 @@ intersphinx_mapping = {
     "sphinxdocs": (
         "https://www.sphinx-doc.org/en/master",
         ("objects-sphinxdocs.inv", "objects-sphinxdocs.txt"),
+    ),
+    "gh-setuptools-scm": (
+        "https://github.com/pypa/setuptools-scm",
+        ("objects-gh-setuptools-scm.inv", "objects-gh-setuptools-scm.txt"),
+    ),
+    "gh-pytest-dev": (
+        "https://github.com/pytest-dev/pytest",
+        ("objects-gh-pytest-dev.inv", "objects-gh-pytest-dev.txt"),
     ),
 }
 intersphinx_disabled_reftypes = ["std:doc"]

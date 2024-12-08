@@ -108,9 +108,10 @@ package level constants
 
    .. seealso::
 
-      `pytest#3697 <https://github.com/pytest-dev/pytest/issues/3697#issuecomment-1984895577>`_
+      :ref:`pytest-dev-issues-3697-1984895577`
 
-      `pytest#10606 <https://github.com/pytest-dev/pytest/issues/10606#issuecomment-1550123106>`_
+      :ref:`pytest-dev-issues-10606-1550123106`
+
 
 """
 

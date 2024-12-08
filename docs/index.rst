@@ -36,6 +36,10 @@
 
 \* Python 3.9 through 3.13, PyPy
 
+**new in 0.2.x**
+
+compatible release operator support;
+
 **new in 0.1.x**
 
 fork portion of drain-swamp;

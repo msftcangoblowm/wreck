@@ -6,11 +6,10 @@ wreck.BackendNotSupportedError py:exception 1 code/general/exceptions.html#$ -
 wreck.exceptions.BackendNotSupportedError py:exception 1 code/general/exceptions.html#$ -
 wreck.MissingRequirementsFoldersFiles py:exception 1 code/general/exceptions.html#$ -
 wreck.exceptions.MissingRequirementsFoldersFiles py:exception 1 code/general/exceptions.html#$ -
-wreck.PyProjectTOMLParseError py:exception 1 code/general/exceptions.html#$ -
-wreck.exceptions.PyProjectTOMLParseError py:exception 1 code/general/exceptions.html#$ -
-wreck.PyProjectTOMLReadError py:exception 1 code/general/exceptions.html#$ -
-wreck.exceptions.PyProjectTOMLReadError py:exception 1 code/general/exceptions.html#$ -
 wreck._safe_path py:module 0 code/general/safe_path.html#$ -
+wreck.cli_dependencies.present_results py:function 1 code/cli_dependencies.html#$ -
+wreck.cli_dependencies.requirements_fix_v2 py:function 1 code/cli_dependencies.html#$ -
+wreck.cli_dependencies.requirements_unlock py:function 1 code/cli_dependencies.html#$ -
 wreck.lock_datum.InFileType py:class 1 code/core/lock_datum.html#$ -
 wreck.lock_datum.InFileType.FILES py:attribute 1 code/core/lock_datum.html#$ -
 wreck.lock_datum.InFileType.ZEROES py:attribute 1 code/core/lock_datum.html#$ -
@@ -29,12 +28,7 @@ wreck.pep518_read.find_pyproject_toml.params.stdin_filename py:parameter 1 code/
 wreck.lock_datum.DATUM py:class 1 code/ext/pipenv_unlock/lock_datum#$ -
 wreck.lock_datum.DatumByPkg py:class 1 code/ext/pipenv_unlock/lock_datum#$ -
 wreck.lock_filepins.FilePins py:class 1 code/ext/pipenv_unlock/lock_filepins#$ -
-wreck.snippet_dependencies.T_REQUIRED py:class 1 code/ext/pipenv_unlock/snippet_dependencies#$ -
-wreck.snippet_dependencies.T_OPTIONALS py:class 1 code/ext/pipenv_unlock/snippet_dependencies#$ -
-code/cli_scm_version std:doc -1 code/cli_scm_version.html scm-version
-code/cli_igor std:doc -1 code/cli_igor.html drain-swamp
-code/cli_igor:main std:label -1 code/cli_igor.html#drain_swamp.cli_igor.main
 code/cli_dependencies std:doc -1 code/cli_dependencies.html reqs
-code/cli_dependencies:reqs std:label -1 code/cli_dependencies.html#module-drain_swamp.cli_dependencies reqs
+code/cli_dependencies:reqs std:label -1 code/cli_dependencies.html#module-wreck.cli_dependencies reqs
 getting_started/installation std:doc -1 getting_started/installation.html install and configure
 getting_started/installation:Configuration std:label -1 getting_started/installation.html#configuration Configuration

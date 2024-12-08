@@ -3,9 +3,22 @@ Wreck
 
 From .in requirement files generate and fix .lock and .unlock files
 
+|  |kit| |codecov| |license|
+|  |last-commit| |test-status| |quality-status| |docs|
+|  |versions| |implementations|
+|  |platforms| |black|
+|  |downloads| |stars|
+|  |mastodon-msftcangoblowm|
+
+|feature banner|
+
 .. PYVERSIONS
 
 \* Python 3.9 through 3.13, PyPy
+
+**new in 0.2.x**
+
+compatible release operator support;
 
 **new in 0.1.x**
 
@@ -317,3 +330,44 @@ The short ramifications are:
 Meaning pay to support the project and towards funding ongoing package maintainance.
 
 - Do not change the copyright notice; that's serious IP theft.
+
+.. |last-commit| image:: https://img.shields.io/github/last-commit/msftcangoblowm/wreck/master
+    :target: https://github.com/msftcangoblowm/wreck/pulse
+    :alt: last commit to gauge activity
+.. |test-status| image:: https://github.com/msftcangoblowm/wreck/actions/workflows/testsuite.yml/badge.svg?branch=master&event=push
+    :target: https://github.com/msftcangoblowm/wreck/actions/workflows/testsuite.yml
+    :alt: Test suite status
+.. |quality-status| image:: https://github.com/msftcangoblowm/wreck/actions/workflows/quality.yml/badge.svg?branch=master&event=push
+    :target: https://github.com/msftcangoblowm/wreck/actions/workflows/quality.yml
+    :alt: Quality check status
+.. |docs| image:: https://readthedocs.org/projects/wreck/badge/?version=latest&style=flat
+    :target: https://wreck.readthedocs.io/
+    :alt: Documentation
+.. |kit| image:: https://img.shields.io/pypi/v/wreck
+    :target: https://pypi.org/project/wreck/
+    :alt: PyPI status
+.. |versions| image:: https://img.shields.io/pypi/pyversions/wreck.svg?logo=python&logoColor=FBE072
+    :target: https://pypi.org/project/wreck/
+    :alt: Python versions supported
+.. |license| image:: https://img.shields.io/github/license/msftcangoblowm/wreck
+    :target: https://pypi.org/project/wreck/blob/master/LICENSE
+    :alt: License
+.. |stars| image:: https://img.shields.io/github/stars/msftcangoblowm/wreck.svg?logo=github
+    :target: https://github.com/msftcangoblowm/wreck/stargazers
+    :alt: GitHub stars
+.. |mastodon-msftcangoblowm| image:: https://img.shields.io/mastodon/follow/112019041247183249
+    :target: https://mastodon.social/@msftcangoblowme
+    :alt: msftcangoblowme on Mastodon
+.. |codecov| image:: https://codecov.io/gh/msftcangoblowm/wreck/branch/master/graph/badge.svg?token=VZAM1geSFh
+    :target: https://codecov.io/gh/msftcangoblowm/wreck
+    :alt: wreck coverage percentage
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/ambv/black
+.. |downloads| image:: https://img.shields.io/pypi/dm/wreck
+.. |implementations| image:: https://img.shields.io/pypi/implementation/wreck
+.. |platforms| image:: https://img.shields.io/badge/platform-linux-lightgrey
+
+.. https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey
+
+.. |feature banner| image:: /docs/_static/wreck-banner-611-255-1.svg
+   :alt: fixes python package requirement files

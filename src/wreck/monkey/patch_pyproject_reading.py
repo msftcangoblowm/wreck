@@ -1,10 +1,10 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-setuptools_scm._integration.pyproject_reading.read_pyproject is too
-strict, monkeypatch it!
+In module :ref:`setuptools-scm-code-pyproject_reading` function
+read_pyproject is too strict, monkeypatch it!
 
-Without the patch, pyproject.toml [tool.setuptools-scm] section is
+Without the patch, ``pyproject.toml`` [tool.setuptools-scm] section is
 missing, raises :py:exc:`LookupError`.
 
 .. warning:: tool_name ordering
@@ -24,8 +24,7 @@ missing, raises :py:exc:`LookupError`.
 
 .. seealso::
 
-   setuptools-scm
-   `config <https://github.com/pypa/setuptools_scm/blob/main/src/setuptools_scm/_config.py>`_
+   setuptools-scm :ref:`setuptools-scm-code-config`
 
 .. py:data:: __all__
    :type: tuple[str, str]

@@ -23,15 +23,21 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - feat: add support for compatiable release operator (#6)
-   - fix(lock_discrepancy): catch invalid SpecifierSet early. Fcn get_ss_set separated out
-   - refactor: move fcn pprint_pins to module lock_datum
-   - docs: remove mentions to nonexistent module wreck.lock_inspect
-   - docs: sync README.rst and docs/overview.rst
-   - ci: add release drafter gh workflow
-   - ci: add issue and PR templates
-
 .. scriv-start-here
+
+.. _changes_0-2-0:
+
+Version 0.2.0 — 2024-12-08
+--------------------------
+
+- docs: fix some in-code links to use intersphinx
+- feat: add support for compatiable release operator (#6)
+- fix(lock_discrepancy): catch invalid SpecifierSet early. Fcn get_ss_set separated out
+- refactor: move fcn pprint_pins to module lock_datum
+- docs: remove mentions to nonexistent module wreck.lock_inspect
+- docs: sync README.rst and docs/overview.rst
+- ci: add release drafter gh workflow
+- ci: add issue and PR templates
 
 .. _changes_0-1-0:
 

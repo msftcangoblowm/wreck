@@ -239,8 +239,10 @@ def _parse_specifiers(specifiers):
 
     .. seealso::
 
-       `pep044 <https://peps.python.org/pep-0440>`_
-       `escape characters <https://docs.python.org/3/library/re.html#re.escape>`_
+       :pep:`440`
+
+       :py:func:`escape characters <re.escape>`
+
 
     """
     dotted_path = f"{g_app_name}.lock_discrepancy._parse_specifiers"

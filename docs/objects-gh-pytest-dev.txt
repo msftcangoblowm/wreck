@@ -1,0 +1,6 @@
+# Sphinx inventory version 2
+# Project: pytest 8.3.3
+# Version: 8.3.3
+# The remainder of this file is compressed using zlib.
+pytest-dev-issues-3697-1984895577 std:label -1 issues/3697#issuecomment-1984895577 pytest#3697
+pytest-dev-issues-10606-1550123106 std:label -1 issues/10606#issuecomment-1550123106 pytest#10606
