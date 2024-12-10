@@ -49,4 +49,4 @@ version-resolver:
       - "bug"
       - "dependency"
       - "docs"
-  default: minor
+  default: patch

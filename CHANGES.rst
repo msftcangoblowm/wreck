@@ -28,12 +28,17 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - fix(pep518_venvs): missing requirements warning message provide hint
-   - fix(tox-req.ini): into allowlist_externals add entrypoint reqs
-   - fix(lock_discrepancy): extract_full_package_name known operators later regex (#7)
-   - test(lock_fixing): add test case for arbitrary equality
-
 .. scriv-start-here
+
+.. _changes_0-2-1:
+
+Version 0.2.1 — 2024-12-10
+--------------------------
+
+- fix(pep518_venvs): missing requirements warning message provide hint
+- fix(tox-req.ini): into allowlist_externals add entrypoint reqs
+- fix(lock_discrepancy): extract_full_package_name known operators later regex (#7)
+- test(lock_fixing): add test case for arbitrary equality
 
 .. _changes_0-2-0:
 
