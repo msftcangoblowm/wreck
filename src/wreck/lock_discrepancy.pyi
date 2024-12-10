@@ -48,6 +48,10 @@ def filter_acceptable(
     highest: Version,
     others: set[Version],
 ) -> tuple[set[SpecifierSet], list[list[str]], Version | None]: ...
+def get_compatible_release(
+    highest: Version,
+    lsts_specifiers: list[list[str]],
+) -> tuple[str, str, bool]: ...
 def get_the_fixes(
     set_acceptable: set[SpecifierSet],
     lsts_specifiers: list[list[str]],

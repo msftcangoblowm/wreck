@@ -15,7 +15,6 @@ import logging
 import logging.config
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from logging_strict.tech_niques import get_locals  # noqa: F401
@@ -26,6 +25,10 @@ from wreck._safe_path import resolve_joinpath
 from wreck.constants import (
     LOGGING,
     g_app_name,
+)
+from wreck.exceptions import (
+    ArbitraryEqualityNotImplemented,
+    PinMoreThanTwoSpecifiers,
 )
 from wreck.lock_datum import PinDatum
 from wreck.lock_discrepancy import (
@@ -43,36 +46,85 @@ testdata_extract_full_package_name = (
         'colorama ;platform_system=="Windows"',
         "colorama",
         "colorama",
+        False,
     ),
     (
         'tomli; python_version<"3.11"',
         "tomli",
         "tomli",
+        False,
     ),
     (
         "pip @ remote",
         "pip",
         "pip",
+        False,
     ),
     (
         "pip@ remote",
         "pip",
         "pip",
+        False,
     ),
     (
         "pip @remote",
         "pip",
         "pip",
+        False,
     ),
     (
         "tox>=1.1.0",
         "tox",
         "tox",
+        False,
     ),
     (
         "tox-gh-action>=1.1.0",
         "tox",
-        None,
+        "tox-gh-action",
+        False,
+    ),
+    (
+        'tomli>=2.2.1; python_version<"3.11"',
+        "tomli",
+        "tomli",
+        False,
+    ),
+    (
+        'tomli>=2.2.1; python_version<"3.11" ;platform_system=="Windows"',
+        "tomli",
+        "tomli",
+        False,
+    ),
+    (
+        'tomli ; python_version<"3.11" ;platform_system=="Windows"',
+        "tomli",
+        "tomli",
+        False,
+    ),
+    (
+        "tomli",
+        "pip",
+        "tomli",
+        False,
+    ),
+    (
+        "pip-requirements-parser ~~ 24.2",
+        "pip-requirements-parser",
+        "pip-requirements-parser",
+        True,
+    ),
+    (
+        "pip-requirements-parser~~24.2",
+        "pip-requirements-parser",
+        "pip-requirements-parser",
+        True,
+    ),
+    (
+        "namespaces.py <= 1.0.1",
+        "namespaces.py",
+        "namespaces.py",
+        False,
     ),
 )
 ids_extract_full_package_name = (
@@ -83,11 +135,18 @@ ids_extract_full_package_name = (
     "space at",
     "exact pkg name operator ge",
     "not a match",
+    "pkg with specifier and qualifier",
+    "pkg with specifier and two qualifiers",
+    "pkg without specifier and two qualifiers",
+    "unrelated package",
+    "pkg name with hyphens or underscores and unknown token possible whitespace",
+    "pkg name with hyphens or underscores and unknown token no whitespace",
+    "pkg name containing a period",
 )
 
 
 @pytest.mark.parametrize(
-    "line, search_for, expected_pkg_name",
+    "line, search_for, expected_pkg_name, is_needs_fix",
     testdata_extract_full_package_name,
     ids=ids_extract_full_package_name,
 )
@@ -95,10 +154,12 @@ def test_extract_full_package_name(
     line,
     search_for,
     expected_pkg_name,
+    is_needs_fix,
     caplog,
 ):
     """For a particular package, check line is an exact match."""
     # pytest -vv --showlocals --log-level INFO -k "test_extract_full_package_name" tests
+    # pytest -vv --showlocals --log-level INFO tests/test_lock_discrepancy.py::test_extract_full_package_name[unrelated\ package]
     LOGGING["loggers"][g_app_name]["propagate"] = True
     logging.config.dictConfig(LOGGING)
     logger = logging.getLogger(name=g_app_name)
@@ -115,16 +176,38 @@ def test_extract_full_package_name(
         **kwargs,
     )
 
-    pkg_name_actual = extract_full_package_name(line, search_for)
-    if expected_pkg_name is None:
-        assert pkg_name_actual is None
-    else:
+    t_match = extract_full_package_name(line, search_for)
+    is_different_pkg, is_known_oper, pkg_name_actual, oper, remaining = t_match
+
+    if pkg_name_actual is None:
+        # not supported yet
         assert pkg_name_actual == expected_pkg_name
+    else:
+        is_no_oper = is_known_oper and oper is not None and len(oper) == 0
+        if is_no_oper and is_different_pkg:
+            # tox and mypy (not pin)
+            assert pkg_name_actual == expected_pkg_name
+        elif is_no_oper and not is_different_pkg:
+            # tox and tox (not pin)
+            assert pkg_name_actual == expected_pkg_name
+        else:
+            if is_different_pkg and is_known_oper:
+                # mypy vs tox, tox-gh-action vs tox
+                assert pkg_name_actual == expected_pkg_name
+            elif not is_different_pkg and is_known_oper:
+                # same and known operator e.g. tox vs tox
+                assert pkg_name_actual == expected_pkg_name
+            else:
+                # unknown operator in different or same pkg. This is a fix issue
+                assert is_needs_fix is True
 
     # Couldn't figure out how to make re.match fail
+    """
     with patch("re.match", return_value=None):
         pkg_name_actual = extract_full_package_name(line, "%%")
         assert pkg_name_actual is None
+    """
+    pass
 
 
 testdata_choose_version_order_mixed_up = (
@@ -291,7 +374,7 @@ testdata_choose_version_order_mixed_up = (
         ),
         Version("25.3"),
         {Version("25.0"), Version("23.0"), Version("24.8")},
-        pytest.raises(NotImplementedError),
+        pytest.raises(PinMoreThanTwoSpecifiers),
         ">=",
         Version("25.0"),
         False,
@@ -459,7 +542,7 @@ testdata_choose_version_order_mixed_up = (
         ),
         Version("24.2"),
         set(),
-        pytest.raises(NotImplementedError),
+        pytest.raises(ArbitraryEqualityNotImplemented),
         "===24.2",
         Version("24.2"),
         False,

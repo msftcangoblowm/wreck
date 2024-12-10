@@ -1,0 +1,2 @@
+pip==24.2
+#    via requirements/invalid_specifier.in

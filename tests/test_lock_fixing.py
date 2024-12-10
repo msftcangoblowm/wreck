@@ -121,11 +121,98 @@ testdata_resolve_resolvable_conflicts = (
         1,
         0,
     ),
+    (
+        Path(__file__).parent.joinpath(
+            "_arbitrary_equality",
+            "invalid_operator.pyproject_toml",
+        ),
+        ".venv",
+        (),
+        (
+            Path(__file__).parent.joinpath(
+                "_arbitrary_equality",
+                "invalid_operator_0.unlock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_arbitrary_equality",
+                "invalid_operator_0.lock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_arbitrary_equality",
+                "invalid_operator_1.unlock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_arbitrary_equality",
+                "invalid_operator_1.lock",
+            ),
+        ),
+        0,
+        1,
+    ),
+    (
+        Path(__file__).parent.joinpath(
+            "_too_many_specifiers",
+            "too_many_specifiers.pyproject_toml",
+        ),
+        ".venv",
+        (),
+        (
+            Path(__file__).parent.joinpath(
+                "_too_many_specifiers",
+                "too_many_specifiers_0.unlock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_too_many_specifiers",
+                "too_many_specifiers_0.lock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_too_many_specifiers",
+                "too_many_specifiers_1.unlock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_too_many_specifiers",
+                "too_many_specifiers_1.lock",
+            ),
+        ),
+        0,
+        1,
+    ),
+    (
+        Path(__file__).parent.joinpath(
+            "_invalid_specifier",
+            "invalid_specifier.pyproject_toml",
+        ),
+        ".venv",
+        (),
+        (
+            Path(__file__).parent.joinpath(
+                "_invalid_specifier",
+                "invalid_specifier_0.unlock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_invalid_specifier",
+                "invalid_specifier_0.lock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_invalid_specifier",
+                "invalid_specifier_1.unlock",
+            ),
+            Path(__file__).parent.joinpath(
+                "_invalid_specifier",
+                "invalid_specifier_1.lock",
+            ),
+        ),
+        1,
+        0,
+    ),
 )
 ids_resolve_resolvable_conflicts = (
     "pip ge 24.2 pip lt 24.2 unresolvable conflict",
     "unsynced lock files bring into sync",
     "no package in .in conflict in .lock",
+    "invalid operator arbitrary equality",
+    "too many specifiers more than 2",
+    "invalid specifier found, line is ignored. No warning",
 )
 
 
@@ -154,6 +241,7 @@ def test_locks_before_fix(
     """Fix .locks only."""
     # pytest -vv --showlocals --log-level INFO -k "test_locks_before_fix" tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_fixing.py::test_locks_before_fix[unsynced\ lock\ files\ bring\ into\ sync]
+    # pytest -vv --showlocals --log-level INFO tests/test_lock_fixing.py::test_locks_before_fix[invalid\ specifier\ found]
     LOGGING["loggers"][g_app_name]["propagate"] = True
     logging.config.dictConfig(LOGGING)
     logger = logging.getLogger(name=g_app_name)

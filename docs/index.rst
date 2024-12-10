@@ -38,7 +38,7 @@
 
 **new in 0.2.x**
 
-compatible release operator support;
+compatible release operator support; arbitrary equality issue UnResolvable;
 
 **new in 0.1.x**
 

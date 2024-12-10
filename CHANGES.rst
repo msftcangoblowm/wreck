@@ -8,6 +8,10 @@ Changelog
    Feature request
    .................
 
+   - add support for package url
+
+   - release-drafter creating release notes on commit rather than on release
+
    - Review everywhere a subprocess occurs. Sanitize user input.
      e.g. --venv-relpath should only contain alphanumeric hyphen underscore forwardslash
      https://github.com/ultralytics/ultralytics/issues/18027#issuecomment-2521308429
@@ -18,10 +22,16 @@ Changelog
    Known regressions
    ..................
 
-   - add support for package url
+   - During ``.in`` load process, line with unknown operator (e.g. ``~~``)
+     is silently ignored (#7)
 
    Commit items for NEXT VERSION
    ..............................
+
+   - fix(pep518_venvs): missing requirements warning message provide hint
+   - fix(tox-req.ini): into allowlist_externals add entrypoint reqs
+   - fix(lock_discrepancy): extract_full_package_name known operators later regex (#7)
+   - test(lock_fixing): add test case for arbitrary equality
 
 .. scriv-start-here
 

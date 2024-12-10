@@ -489,7 +489,11 @@ class VenvMapLoader:
                     if is_not_founds:
                         msg_missing = (
                             f"For venv: {venv_relpath!s}, missing requirements: "
-                            f"{lst_not_found!r}"
+                            f"{lst_not_found!r}. "
+                            "One possibility is file name changed. "
+                            "Search for requirement relative path in "
+                            "pyproject.toml [[tool.venv]] sections or "
+                            "in requirements files"
                         )
                         lst_missing_loc.append(msg_missing)
                     else:  # pragma: no cover

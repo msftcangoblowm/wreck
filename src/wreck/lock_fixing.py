@@ -31,7 +31,11 @@ from .constants import (
     SUFFIX_UNLOCKED,
     g_app_name,
 )
-from .exceptions import MissingRequirementsFoldersFiles
+from .exceptions import (
+    ArbitraryEqualityNotImplemented,
+    MissingRequirementsFoldersFiles,
+    PinMoreThanTwoSpecifiers,
+)
 from .lock_collections import Ins
 from .lock_datum import (
     Pin,
@@ -299,13 +303,29 @@ def _load_once(
         )
         set_acceptable, lsts_specifiers, is_eq_affinity_value = t_acceptable
 
-        t_chosen = get_the_fixes(
-            set_acceptable,
-            lsts_specifiers,
-            highest,
-            is_eq_affinity_value,
-            is_ss_count_zero,
-        )
+        try:
+            t_chosen = get_the_fixes(
+                set_acceptable,
+                lsts_specifiers,
+                highest,
+                is_eq_affinity_value,
+                is_ss_count_zero,
+            )
+        except (ArbitraryEqualityNotImplemented, PinMoreThanTwoSpecifiers):
+            # unresolvable conflict --> warning
+            unresolvables.append(
+                UnResolvable(
+                    venv_relpath,
+                    pkg_name,
+                    str_pkg_qualifiers,
+                    set_ss,
+                    highest,
+                    others,
+                    set_pindatum,
+                )
+            )
+            continue
+
         assert isinstance(t_chosen, tuple)
         lock_nudge_pin, unlock_nudge_pin, is_found = t_chosen
 

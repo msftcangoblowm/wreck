@@ -35,7 +35,6 @@ from __future__ import annotations
 import io
 import logging
 import operator
-import os
 import re
 import sys
 from dataclasses import dataclass
@@ -53,6 +52,10 @@ from packaging.specifiers import (
 from packaging.version import Version
 
 from .constants import g_app_name
+from .exceptions import (
+    ArbitraryEqualityNotImplemented,
+    PinMoreThanTwoSpecifiers,
+)
 from .lock_datum import (
     DatumByPkg,
     Pin,
@@ -439,7 +442,7 @@ def filter_acceptable(
     return t_ret
 
 
-def get_compatiable_release(
+def get_compatible_release(
     highest: Version,
     lsts_specifiers: list[list[str]],
 ):
@@ -467,6 +470,8 @@ def get_compatiable_release(
     :type highest: packaging.version.Version
     :param lsts_specifiers: specifiers
     :type lsts_specifiers: list[list[str]]
+    :returns: lock and unlock nudge pins and True indicates resolvable
+    :rtype: tuple[str, str, bool]
     """
     nudge_pin_lock = nudge_pin_lock_v1(highest)
 
@@ -519,6 +524,14 @@ def get_the_fixes(
        bool False if unresolvable otherwise True
 
     :rtype: tuple[str | None, str | None, bool]
+    :raises:
+
+       - :py:exc:`wreck.exceptions.PinMoreThanTwoSpecifiers` --
+         a pin contains >2 specifiers
+
+       - :py:exc:`wreck.exceptions.ArbitraryEqualityNotImplemented` --
+         ``===`` operator not implemented
+
     """
     dotted_path = f"{g_app_name}.lock_discrepancy.get_the_fixes"
 
@@ -572,8 +585,8 @@ def get_the_fixes(
                         # ``==`` -- default unlock operator
                         continue
                     elif oper in ("~="):
-                        # (nudge_pin_lock, nudge_pin_unlock, True)
-                        t_ret_v2 = get_compatiable_release(
+                        # compatible release operator ``~=``
+                        t_ret_v2 = get_compatible_release(
                             highest,
                             lsts_specifiers,
                         )
@@ -592,13 +605,13 @@ def get_the_fixes(
                 oper_0, ver_0 = t_spec_0
                 oper_1, ver_1 = t_spec_1
 
-                # ``~=`` operator --> NotImplementedError
+                # compatible release operator ``~=``
                 two_opers = (oper_0, oper_1)
                 if "~=" in two_opers:
                     # Combine (union) all version identifiers
                     # nudge_pin_lock = nudge_pin_lock_v1(unlock_ver)
                     # nudge_pin_unlock = f"{oper_0}{ver_0!s}, {oper_1}{ver_1!s}"
-                    t_ret_v2 = get_compatiable_release(
+                    t_ret_v2 = get_compatible_release(
                         highest,
                         lsts_specifiers,
                     )
@@ -637,8 +650,12 @@ def get_the_fixes(
                         unlock_operator = oper_0
                         unlock_ver = ver_0
             else:
-                msg_warn = "A pin containing >= 2 specifiers is not supported"
-                raise NotImplementedError(msg_warn)
+                # NotImplementedError --> UnResolvable
+                msg_warn = (
+                    "A pin containing >2 specifiers is not supported "
+                    f"{lsts_specifiers}"
+                )
+                raise PinMoreThanTwoSpecifiers(msg_warn)
 
         if unlock_ver is None:
             # Take highest from amongst the acceptable versions
@@ -663,9 +680,11 @@ def get_the_fixes(
             pass
 
         specifier_len = _specifier_length(unlock_operator)
-        if specifier_len == 3 and unlock_operator == "===":
+        is_arbritrary_equality = specifier_len == 3 and unlock_operator == "==="
+        if is_arbritrary_equality:
+            # ArbitraryEqualityNotImplemented --> UnResolvable
             msg_info = f"{dotted_path} operator not implemented {unlock_operator}"
-            raise NotImplementedError(msg_info)
+            raise ArbitraryEqualityNotImplemented(msg_info)
         elif specifier_len == 2 and unlock_operator == "==":
             # unlock_ver is Non-None
             func = None
@@ -708,14 +727,12 @@ def get_the_fixes(
                 t_ret_v2 = (nudge_pin_lock, nudge_pin_unlock, True)
             else:
                 # Unresolvable
-                found = None
                 t_ret_v2 = (None, None, False)
         else:
             # ==
             nudge_pin_lock = nudge_pin_lock_v1(found)
             t_ret_v2 = (nudge_pin_lock, nudge_pin_lock, True)
 
-    # t_ret = (set_ss, unlock_operator, found)
     return t_ret_v2
 
 
@@ -883,7 +900,7 @@ class ResolvedMsg:
 
 
 def extract_full_package_name(line, pkg_name_desired):
-    """Extract first occurrence of exact package name
+    """Extract first occurrence of exact package name. Algo uses tokens, not regex.
 
     :param line:
 
@@ -892,8 +909,15 @@ def extract_full_package_name(line, pkg_name_desired):
     :type line: str
     :param pkg_name_desired: pkg name would like an exact match
     :type pkg_name_desired: str
-    :returns: pkg name If line contains exact match for package otherwise None
-    :rtype: str | None
+    :returns:
+
+       is_different_pkg -- True indicates can be either similar or different package
+       is_known_oper -- None means could not parse line. bool known/unknown operator
+       pkg -- package name. Alphanumeric hyphen underscore and period
+       oper - operator e.g. ``>=``
+       remaining -- everything following the operator
+
+    :rtype: tuple[bool, bool | None, str | None, str | None, str | None]
 
     .. seealso::
 
@@ -901,30 +925,99 @@ def extract_full_package_name(line, pkg_name_desired):
        `escape characters <https://docs.python.org/3/library/re.html#re.escape>`_
 
     """
-    mod_path = f"{g_app_name}.lock_discrepancy.extract_full_package_name"
-    pattern = r"^(\S+)(?=(==|<=|>=|<|>|~=|!=|===|@| @|@ | @ | ;|; |;| ; ))"
-    m = re.match(pattern, line)
-
-    if m is None:
-        if is_module_debug:  # pragma: no cover
-            msg_info = (
-                f"{mod_path} failed to parse pkg from line: {line}{os.linesep}"
-                f"pkg_name_desired {pkg_name_desired}"
-            )
-            _logger.info(msg_info)
+    t_tokens = (";", "@", "===", "==", "<=", ">=", "<", ">", "~=", "!=")
+    smallest_idx = None
+    smallest_token = None
+    for token in t_tokens:
+        is_in = token in line
+        if is_in:
+            idx_current = line.index(token)
+            if smallest_idx is None:
+                smallest_token = token
+                smallest_idx = idx_current
+            else:
+                if idx_current < smallest_idx:
+                    smallest_token = token
+                    smallest_idx = idx_current
+                else:  # pragma: no cover
+                    pass
         else:  # pragma: no cover
             pass
-        ret = None
+
+    if smallest_idx is not None:
+        # up to 1st known token
+        pkg = line[:smallest_idx]
+        pkg = pkg.strip()
+        oper = smallest_token
+        remaining = line[line.index(smallest_token) + len(smallest_token) :]
+        remaining = remaining.strip()
+        is_known_oper = True
     else:
-        """for debugging results of re.match. Use along with
-        logging_strict.tech_niques.get_locals"""
-        groups = m.groups(default=None)  # noqa: F841
-        group_0 = m.group(0)
-        if group_0.rstrip() == pkg_name_desired:
-            ret = group_0.rstrip()
+        # no token case
+        # pattern_pkg_only = r"^([-\w]+)\s?\b"
+        """
+
+        .. code-block:: text
+
+           pattern_pkg_only = r'^(.*)'
+           m_pkg_only = re.match(pattern_pkg_only, line)
+
+           if m_pkg_only is not None:
+               groups_pkg_only = m_pkg_only.groups()
+           else:
+               groups_pkg_only = None
+
+        """
+
+        pass
+
+        """unknown token case
+
+        There are three groups.
+
+        - one or more hyphen | word characters,
+        - maybe a space,
+        - 1-3 non-decimal characters,
+        - maybe a space,
+        - everything else
+
+        pip-requirements-parser ~~ 24.2
+        pip-requirements-parser~~24.2
+        """
+        pattern = r"^([-\w]+)\s?(\D{1,3})?\s?(.*)?"
+        m = re.match(pattern, line)
+
+        if m is not None:
+            groups = m.groups()
+            # If just a pkg name :code:`groups == ('tomli', None, '')`
+            pkg = groups[0]
+            oper = groups[1]
+            if oper is None:
+                # pkg name only
+                pkg = pkg.strip()
+                oper = ""
+                remaining = ""
+                is_known_oper = True
+            else:
+                # unsupported/unexpected token
+                pkg = pkg.strip()
+                oper = groups[1]
+                oper = oper.strip()
+                remaining = groups[2]
+                remaining = remaining.strip()
+                is_known_oper = False
         else:
-            # e.g. desired ``tox`` line contains ``tox-gh-action``
-            ret = None
+            # planned but not yet supported pattern e.g. remote URL
+            pkg = None
+            oper = None
+            remaining = None
+            is_known_oper = None
+
+    # Confirm expected term, not more
+    # tox-gh-actions not tox
+    is_different_pkg = pkg is not None and pkg != pkg_name_desired
+
+    ret = (is_different_pkg, is_known_oper, pkg, oper, remaining)
 
     return ret
 
@@ -960,28 +1053,29 @@ def write_to_file_nudge_pin(path_f, pkg_name, nudge_pin_line):
                 is_empty_line = len(line.strip()) == 0
                 is_comment = line.startswith("#")
 
-                # This would match e.g. tox and tox-gh-actions
                 # Need an exact match
-                is_pkg_startswith = line.startswith(pkg_name)
-
-                if is_pkg_startswith:
-                    pkg_actual = extract_full_package_name(line, pkg_name)
-                    if pkg_actual is None:
-                        is_pkg_not = True
-                    else:
-                        is_pkg_not = False
-                else:
-                    is_pkg_not = True
-
-                if is_empty_line or is_comment or is_pkg_not:
+                t_actual = extract_full_package_name(line, pkg_name)
+                is_different_pkg, is_known_oper, pkg, oper, remaining = t_actual
+                #    both ok
+                # is_no_oper = is_known_oper and oper is not None and len(oper) == 0
+                #    also is_known_oper is None
+                is_line_issue = pkg is None
+                if (
+                    is_empty_line
+                    or is_comment
+                    or is_line_issue
+                    or is_different_pkg
+                    or (is_known_oper is not None and is_known_oper is False)
+                ):
                     g.writelines([line])
                 else:
                     # found. Replace line rather than remove line
                     is_found = True
                     g.writelines([nudge_pin_line])
 
-        # If not replaced, append line
+        # covers cases: for-else the file is empty, no such package line found
         if not is_found:
+            # not replaced, append line
             g.writelines([nudge_pin_line])
         else:  # pragma: no cover
             pass

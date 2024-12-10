@@ -11,6 +11,7 @@ about: Create a report to help us improve
 1. Python version: `$ python -V`
 1. pip version: `$ pip --version`
 1. pip-tools version: `$ pip-compile --version`
+1. wreck version: `$ python -m pip list | grep wreck`
 
 #### Steps to replicate
 
