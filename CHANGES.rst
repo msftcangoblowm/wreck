@@ -46,9 +46,14 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - fix(pep518_venvs): venv with no reqs (#9)
-
 .. scriv-start-here
+
+.. _changes_0-2-2:
+
+Version 0.2.2 — 2024-12-14
+--------------------------
+
+- fix(pep518_venvs): venv with no reqs (#9)
 
 .. _changes_0-2-1:
 
