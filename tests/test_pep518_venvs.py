@@ -73,6 +73,7 @@ def test_venvmaploader(
     )
     path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
+    data_before_parse = loader.l_data  # noqa: F841
     venv_reqs, lst_missing = loader.parse_data()
     assert len(lst_missing) != 0
     assert len(lst_missing) == len(venv_reqs)
@@ -90,7 +91,7 @@ def test_venvmaploader(
             prep_these.append(f"{base_relpath}{suffix}")
     prepare_folders_files(prep_these, tmp_path)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
-    venv_reqs, lst_missing = loader.parse_data()
+    venv_reqs, lst_missing = loader.parse_data(check_suffixes=None)
     assert len(lst_missing) != 0
     assert len(lst_missing) != len(venv_reqs)
 
@@ -270,6 +271,7 @@ testdata_venv_get_reqs = (
             "requirements/manage",
             "requirements/dev",
         ),
+        does_not_raise(),
         8,
     ),
     (
@@ -298,17 +300,65 @@ testdata_venv_get_reqs = (
             "docs/pip-tools",
             "docs/requirements",
         ),
+        does_not_raise(),
+        2,
+    ),
+    (
+        Path(__file__).parent.joinpath(
+            "_requirements_none",
+            "requires-none.pyproject_toml",
+        ),
+        ".venv",
+        (),
+        (),
+        does_not_raise(),
+        0,
+    ),
+    (
+        Path(__file__).parent.joinpath(
+            "_requirements_none",
+            "requires-none.pyproject_toml",
+        ),
+        0.1234,
+        (),
+        (),
+        pytest.raises(TypeError),
+        0,
+    ),
+    (
+        Path(__file__).parent.joinpath(
+            "_req_files",
+            "venvs.pyproject_toml",
+        ),
+        ".doc/.venv",
+        (
+            (
+                Path(__file__).parent.parent.joinpath(
+                    "docs",
+                    "pip-tools.in",
+                ),
+                "docs/pip-tools.in",
+            ),
+        ),
+        ("docs/pip-tools",),
+        pytest.raises(MissingRequirementsFoldersFiles),
         2,
     ),
 )
 ids_venv_get_reqs = (
     "venvs.pyproject_toml .venv",
     "venvs.pyproject_toml .doc/.venv",
+    "tool.venvs section no requirements",
+    "venv_path unsupported type expected str",
+    "missing top level docs/requirement requirement file",
 )
 
 
 @pytest.mark.parametrize(
-    "path_pyproject_toml, venv_relpath, seq_reqs, base_relpaths, expected_req_file_count",
+    (
+        "path_pyproject_toml, venv_relpath, seq_reqs, base_relpaths, "
+        "expectation, expected_req_file_count"
+    ),
     testdata_venv_get_reqs,
     ids=ids_venv_get_reqs,
 )
@@ -317,6 +367,7 @@ def test_venv_get_reqs(
     venv_relpath,
     seq_reqs,
     base_relpaths,
+    expectation,
     expected_req_file_count,
     tmp_path,
     prep_pyproject_toml,
@@ -324,6 +375,7 @@ def test_venv_get_reqs(
 ):
     """Test get_reqs"""
     # pytest --showlocals --log-level INFO -k "test_venv_get_reqs" tests
+    # pytest --showlocals --log-level INFO tests/test_pep518_venvs.py::test_venv_get_reqs[tool.venvs\ section\ no\ requirements]
     # prepare
     #    pyproject.toml
     path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
@@ -342,10 +394,6 @@ def test_venv_get_reqs(
     with pytest.raises(MissingPackageBaseFolder):
         get_reqs(None, venv_path=venv_relpath, suffix_last=SUFFIX_IN)
 
-    # missing .in files
-    with pytest.raises(MissingRequirementsFoldersFiles):
-        get_reqs(loader, venv_path=venv_relpath, suffix_last=SUFFIX_IN)
-
     #    requirements empty files and folders
     suffixes = (SUFFIX_IN,)
     seq_rel_paths = []
@@ -357,6 +405,17 @@ def test_venv_get_reqs(
     #    overwrite some req relpath src --> dest e.g. 'requirements/dev.unlock'
     for t_paths in seq_reqs:
         src_abspath, dest_relpath = t_paths
+
+        # If a .shared requirement file, get abspath
+        vr = VenvReq(
+            loader.project_base,
+            venv_relpath,
+            dest_relpath,
+            ("docs", "requirements"),
+        )
+        if vr.is_req_shared:
+            vr.req_abspath
+
         abspath_dest = cast("Path", resolve_joinpath(tmp_path, dest_relpath))
         shutil.copy(src_abspath, abspath_dest)
 
@@ -365,15 +424,40 @@ def test_venv_get_reqs(
         get_reqs(loader, ".dogfood", suffix_last=SUFFIX_IN)
 
     # venv_relpath is relative path
-    abspath_reqs_a = get_reqs(loader, venv_relpath, suffix_last=SUFFIX_IN)
-    actual_req_file_count_a = len(abspath_reqs_a)
-    assert actual_req_file_count_a == expected_req_file_count
+    with expectation:
+        abspath_reqs_a = get_reqs(loader, venv_relpath, suffix_last=None)
+    if isinstance(expectation, does_not_raise):
+        actual_req_file_count_a = len(abspath_reqs_a)
+        assert actual_req_file_count_a == expected_req_file_count
 
-    # venv_relpath is absolute path
-    abspath_venv_b = cast("Path", resolve_joinpath(tmp_path, venv_relpath))
-    abspath_reqs_b = get_reqs(loader, abspath_venv_b, suffix_last=SUFFIX_IN)
-    actual_req_file_count_b = len(abspath_reqs_b)
-    assert actual_req_file_count_a == actual_req_file_count_b
+    # venv_relpath is absolute path. Otherwise continue
+    if isinstance(venv_relpath, str) or issubclass(type(venv_relpath), PurePath):
+        abspath_venv_b = cast("Path", resolve_joinpath(tmp_path, venv_relpath))
+        with expectation:
+            abspath_reqs_b = get_reqs(loader, abspath_venv_b, suffix_last=SUFFIX_IN)
+        if isinstance(expectation, does_not_raise):
+            actual_req_file_count_b = len(abspath_reqs_b)
+            assert actual_req_file_count_b == expected_req_file_count
+
+    # Call VenvMap.reqs, bypassing get_reqs multitude of checks and Exceptions
+    ignore_excs = (MissingRequirementsFoldersFiles,)
+    if isinstance(expectation, does_not_raise) or (
+        not isinstance(expectation, does_not_raise)
+        and expectation.expected_exception not in ignore_excs
+    ):
+        with expectation:
+            venvs = VenvMap(
+                loader,
+                parse_venv_relpath=venv_relpath,
+                check_suffixes=suffixes,
+            )
+            reqs = venvs.reqs(venv_relpath)
+            if isinstance(expectation, does_not_raise):
+                actual_req_file_count_c = len(reqs)
+                assert actual_req_file_count_c == expected_req_file_count
+            else:
+                # skipped which Exception?
+                exceptation_exc = expectation.expected_exception  # noqa: F841
 
 
 def test_check_venv_relpath(

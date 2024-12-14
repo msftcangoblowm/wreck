@@ -408,7 +408,12 @@ class VenvMapLoader:
             lst_missing: list[str]
             lst_missing_loc: list[str]
 
-        is_seq = check_suffixes is not None and isinstance(check_suffixes, Sequence)
+        # Sequence[str] | None
+        check_suffixes_local = fix_check_suffixes(check_suffixes)
+        if check_suffixes_local is None:
+            check_suffixes_local = (".in", ".unlock", ".lock")
+        else:  # pragma: no cover
+            pass
 
         venv_reqs = []
         lst_missing = []
@@ -433,10 +438,10 @@ class VenvMapLoader:
             for k, v in d_venv.items():
                 if k == "reqs":
                     # Check type(v) is Sequence and not one str
-                    is_nonstr_sequence = not isinstance(v, Sequence) or (
+                    is_unsupported_types = not isinstance(v, Sequence) or (
                         isinstance(v, Sequence) and isinstance(v, str)
                     )
-                    if is_nonstr_sequence:
+                    if is_unsupported_types:
                         raise ValueError(msg_exc_field_type_ng)
                     else:  # pragma: no cover
                         pass
@@ -470,42 +475,40 @@ class VenvMapLoader:
             # Check req
             lst_missing_loc = []
 
+            # Check file existence. Excludes support files
+
             for req in reqs:
                 vr = VenvReq(self.project_base, venv_relpath, req, t_relpath_folders)
 
-                # Check file existance. Excludes support files
-                if is_seq:
-                    check_these = []
-                    for check_suffix in check_suffixes:
-                        abspath_req = replace_suffixes_last(
-                            vr.req_abspath, check_suffix
-                        )
-                        check_these.append(abspath_req)
+                check_these = []
+                for check_suffix in check_suffixes_local:
+                    abspath_req = replace_suffixes_last(vr.req_abspath, check_suffix)
+                    check_these.append(abspath_req)
 
-                    lst_not_found = [
-                        path_f for path_f in check_these if not path_f.is_file()
-                    ]
-                    is_not_founds = len(lst_not_found) != 0
-                    if is_not_founds:
-                        msg_missing = (
-                            f"For venv: {venv_relpath!s}, missing requirements: "
-                            f"{lst_not_found!r}. "
-                            "One possibility is file name changed. "
-                            "Search for requirement relative path in "
-                            "pyproject.toml [[tool.venv]] sections or "
-                            "in requirements files"
-                        )
-                        lst_missing_loc.append(msg_missing)
-                    else:  # pragma: no cover
-                        pass
+                lst_not_found = [
+                    path_f for path_f in check_these if not path_f.is_file()
+                ]
+                is_not_founds = len(lst_not_found) != 0
+                if is_not_founds:
+                    msg_missing = (
+                        f"For venv: {venv_relpath!s}, missing requirements: "
+                        f"{lst_not_found!r}. "
+                        "One possibility is file name changed. "
+                        "Search for requirement relative path in "
+                        "pyproject.toml [[tool.venv]] sections or "
+                        "in requirements files"
+                    )
+                    lst_missing_loc.append(msg_missing)
                 else:  # pragma: no cover
                     pass
-
                 # Anyway store VenvReq. TOML loads func removes dups
                 venv_reqs.append(vr)
+
             lst_missing.extend(lst_missing_loc)
 
-        return venv_reqs, lst_missing
+        t_ret = venv_reqs, lst_missing
+
+        return t_ret
 
     def ensure_abspath(self, key):
         """Support key being either relative or absolute path
@@ -862,15 +865,28 @@ class VenvMap(Iterator[VenvReq]):
 
         """
         msg_exc_lookup = f"venv {key} not in [[tool.{TOML_SECTION_VENVS}]]"
-        if key not in self:
+
+        # Want both relpath and abspath
+        try:
+            abspath_key = self.ensure_abspath(key)
+        except TypeError:
+            raise
+        path_cwd = self._loader.project_base
+        relpath_key = abspath_key.relative_to(path_cwd)
+
+        # Check if venv specified. May have no associated reqs
+        t_venv_relpaths = self._loader.venv_relpaths
+        is_venv_specified = relpath_key.as_posix() in t_venv_relpaths
+        #    :code:`key not in self` removed
+        if not is_venv_specified:
+            #    venv not specified
             raise KeyError(msg_exc_lookup)
         else:  # pragma: no cover
             pass
 
-        key_abspath = self.ensure_abspath(key)
-
+        # no reqs, for this venv, is not a KeyError
         reqs = [
-            venv_req for venv_req in self._venvs if venv_req.venv_abspath == key_abspath
+            venv_req for venv_req in self._venvs if venv_req.venv_abspath == abspath_key
         ]
 
         return reqs
@@ -930,8 +946,12 @@ def get_reqs(loader, venv_path=None, suffix_last=SUFFIX_IN):
     relpath_venv = check_venv_relpath(loader, venv_path)
     venv_relpath = relpath_venv.as_posix()
 
-    check_suffixes = (suffix_last,)
-
+    # Sequence[str] | None
+    check_suffixes = fix_check_suffixes(suffix_last)
+    if check_suffixes is None:
+        check_suffixes = (SUFFIX_IN,)
+    else:  # pragma: no cover
+        pass
     venv_relpaths = loader.venv_relpaths
 
     # Ensure requirements files defined in [[tool.venvs]] reqs exists
@@ -981,4 +1001,42 @@ def get_reqs(loader, venv_path=None, suffix_last=SUFFIX_IN):
         )
         raise KeyError(msg_warn)
 
-    return tuple(set_out)
+    ret = tuple(set_out)
+
+    return ret
+
+
+def fix_check_suffixes(check_suffixes):
+    """Passthrough a Sequence[str]. Coerse str into a non str Sequence.
+    If unsupported type or None return None
+
+    :param check_suffixes: Should be a Sequence[str] or a str
+    :type check_suffixes: typing.Any
+    :returns: A non-str Sequence or None if unsupported type
+    :rtype: collections.abc.Sequence[str] | None
+    """
+
+    def is_nonstr_sequence(val):
+        """Check if a Sequence but not a str
+        :param val:
+        :type val: typing.Any
+        :returns: True is Sequence but not a str
+        :rtype: bool
+        """
+        ret = val is not None and isinstance(val, Sequence) and not isinstance(val, str)
+        return ret
+
+    is_seq_str = (
+        check_suffixes is not None
+        and isinstance(check_suffixes, Sequence)
+        and isinstance(check_suffixes, str)
+    )
+
+    if is_seq_str:
+        check_suffixes_local = (check_suffixes,)
+    elif is_nonstr_sequence(check_suffixes):
+        check_suffixes_local = check_suffixes
+    else:
+        # unsupported type, but not dealt with here
+        check_suffixes_local = None
+    return check_suffixes_local

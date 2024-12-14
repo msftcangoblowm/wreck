@@ -19,14 +19,34 @@ Changelog
 
    - remove module wreck.lock_infile and support via functools.singledispatch
 
+   - reqs fix
+     Skip write if file has same sha512 signature
+
+   - tox-req.ini has two targets: base and docs. lock+fix of prod.shared.lock
+     gets different results. The difference only affects presence/absence
+     of a comment. target docs is unaware of setuptools-scm.
+
+     For target docs, do not save prod.shared.lock?
+     Add option, ``--skip-write='[requirements relpath]'``
+     Allow option usage multiple times
+     Skip these:
+     requirements/pins-cffi.unlock
+     requirements/prod.shared.lock
+
    Known regressions
    ..................
 
    - During ``.in`` load process, line with unknown operator (e.g. ``~~``)
      is silently ignored (#7)
 
+   - venv_path is assumed to be a relative path. What if it's outside of the
+     package folder tree? Then assumption relative to package base folder
+     becomes incorrect
+
    Commit items for NEXT VERSION
    ..............................
+
+   - fix(pep518_venvs): venv with no reqs (#9)
 
 .. scriv-start-here
 
