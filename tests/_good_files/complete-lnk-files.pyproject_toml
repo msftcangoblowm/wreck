@@ -22,11 +22,9 @@ authors = [  # Contact by mastodon please
 ]
 
 [tool.setuptools.dynamic]
-# @@@ editable little_shop_of_horrors_shrine_candles
 dependencies = { file = ['requirements/prod.shared.lnk'] }
 optional-dependencies.pip = { file = ['requirements/pip.lnk'] }
 optional-dependencies.manage = { file = ['requirements/manage.lnk'] }
-# @@@ end
 
 version = {attr = 'complete_awesome_perfect._version.__version__'}
 
@@ -36,17 +34,13 @@ include = ["complete_awesome_perfect*"]
 
 [tool.drain-swamp]
 copyright_start_year = 2024
-
 # Legacy. Obsoleted by tool.venvs
-[tool.pipenv-unlock]
 version_file = 'src/complete_awesome_perfect/_version.py'
 folders = [
     'ci',
 ]
-
 required = { target = "prod", relative_path = 'requirements/prod.shared.in' }
-
-# underscore: hyphen
+#    underscore: hyphen
 optionals = [
     { target = "pip", relative_path = 'requirements/pip.in' },
     { target = "manage", relative_path = 'requirements/manage.in' },

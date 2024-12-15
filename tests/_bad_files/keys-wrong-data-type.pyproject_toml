@@ -18,19 +18,17 @@ dynamic = [
 ]
 
 [tool.setuptools.dynamic]
-# @@@ editable little_shop_of_horrors_shrine_candles
 dependencies = { file = ['requirements/prod.shared.lock'] }
 optional-dependencies.pip = { file = ['requirements/pip.lock'] }
 optional-dependencies.pip_tools = { file = ['requirements/pip-tools.lock'] }
 optional-dependencies.dev = { file = ['requirements/dev.lock'] }
 optional-dependencies.manage = { file = ['requirements/manage.lock'] }
 optional-dependencies.docs = { file = ['docs/requirements.lock'] }
-# @@@ end
 
 version = {attr = 'wreck._version.__version__'}
 
 # Legacy. Obsoleted by tool.venvs
-[tool.pipenv-unlock]
+[tool.drain-swamp]
 required = 4
 optionals = 4
 

@@ -16,7 +16,7 @@ missing, raises :py:exc:`LookupError`.
 
 - tool_name (str -> str | Sequence[str])
   from "setuptools-scm"
-  to ["drain-swamp", "pipenv-unlock"]
+  to ["drain-swamp"]
 
 - the tool_name becomes the first element
 
@@ -135,7 +135,7 @@ class ReadPyprojectBase(abc.ABC):
     def __call__(
         self,
         path=Path("pyproject.toml"),
-        tool_name=["drain-swamp", "pipenv-unlock"],
+        tool_name=["drain-swamp"],
         require_section=True,
         key_name: str | None = None,
         is_expect_list: bool = False,
@@ -149,7 +149,7 @@ class ReadPyprojectBase(abc.ABC):
         :type path: pathlib.Path
         :param tool_name:
 
-           Default ["drain-swamp", "pipenv-unlock"]. ``pyproject.toml``
+           Default ``["drain-swamp"]``. ``pyproject.toml``
            sections name or section name. First section name **MUST** be the package name
 
         :type tool_name: str | Sequence[str]

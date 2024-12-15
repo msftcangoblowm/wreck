@@ -72,7 +72,7 @@ testdata_read_pyproject_normal = (
         "drain-swamp",
     ),
     (
-        ("drain-swamp", "pipenv-unlock"),
+        ("drain-swamp",),
         Path(__file__).parent.joinpath(
             "_good_files",
             "complete-manage-pip-prod-unlock.pyproject_toml",
@@ -145,20 +145,22 @@ testdata_read_pyproject_copyright_and_version = (
         ),
         pytest.raises(LookupError),
         False,
-        False,
+        True,
     ),
     (
-        "pipenv-unlock",
+        "drain-swamp",
         Path(__file__).parent.joinpath(
             "_good_files",
             "complete-manage-pip-prod-unlock.pyproject_toml",
         ),
         does_not_raise(),
         True,
-        False,
+        True,
     ),
     (
-        ["drain-swamp", "pipenv-unlock"],
+        [
+            "drain-swamp",
+        ],
         Path(__file__).parent.joinpath(
             "_good_files",
             "complete-manage-pip-prod-unlock.pyproject_toml",
@@ -199,7 +201,7 @@ def test_read_pyproject_copyright_and_version(
         keys = data_1.section.keys()
         #    from section drain-swamp
         assert in_keys_copyright == ("copyright_start_year" in keys)
-        #    from section pipenv-unlock
+        #    from section drain-swamp
         assert in_keys_version_file == ("version_file" in keys)
 
 

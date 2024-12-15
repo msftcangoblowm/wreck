@@ -32,14 +32,12 @@ optional-dependencies.docs = { file = ['docs/requirements.lock'] }
 version = {attr = 'wreck._version.__version__'}
 
 # Legacy. Obsoleted by tool.venvs
-[tool.pipenv-unlock]
+[tool.drain-swamp]
 folders = [
     'ci',
 ]
-
 required = { target = "prod", relative_path = 'requirements/prod.in' }
-
-# underscore: hyphen
+#    underscore: hyphen
 optionals = [
     { target = "pip", relative_path = 'requirements/pip.in' },
     { target = "pip_tools", relative_path = 'requirements/pip-tools.in' },

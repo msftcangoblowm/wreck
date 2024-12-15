@@ -46,6 +46,8 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - fix: pyproject.toml section pipenv-unlock (#10)
+
 .. scriv-start-here
 
 .. _changes_0-2-2:
