@@ -13,8 +13,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import os
 import sys
 
@@ -25,20 +23,15 @@ from wreck._safe_path import (
     is_win,
     resolve_path,
 )
-from wreck.constants import (
-    LOGGING,
-    g_app_name,
-)
+from wreck.constants import g_app_name
 
 
-def test_run_cmd(tmp_path, prepare_folders_files, caplog, has_logging_occurred):
+@pytest.mark.logging_package_name(g_app_name)
+def test_run_cmd(tmp_path, prepare_folders_files, logging_strict):
     """Test run_cmd."""
     # pytest --showlocals --log-level INFO -k "test_run_cmd" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # expecting Sequence
     cwd = tmp_path

@@ -65,7 +65,7 @@ jobs:
         path: '${{ runner.temp }}'
 
     - name: Trans jobs artifact -- upload
-      uses: actions/upload-artifact@v4.4.3
+      uses: actions/upload-artifact@v4.5.0
       with:
           name: config-settings-toml-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
           path: '${{ env.DS_CONFIG_SETTINGS }}'
@@ -147,14 +147,14 @@ jobs:
         python -m coverage xml --fail-under=95
 
     - name: "Upload to Codecov"
-      uses: codecov/codecov-action@v5.1.1
+      uses: codecov/codecov-action@v5.1.2
       with:
         name: unittest-py${{ matrix.python-version }}
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: msftcangoblowm/wreck
         os: linux
         flags: unittests
-        file: ./coverage.xml
+        files: ./coverage.xml
         env_vars: OS,PYTHON
         fail_ci_if_error: true
         verbose: true

@@ -21,6 +21,11 @@ import traceback
 from pathlib import Path
 
 import click
+from logging_strict import (
+    LoggingState,
+    ui_yaml_curated,
+    worker_yaml_curated,
+)
 
 # pep366 ...
 # https://stackoverflow.com/a/34155199
@@ -77,10 +82,7 @@ else:
 
 # pep366 ...done
 
-from .constants import (
-    LOGGING,
-    g_app_name,
-)
+from .constants import g_app_name
 from .exceptions import MissingRequirementsFoldersFiles
 from .lock_collections import unlock_compile
 from .lock_compile import (
@@ -348,8 +350,21 @@ def requirements_fix_v2(
     dotted_path = f"{g_app_name}.cli_dependencies.dependencies_lock"
 
     # Need flag to better control logging
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
+    #    LOGGING["loggers"][g_app_name]["propagate"] = True
+    #    logging.config.dictConfig(LOGGING)
+    _genre = "mp"
+    _flavor = "asz"
+    #    may raise strictyaml.YAMLValidationError
+    if LoggingState().is_state_app:
+        fcn = ui_yaml_curated
+    else:
+        fcn = worker_yaml_curated
+    fcn(
+        _genre,
+        _flavor,
+        logger_package_name=g_app_name,
+        package_start_relative_folder="configs",
+    )
 
     try:
         loader = VenvMapLoader(str_path)

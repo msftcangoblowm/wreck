@@ -13,8 +13,6 @@ Unittest for entrypoint, cli_dependencies
 
 """
 
-import logging
-import logging.config
 import shutil
 import sys
 import traceback
@@ -33,7 +31,6 @@ from wreck.cli_dependencies import (
     requirements_unlock,
 )
 from wreck.constants import (
-    LOGGING,
     SUFFIX_IN,
     g_app_name,
 )
@@ -94,6 +91,7 @@ ids_venvmap_loader_exceptions = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "fcn, path_pyproject_toml, venv_path, seq_in, expected_exit_code",
     test_data_venvmap_loader_exceptions,
@@ -105,17 +103,14 @@ def test_venvmap_loader_exceptions(
     venv_path,
     seq_in,
     expected_exit_code,
-    caplog,
     tmp_path,
     prep_pyproject_toml,
+    logging_strict,
 ):
     """Test VenvMapLoader exceptions 3 and 4."""
     # pytest -vv --showlocals --log-level INFO -k "test_venvmap_loader_exceptions" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:
@@ -202,6 +197,7 @@ ids_lock_unlock_docs_venv = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "fcn, path_pyproject_toml, venv_path, seq_in, expected_exit_code",
     testdata_lock_unlock_docs_venv,
@@ -214,21 +210,18 @@ def test_lock_unlock_docs_venv(
     tmp_path,
     seq_in,
     expected_exit_code,
-    caplog,
     prep_pyproject_toml,
     prepare_folders_files,
     path_project_base,
+    logging_strict,
 ):
     """Test dependency lock and unlock."""
     # pytest -vv --showlocals --log-level INFO -k "test_lock_unlock_docs_venv" -v tests
     # pytest --showlocals tests/test_cli_dependencies.py::test_lock_unlock_docs_venv[lock\ for\ drain-swamp\ and\ docs]
     # python [path to project base]src/wreck/cli_dependencies.py unlock --path=[tmp path folder] --venv-relpath='.doc/.venv'
     # python [path to project base]src/wreck/cli_dependencies.py unlock --path=[tmp path folder]
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:
@@ -336,6 +329,7 @@ ids_lock_unlock_and_back_wo_prepare = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "func, path_pyproject_toml, venv_path, expected_exit_code",
     testdata_lock_unlock_and_back_wo_prepare,
@@ -348,16 +342,12 @@ def test_lock_unlock_and_back_wo_prepare(
     expected_exit_code,
     tmp_path,
     prep_pyproject_toml,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """Test dependency lock and unlock without prepare."""
     # pytest --showlocals --log-level INFO -k "test_lock_unlock_and_back_wo_prepare" -v tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:
@@ -424,6 +414,7 @@ ids_lock_unlock_compile_with_prepare = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "func, path_pyproject_toml, venv_path, is_prep_pyproject_toml, is_prep_files, expected_exit_code",
     testdata_lock_unlock_compile_with_prepare,
@@ -440,16 +431,12 @@ def test_lock_unlock_compile_with_prepare(
     prep_pyproject_toml,
     path_project_base,
     prepare_folders_files,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """Test dependency lock and unlock with prepare."""
     # pytest -v --showlocals --log-level INFO -k "test_lock_unlock_compile_with_prepare" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     path_cwd = path_project_base()
 
@@ -544,6 +531,7 @@ ids_lock_compile_requires_pip_tools = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "fcn, path_pyproject_toml, venv_path, seqs_reqs, expected_exit_code",
     testdata_lock_compile_requires_pip_tools,
@@ -557,16 +545,13 @@ def test_lock_compile_requires_pip_tools(
     expected_exit_code,
     tmp_path,
     prep_pyproject_toml,
-    caplog,
     path_project_base,
+    logging_strict,
 ):
     """Test lock_compile install pip-tools 5"""
     # pytest -vv --showlocals --log-level INFO -k "test_lock_compile_requires_pip_tools" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     path_cwd = path_project_base()
 
@@ -656,6 +641,7 @@ ids_lock_compile_valueerror = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "fcn, path_pyproject_toml, venv_path, seqs_reqs, expected_exit_code",
     testdata_lock_compile_valueerror,
@@ -669,15 +655,12 @@ def test_lock_compile_valueerror(
     expected_exit_code,
     tmp_path,
     prep_pyproject_toml,
-    caplog,
+    logging_strict,
 ):
     """Test lock_compile ValueError 8"""
     # pytest -vv --showlocals --log-level INFO -k "test_lock_compile_valueerror" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:

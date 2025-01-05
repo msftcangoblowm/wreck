@@ -11,8 +11,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
 
@@ -22,10 +20,7 @@ from packaging.specifiers import InvalidSpecifier
 from packaging.version import Version
 
 from wreck._safe_path import resolve_joinpath
-from wreck.constants import (
-    LOGGING,
-    g_app_name,
-)
+from wreck.constants import g_app_name
 from wreck.exceptions import (
     ArbitraryEqualityNotImplemented,
     PinMoreThanTwoSpecifiers,
@@ -145,6 +140,7 @@ ids_extract_full_package_name = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "line, search_for, expected_pkg_name, is_needs_fix",
     testdata_extract_full_package_name,
@@ -155,16 +151,13 @@ def test_extract_full_package_name(
     search_for,
     expected_pkg_name,
     is_needs_fix,
-    caplog,
+    logging_strict,
 ):
     """For a particular package, check line is an exact match."""
     # pytest -vv --showlocals --log-level INFO -k "test_extract_full_package_name" tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_discrepancy.py::test_extract_full_package_name[unrelated\ package]
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     func_path = f"{g_app_name}.lock_discrepancy.extract_full_package_name"
     args = (line, search_for)
@@ -634,6 +627,7 @@ ids_choose_version_order_mixed_up = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
         "pkg_name, seq_file_0, seq_file_1, highest, others, expectation, "
@@ -653,15 +647,12 @@ def test_choose_version_order_mixed_up(
     found_expected,
     is_found_expected,
     tmp_path,
-    caplog,
+    logging_strict,
 ):
     """Have versions in others out of order."""
     # pytest -vv --showlocals --log-level INFO -k "test_choose_version_order_mixed_up" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     f_relpath_0, line_0, specifiers_0, qualifiers_0 = seq_file_0
     f_relpath_1, line_1, specifiers_1, qualifiers_1 = seq_file_1

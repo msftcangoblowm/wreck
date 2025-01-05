@@ -44,7 +44,7 @@ jobs:
         python_version: '3.9'
 
     - name: "Download artifact"
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v4.1.8
       with:
         name: config-settings-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
         path: '${{ runner.temp }}'
@@ -83,7 +83,7 @@ jobs:
         python -m build
 
     - name: Store the distribution packages
-      uses: actions/upload-artifact@v4.4.3
+      uses: actions/upload-artifact@v4.5.0
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
@@ -103,7 +103,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+      uses: actions/download-artifact@v4.1.8
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
@@ -133,12 +133,12 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+      uses: actions/download-artifact@v4.1.8
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
     - name: Sign the dists with Sigstore
-      uses: sigstore/gh-action-sigstore-python@f514d46b907ebcd5bedc05145c03b69c1edd8b46 # v3.0.0
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
       with:
         inputs: >-
           ./dist/*.tar.gz
@@ -178,7 +178,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+      uses: actions/download-artifact@v4.1.8
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}

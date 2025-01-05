@@ -1,3 +1,7 @@
+appdirs==1.4.4
+    # via logging-strict
+attrs==24.3.0
+    # via logging-strict
 build==1.2.2.post1
     # via pip-tools
 click==8.1.7
@@ -8,6 +12,8 @@ importlib-metadata==8.5.0
     # via
     #   -r requirements/prod.in
     #   build
+logging-strict==1.4.2
+    # via -r requirements/prod.in
 packaging==24.2
     # via
     #   -r requirements/prod.in
@@ -23,10 +29,21 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
+python-dateutil==2.9.0.post0
+    # via
+    #   logging-strict
+    #   strictyaml
+six==1.17.0
+    # via python-dateutil
+strictyaml==1.7.3
+    # via logging-strict
 tomli==2.2.1
     # via
     #   build
+    #   logging-strict
     #   pip-tools
+typing-extensions==4.12.2
+    # via logging-strict
 wheel==0.45.1
     # via pip-tools
 zipp==3.21.0

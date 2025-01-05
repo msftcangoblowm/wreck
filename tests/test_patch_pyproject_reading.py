@@ -11,8 +11,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import sys
 from contextlib import nullcontext as does_not_raise
 from pathlib import (
@@ -22,10 +20,7 @@ from pathlib import (
 
 import pytest
 
-from wreck.constants import (
-    LOGGING,
-    g_app_name,
-)
+from wreck.constants import g_app_name
 from wreck.monkey.patch_pyproject_reading import (
     PyProjectData,
     ReadPyproject,
@@ -300,6 +295,7 @@ ids_toml_array_of_tables = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     ("toml_contents, tool_name, key_name, expection, " "expected_section_items_count"),
     testdata_toml_array_of_tables,
@@ -312,16 +308,12 @@ def test_toml_array_of_tables(
     expection,
     expected_section_items_count,
     tmp_path,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """Support list[dict]"""
     # pytest --showlocals -vv --log-level INFO -k "test_toml_array_of_tables" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # prepare
     #    Normally files are copied, not contents written

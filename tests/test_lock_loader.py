@@ -11,8 +11,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import shutil
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
@@ -24,7 +22,6 @@ from pip_requirements_parser import InstallationError
 
 from wreck._safe_path import resolve_joinpath
 from wreck.constants import (
-    LOGGING,
     SUFFIX_IN,
     SUFFIX_LOCKED,
     SUFFIX_UNLOCKED,
@@ -112,6 +109,7 @@ ids_loader_pindatum = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "path_config, venv_path, seq_reqs, bases_relpath",
     testdata_loader_pindatum,
@@ -125,15 +123,12 @@ def test_loader_pindatum(
     tmp_path,
     prep_pyproject_toml,
     prepare_folders_files,
-    caplog,
+    logging_strict,
 ):
     """test FilePins."""
     # pytest -vv --showlocals --log-level INFO -k "test_loader_pindatum" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # prepare
     #    pyproject.toml or [something].pyproject_toml

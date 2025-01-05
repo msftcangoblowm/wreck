@@ -11,8 +11,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import operator
 from collections.abc import Sequence
 from contextlib import nullcontext as does_not_raise
@@ -26,7 +24,6 @@ import pytest
 
 from wreck._safe_path import resolve_joinpath
 from wreck.constants import (
-    LOGGING,
     SUFFIX_IN,
     SUFFIX_LOCKED,
     SUFFIX_UNLOCKED,
@@ -146,6 +143,7 @@ ids_pindatum_realistic = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "path_config, venv_path, bases_relpath",
     testdata_pindatum_realistic,
@@ -158,15 +156,12 @@ def test_pindatum_realistic(
     tmp_path,
     prep_pyproject_toml,
     prepare_folders_files,
-    caplog,
+    logging_strict,
 ):
     """test FilePins."""
     # pytest -vv --showlocals --log-level INFO -k "test_pindatum_realistic" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # prepare
     #    pyproject.toml or [something].pyproject_toml

@@ -1,6 +1,6 @@
 appdirs==1.4.4
     # via logging-strict
-attrs==24.2.0
+attrs==24.3.0
     # via logging-strict
 backports-tarfile==1.2.0
     # via jaraco-context
@@ -68,8 +68,10 @@ jeepney==0.8.0
     #   secretstorage
 keyring==25.5.0
     # via twine
-logging-strict==1.3.6
-    # via -r requirements/dev.in
+logging-strict==1.4.2
+    # via
+    #   -r requirements/prod.in
+    #   pytest-logging-strict
 markdown-it-py==3.0.0
     # via rich
 mccabe==0.7.0
@@ -132,9 +134,12 @@ pytest==8.3.3
     # via
     #   -r requirements/dev.in
     #   pytest-datadir
+    #   pytest-logging-strict
     #   pytest-regressions
 pytest-datadir==1.5.0
     # via pytest-regressions
+pytest-logging-strict==0.1.0.post1
+    # via -r requirements/dev.in
 pytest-regressions==2.5.0
     # via -r requirements/dev.in
 python-dateutil==2.9.0.post0
@@ -159,10 +164,12 @@ rich==13.9.4
     #   twine
 secretstorage==3.3.3
     # via keyring
-six==1.16.0
+six==1.17.0
     # via python-dateutil
 strictyaml==1.7.3
-    # via logging-strict
+    # via
+    #   logging-strict
+    #   pytest-logging-strict
 tomli==2.2.1 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
@@ -184,6 +191,7 @@ typing-extensions==4.12.2 ; python_version < "3.10"
     #   black
     #   logging-strict
     #   mypy
+    #   pytest-logging-strict
     #   rich
 urllib3==2.2.3
     # via

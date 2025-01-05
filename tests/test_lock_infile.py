@@ -13,8 +13,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import operator
 import shutil
 from collections.abc import Sequence
@@ -31,10 +29,7 @@ from wreck._safe_path import (
     fix_relpath,
     resolve_joinpath,
 )
-from wreck.constants import (
-    LOGGING,
-    g_app_name,
-)
+from wreck.constants import g_app_name
 from wreck.exceptions import MissingRequirementsFoldersFiles
 from wreck.lock_datum import InFileType
 from wreck.lock_infile import (
@@ -114,6 +109,7 @@ ids_resolve_one_iteration = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "relpath_files, expected_unresolved",
     testdata_resolve_one_iteration,
@@ -124,16 +120,12 @@ def test_resolve_one_iteration(
     expected_unresolved,
     path_project_base,
     tmp_path,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """Does one loop iteration. Unresolved constraints are expected"""
     # pytest -vv --showlocals --log-level INFO -k "test_resolve_one_iteration" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     path_cwd = path_project_base()
 
@@ -208,6 +200,7 @@ ids_resolve_loop = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "relpath_files, expectation",
     testdata_resolve_loop,
@@ -217,16 +210,12 @@ def test_resolve_loop(
     relpath_files,
     expectation,
     path_project_base,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """Resolve constraints raising error is unresolvable constraints."""
     # pytest --showlocals --log-level INFO -k "test_resolve_loop" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     assert isinstance(relpath_files, Sequence)
 
@@ -400,6 +389,7 @@ testdata_methods_infiles = (
 ids_methods_infiles = ("resolvable requirements constraints",)
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "relpath_files",
     testdata_methods_infiles,
@@ -408,16 +398,12 @@ ids_methods_infiles = ("resolvable requirements constraints",)
 def test_methods_infiles(
     relpath_files,
     path_project_base,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """Verify InFiles methods."""
     # pytest --showlocals --log-level INFO -k "test_methods_infiles" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     assert isinstance(relpath_files, Sequence)
 
@@ -464,8 +450,6 @@ def test_methods_infiles(
         check_for = fix_relpath("requirements/goose-meat.in")
         in_ = files.get_by_relpath(check_for, set_name=checks_files)
         assert in_ is None
-    # assert has_logging_occurred(caplog)
-    pass
 
 
 def test_infiletype():
@@ -519,6 +503,7 @@ ids_infiles_write = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
         "abspath_ins, abspath_outs, support_relpaths, dest_relpath, "
@@ -537,17 +522,13 @@ def test_infiles_write(
     path_project_base,
     prep_pyproject_toml,
     tmp_path,
-    caplog,
+    logging_strict,
 ):
     """Convert .in --> .unlock file(s)."""
     # pytest --showlocals --log-level INFO -k "test_infiles_write" tests
     # pytest --showlocals tests/test_lock_infile.py::test_infiles_write[create\ only\ manage.unlock]
-
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     path_cwd = path_project_base()
 
@@ -613,19 +594,17 @@ testdata_infile_sort = (
 ids_infile_sort = ("requirements files from multiple folders",)
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "relpaths, expected_order",
     testdata_infile_sort,
     ids=ids_infile_sort,
 )
-def test_infile_sort(relpaths, expected_order, tmp_path, caplog):
+def test_infile_sort(relpaths, expected_order, tmp_path, logging_strict):
     """On InFile, test built-in function sorted."""
     # pytest --showlocals --log-level INFO -k "test_infile_sort" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # Compares hash(stem, relpath)
     in_a = InFile("docs/pip-tools.in", "pip-tools")

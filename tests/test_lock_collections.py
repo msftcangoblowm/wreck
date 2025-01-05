@@ -11,8 +11,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import shutil
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
@@ -22,7 +20,6 @@ import pytest
 
 from wreck._safe_path import resolve_joinpath
 from wreck.constants import (
-    LOGGING,
     SUFFIX_IN,
     SUFFIX_LOCKED,
     g_app_name,
@@ -209,6 +206,7 @@ ids_ins_realistic = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
         "path_config, venv_path, seq_reqs_primary, seq_reqs_support, "
@@ -227,16 +225,12 @@ def test_ins_realistic(
     tmp_path,
     prep_pyproject_toml,
     prepare_folders_files,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """test wreck.lock_collections.Ins"""
     # pytest -vv --showlocals --log-level INFO -k "test_ins_realistic" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # prepare
     #    pyproject.toml or [something].pyproject_toml

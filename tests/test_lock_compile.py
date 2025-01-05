@@ -11,8 +11,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import os
 import shutil
 from collections.abc import Generator
@@ -31,10 +29,7 @@ from wreck._safe_path import (
     resolve_joinpath,
     resolve_path,
 )
-from wreck.constants import (
-    LOGGING,
-    g_app_name,
-)
+from wreck.constants import g_app_name
 from wreck.exceptions import MissingRequirementsFoldersFiles
 from wreck.lock_compile import (
     _compile_one,
@@ -400,6 +395,7 @@ ids_lock_compile_live = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.xfail(
     not is_package_installed("pip-tools"),
     reason="dependency package pip-tools is required",
@@ -420,16 +416,12 @@ def test_lock_compile_live(
     path_project_base,
     prep_pyproject_toml,
     prepare_folders_files,
-    caplog,
-    has_logging_occurred,
+    logging_strict,
 ):
     """Test lock_compile. Bypass applied for empty .in file, unlike _compile_one."""
     # pytest -vv --showlocals --log-level INFO -k "test_lock_compile_live" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     path_cwd = path_project_base()
     # prepare

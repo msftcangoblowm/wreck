@@ -20,6 +20,10 @@ from wreck._safe_path import resolve_path
 
 from .wd_wrapper import WorkDir
 
+pytest_plugins = [
+    "logging_strict",
+]
+
 
 class FileRegression:
     """Compare previous runs files.
@@ -114,16 +118,13 @@ def has_logging_occurred():
     .. code-block: text
 
        import pytest
-       import logging
-       import logging.config
-       from wreck.constants import g_app_name, LOGGING
+       from wreck.constants import g_app_name
 
-       def test_something(caplog, has_logging_occurred):
-           LOGGING['loggers'][g_app_name]['propagate'] = True
-           logging.config.dictConfig(LOGGING)
-           logger = logging.getLogger(name=g_app_name)
-           logger.addHandler(hdlr=caplog.handler)
-           caplog.handler.level = logger.level
+       @pytest.mark.logging_package_name(g_app_name)
+       def test_something(logging_strict, caplog, has_logging_occurred):
+           t_two = logging_strict()
+           logger, loggers = t_two
+
            assert has_logging_occurred(caplog)
 
     .. seealso::

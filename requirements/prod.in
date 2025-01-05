@@ -18,3 +18,5 @@ pip-requirements-parser
 
 # wreck._package_installed
 importlib-metadata>=8.5.0
+
+logging-strict

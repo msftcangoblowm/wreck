@@ -11,8 +11,6 @@ Unit test -- Module
 
 """
 
-import logging
-import logging.config
 import shutil
 from collections.abc import Sequence  # noqa: F401
 from pathlib import Path
@@ -21,7 +19,6 @@ import pytest
 from logging_strict.tech_niques import get_locals  # noqa: F401
 
 from wreck.constants import (
-    LOGGING,
     SUFFIX_IN,
     SUFFIX_LOCKED,
     g_app_name,
@@ -216,6 +213,7 @@ ids_resolve_resolvable_conflicts = (
 )
 
 
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
         "path_pyproject_toml, venv_path, base_relpaths, "
@@ -233,20 +231,16 @@ def test_locks_before_fix(
     expected_resolvable_count,
     expected_unresolvable_count,
     tmp_path,
-    caplog,
-    has_logging_occurred,
     prepare_folders_files,
     prep_pyproject_toml,
+    logging_strict,
 ):
     """Fix .locks only."""
     # pytest -vv --showlocals --log-level INFO -k "test_locks_before_fix" tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_fixing.py::test_locks_before_fix[unsynced\ lock\ files\ bring\ into\ sync]
     # pytest -vv --showlocals --log-level INFO tests/test_lock_fixing.py::test_locks_before_fix[invalid\ specifier\ found]
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # prepare
     #    pyproject.toml
@@ -347,10 +341,8 @@ def test_locks_before_fix(
         suffixes=None,
     )
 
-    # assert has_logging_occurred(caplog)
-    pass
 
-
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
         "path_pyproject_toml, venv_path, base_relpaths, "
@@ -368,18 +360,14 @@ def test_fix_requirements_lock(
     expected_resolvable_count,
     expected_unresolvable_count,
     tmp_path,
-    caplog,
-    has_logging_occurred,
     prepare_folders_files,
     prep_pyproject_toml,
+    logging_strict,
 ):
     """Test fix_requirements_lock"""
     # pytest -vv --showlocals --log-level INFO -k "test_fix_requirements_lock" tests
-    LOGGING["loggers"][g_app_name]["propagate"] = True
-    logging.config.dictConfig(LOGGING)
-    logger = logging.getLogger(name=g_app_name)
-    logger.addHandler(hdlr=caplog.handler)
-    caplog.handler.level = logger.level
+    t_two = logging_strict()
+    logger, loggers = t_two
 
     # prepare
     #    pyproject.toml
