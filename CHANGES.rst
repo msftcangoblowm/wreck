@@ -46,14 +46,26 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - refactor(cli_dependencies): add logging-strict support (#14)
-   - tests: use pytest fixture logging_strict from package pytest-logging-strict (#14)
-   - refactor: add dependency logging-strict
-   - refactor(dev.in): add dependency pytest-logging-strict
-   - refactor: remove hard coded logging config dict from wreck.constants.LOGGING (#14)
-   - ci: bump action versions
-
 .. scriv-start-here
+
+.. _changes_0-2-4:
+
+Version 0.2.4 — 2025-01-05
+--------------------------
+
+- refactor(cli_dependencies): add logging-strict support (#14)
+- tests: use pytest fixture logging_strict from package pytest-logging-strict (#14)
+- refactor: add dependency logging-strict
+- refactor(dev.in): add dependency pytest-logging-strict
+- refactor: remove hard coded logging config dict from wreck.constants.LOGGING (#14)
+- ci: bump action versions
+
+.. _changes_0-2-3:
+
+Version 0.2.3 — 2024-12-15
+--------------------------
+
+- fix: pyproject.toml section pipenv-unlock (#10)
 
 .. _changes_0-2-2:
 

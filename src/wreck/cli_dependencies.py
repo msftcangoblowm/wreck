@@ -14,7 +14,6 @@ source code, as long has has required dependencies installed
 """
 
 import logging
-import logging.config
 import os
 import sys
 import traceback
