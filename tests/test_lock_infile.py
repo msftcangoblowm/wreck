@@ -86,6 +86,7 @@ testdata_resolve_one_iteration = (
             Path("requirements/tox.in"),
             Path("requirements/prod.in"),
             Path("requirements/pins.shared.in"),
+            Path("requirements/pins-virtualenv-cve-2024-53899.in"),
         ),
         1,
     ),
@@ -488,12 +489,13 @@ testdata_infiles_write = (
         (
             "requirements/pins.shared.in",
             "requirements/pins-cffi.in",
+            "requirements/pins-virtualenv-cve-2024-53899.in",
             "requirements/prod.in",
             "requirements/tox.in",
         ),
         "requirements",
         does_not_raise(),
-        4,
+        5,
     ),
 )
 ids_infiles_write = (
