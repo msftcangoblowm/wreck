@@ -95,6 +95,12 @@ reqs = [
     'docs/requirements',
 ]
 
+[[tool.venvs]]
+venv_base_path = '.rst2html5'
+reqs = [
+    'requirements/rst2html5',
+]
+
 [tool.pip-tools]
 no_header = true
 resolver = "backtracking"

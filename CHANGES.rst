@@ -46,6 +46,11 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - fix(tox): rm dir build/lib/ before tox. coverage report avoid remnants
+   - ci: separate rst2html5 and Sphinx jobs
+   - tox: separate venv and target for rst2html5 and Sphinx
+   - chore: bump dependencies
+
 .. scriv-start-here
 
 .. _changes_0-2-4:

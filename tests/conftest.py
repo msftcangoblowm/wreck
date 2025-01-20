@@ -25,6 +25,12 @@ pytest_plugins = [
 ]
 
 
+def pytest_addoption(parser: pytest.Parser):
+    """Add cli options"""
+    # parser.addoption("--nonloc", action="store_true", help="Include nonlocal tests")
+    pass
+
+
 class FileRegression:
     """Compare previous runs files.
 

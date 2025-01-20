@@ -1,0 +1,2 @@
+# include by -r, not -c
+types-setuptools>=75.8.0.20250110

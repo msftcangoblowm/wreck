@@ -1,8 +1,6 @@
 click
 importlib-metadata>=8.5.0
-logging-strict
+logging-strict>=1.5.0
 packaging
 pip-requirements-parser
 pip-tools
-attrs>=24.3.0
-six>=1.17.0

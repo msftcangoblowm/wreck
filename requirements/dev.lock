@@ -12,7 +12,7 @@ blackdoc==0.3.9
     # via -r requirements/dev.in
 build==1.2.2.post1
     # via pip-tools
-certifi==2024.8.30
+certifi==2024.12.14
     # via requests
 cffi==1.17.1
     # via
@@ -20,12 +20,12 @@ cffi==1.17.1
     #   cryptography
 charset-normalizer==3.4.0
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   -r requirements/prod.in
     #   black
     #   pip-tools
-coverage==7.6.8
+coverage==7.6.10
     # via -r requirements/dev.in
 cryptography==44.0.0
     # via secretstorage
@@ -33,7 +33,7 @@ docutils==0.21.2
     # via readme-renderer
 exceptiongroup==1.2.2
     # via pytest
-fastjsonschema==2.21.0
+fastjsonschema==2.21.1
     # via validate-pyproject
 flake8==7.1.1
     # via
@@ -68,8 +68,9 @@ jeepney==0.8.0
     #   secretstorage
 keyring==25.5.0
     # via twine
-logging-strict==1.4.2
+logging-strict==1.5.0
     # via
+    #   -r requirements/dev.in
     #   -r requirements/prod.in
     #   pytest-logging-strict
 markdown-it-py==3.0.0
@@ -78,12 +79,12 @@ mccabe==0.7.0
     # via flake8
 mdurl==0.1.2
     # via markdown-it-py
-more-itertools==10.5.0
+more-itertools==10.6.0
     # via
     #   blackdoc
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.13.0
+mypy==1.14.1
     # via -r requirements/dev.in
 mypy-extensions==1.0.0
     # via
@@ -120,7 +121,7 @@ pyflakes==3.2.0
     # via
     #   flake8
     #   flake8-pyi
-pygments==2.18.0
+pygments==2.19.1
     # via
     #   readme-renderer
     #   rich
@@ -130,7 +131,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==8.3.3
+pytest==8.3.4
     # via
     #   -r requirements/dev.in
     #   pytest-datadir
@@ -138,7 +139,7 @@ pytest==8.3.3
     #   pytest-regressions
 pytest-datadir==1.5.0
     # via pytest-regressions
-pytest-logging-strict==0.1.0.post1
+pytest-logging-strict==0.2.0
     # via -r requirements/dev.in
 pytest-regressions==2.5.0
     # via -r requirements/dev.in
@@ -183,9 +184,9 @@ tomli==2.2.1 ; python_version < "3.11"
     #   pytest
 twine==5.1.1
     # via -r requirements/dev.in
-types-setuptools==75.6.0.20241126
-    # via -r requirements/dev.in
-typing-extensions==4.12.2 ; python_version < "3.10"
+types-setuptools==75.8.0.20250110
+    # via -r requirements/pins-typing.in
+typing-extensions==4.12.2 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   black
@@ -207,5 +208,5 @@ zipp==3.21.0
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.3.1
     # via pip-tools
-setuptools==75.6.0
+setuptools==75.8.0
     # via pip-tools

@@ -22,14 +22,14 @@ pyproject-hooks==1.2.0
     #   pip-tools
 requests==2.32.3
     # via get-pypi-latest-version
-six==1.16.0
+six==1.17.0
     # via html5lib
 tomli==2.2.1 ; python_version < "3.11"
     # via
     #   -c docs/../requirements/pins.shared.in
     #   build
     #   pip-tools
-urllib3==2.2.3
+urllib3==2.3.0
     # via requests
 webencodings==0.5.1
     # via html5lib

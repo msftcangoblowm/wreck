@@ -4,6 +4,6 @@
 # called by tox.ini [testenv:mypy]
 
 -c pins.shared.in
+-r pins-typing.in
 
 mypy
-types-setuptools

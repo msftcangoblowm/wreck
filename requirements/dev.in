@@ -4,6 +4,7 @@
 -c pins.shared.in
 -c pins-cffi.in
 -r prod.in
+-r pins-typing.in
 
 black
 blackdoc
@@ -11,11 +12,11 @@ isort
 flake8
 flake8-pyi
 flake8-pyproject
+logging-strict>=1.5.0  # registry implementation
 mypy
 coverage
 twine
 validate-pyproject
 pytest>=7.1
-pytest-logging-strict
+pytest-logging-strict>=0.2.0  # registry implementation
 pytest-regressions
-types-setuptools

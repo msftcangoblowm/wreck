@@ -246,7 +246,10 @@ def test_ins_realistic(
     loader = VenvMapLoader(path_dest_config.as_posix())
 
     #    requirements empty files and folders; no .unlock or .lock files
-    seq_rel_paths = ("requirements/pins.shared.in",)
+    seq_rel_paths = (
+        "requirements/pins.shared.in",
+        "requirements/pins-typing.in",
+    )
     prepare_folders_files(seq_rel_paths, tmp_path)
 
     #    requirements empty files and folders

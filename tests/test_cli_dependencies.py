@@ -274,6 +274,7 @@ def test_lock_unlock_docs_venv(
             "requirements/manage.in",
             "docs/pip-tools.in",
             "requirements/pins.shared.in",
+            "requirements/pins-typing.in",
         ]
         prepare_folders_files(seq_in_supplamental, path_tmp_dir)
         for relpath_f in seq_in_supplamental:

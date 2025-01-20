@@ -6,7 +6,7 @@ Module _safe_path deals with platform related path issues
 Unit test -- Module
 
 .. code-block:: shell
-
+test_get_venv_python_abspath
    python -m coverage run --source='wreck._safe_path' -m pytest \
    --showlocals tests/test_safe_path.py && coverage report \
    --data-file=.coverage --include="**/_safe_path.py"
@@ -163,6 +163,8 @@ def test_get_venv_python_abspath(
     # pytest --showlocals --log-level INFO -k "test_get_venv_python_abspath" tests
     path_cwd = path_project_base()
 
+    is_skip_real_venv_check = ('.rst2html5',)
+
     # FileNotFoundError (pyproject.toml) or LookupError (section tool.venvs)
     expectation = does_not_raise()
     with expectation:
@@ -188,13 +190,15 @@ def test_get_venv_python_abspath(
                 )
                 pytest.skip(reason)
             else:
-                venv_python_executable_abspath = Path(abspath_venv_python_executable)
-                # TODO: test has executable permission
-                is_file = (
-                    venv_python_executable_abspath.exists()
-                    and venv_python_executable_abspath.is_file()
-                )
-                assert is_file is True
+                # is real venv check -- skip if used only from tox
+                if venv_relpath not in is_skip_real_venv_check:
+                    venv_python_executable_abspath = Path(abspath_venv_python_executable)
+                    # TODO: test has executable permission
+                    is_file = (
+                        venv_python_executable_abspath.exists()
+                        and venv_python_executable_abspath.is_file()
+                    )
+                    assert is_file is True
 
         # Force a NotADirectoryError
         venv_relpath = resolve_joinpath(
