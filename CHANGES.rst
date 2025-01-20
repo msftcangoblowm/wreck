@@ -46,6 +46,7 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - fix(requirements): add nudge pin for package virtualenv to mitigate CVE-2024-53899
    - fix(tox): rm dir build/lib/ before tox. coverage report avoid remnants
    - ci: separate rst2html5 and Sphinx jobs
    - tox: separate venv and target for rst2html5 and Sphinx

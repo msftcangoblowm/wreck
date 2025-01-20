@@ -163,7 +163,7 @@ def test_get_venv_python_abspath(
     # pytest --showlocals --log-level INFO -k "test_get_venv_python_abspath" tests
     path_cwd = path_project_base()
 
-    is_skip_real_venv_check = ('.rst2html5',)
+    is_skip_real_venv_check = (".rst2html5",)
 
     # FileNotFoundError (pyproject.toml) or LookupError (section tool.venvs)
     expectation = does_not_raise()
@@ -192,7 +192,9 @@ def test_get_venv_python_abspath(
             else:
                 # is real venv check -- skip if used only from tox
                 if venv_relpath not in is_skip_real_venv_check:
-                    venv_python_executable_abspath = Path(abspath_venv_python_executable)
+                    venv_python_executable_abspath = Path(
+                        abspath_venv_python_executable
+                    )
                     # TODO: test has executable permission
                     is_file = (
                         venv_python_executable_abspath.exists()

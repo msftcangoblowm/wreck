@@ -38,4 +38,6 @@ typing-extensions==4.12.2 ; python_version < "3.11"
     #   -c requirements/pins.shared.in
     #   tox
 virtualenv==20.29.0
-    # via tox
+    # via
+    #   -c requirements/pins-virtualenv-cve-2024-53899.in
+    #   tox

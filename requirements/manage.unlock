@@ -8,3 +8,4 @@ pip-tools
 pre-commit
 tomli>=2.0.2; python_version<"3.11"
 typing-extensions; python_version<"3.11"
+virtualenv>=20.26.6

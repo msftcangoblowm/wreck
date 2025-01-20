@@ -12,11 +12,13 @@ isort
 flake8
 flake8-pyi
 flake8-pyproject
-logging-strict>=1.5.0  # registry implementation
+# registry implementation
+logging-strict>=1.5.0
 mypy
 coverage
 twine
 validate-pyproject
 pytest>=7.1
-pytest-logging-strict>=0.2.0  # registry implementation
+# registry implementation
+pytest-logging-strict>=0.2.0
 pytest-regressions

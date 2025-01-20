@@ -90,6 +90,7 @@ typing-extensions==4.12.2 ; python_version < "3.11"
     #   tox
 virtualenv==20.29.0
     # via
+    #   -c requirements/pins-virtualenv-cve-2024-53899.in
     #   pre-commit
     #   tox
 wheel==0.45.1
