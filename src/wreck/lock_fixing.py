@@ -601,7 +601,8 @@ class Fixing:
 
             if is_module_debug:  # pragma: no cover
                 msg_info = (
-                    f"(in .unlock){os.linesep}fixed {fixed_issues}{os.linesep}"
+                    f"{dotted_path} (in .unlock){os.linesep}fixed "
+                    f"{fixed_issues}{os.linesep}"
                     f"shared issues {applies_to_shared}"
                 )
                 _logger.info(msg_info)

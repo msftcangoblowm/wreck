@@ -362,3 +362,129 @@ def test_ins_realistic(
         #    Would fix the unlock files using knowledge gleened from
         #    .lock pin version discrepancies
         pass
+
+
+testdata_duplicate_lines = (
+    (
+        Path(__file__).parent.joinpath(
+            "_duplicate_line",
+            "prod_and_dev.pyproject_toml",
+        ),
+        ".venv",
+        (
+            (
+                Path(__file__).parent.joinpath(
+                    "_duplicate_line",
+                    "dev.in",
+                ),
+                "requirements/dev.in",
+            ),
+            (
+                Path(__file__).parent.joinpath(
+                    "_duplicate_line",
+                    "prod.in",
+                ),
+                "requirements/prod.in",
+            ),
+        ),
+        (
+            (
+                Path(__file__).parent.joinpath(
+                    "_duplicate_line",
+                    "dev.unlock",
+                ),
+                "requirements/dev.unlock",
+            ),
+        ),
+        "logging-strict>=1.5.0",
+        1,
+    ),
+)
+ids_duplicate_lines = ("in dev.unlock expect one line not two",)
+
+
+@pytest.mark.parametrize(
+    (
+        "path_config, venv_path, seq_reqs_primary, seq_reqs_support, "
+        "pattern, num_lines_expected"
+    ),
+    testdata_duplicate_lines,
+    ids=ids_duplicate_lines,
+)
+@pytest.mark.logging_package_name(g_app_name)
+def test_duplicate_lines(
+    path_config,
+    venv_path,
+    seq_reqs_primary,
+    seq_reqs_support,
+    pattern,
+    num_lines_expected,
+    tmp_path,
+    prep_pyproject_toml,
+    prepare_folders_files,
+):
+    """Verify .unlock duplicate lines removed.
+
+    **Could not reproduce the cause**, instead
+
+    - start with a ``dev.unlock`` with duplicate lines
+
+    - Read the dev.unlock
+
+    - write it out
+
+    .. seealso::
+
+       ``tests/_duplicate_line/README.rst``
+
+    """
+    # pytest -vv --showlocals --log-level INFO -k "test_duplicate_lines" tests
+    # prepare
+    #    pyproject.toml or [something].pyproject_toml
+    path_dest_config = prep_pyproject_toml(path_config, tmp_path)
+
+    #    venv folders must exist. This fixture creates files. So .python-version
+    venvs_path = (
+        ".venv/.python-version",
+        "requirements/README.rst",
+    )
+    prepare_folders_files(venvs_path, tmp_path)
+
+    #    secondary support files
+    is_first = True
+    for t_paths in seq_reqs_support:
+        src_abspath, dest_relpath = t_paths
+
+        #    overwrite 'requirements/dev.in'
+        abspath_dest = cast("Path", resolve_joinpath(tmp_path, dest_relpath))
+
+        if is_first:
+            is_first = False
+            abspath_dest_0 = abspath_dest
+
+        shutil.copy(src_abspath, abspath_dest)
+
+    # primary .in files
+    for t_paths in seq_reqs_primary:
+        src_abspath, dest_relpath = t_paths
+
+        #    overwrite 'requirements/dev.in'
+        abspath_dest = cast("Path", resolve_joinpath(tmp_path, dest_relpath))
+
+        shutil.copy(src_abspath, abspath_dest)
+
+    expectation = does_not_raise()
+    with expectation:
+        loader = VenvMapLoader(path_dest_config.as_posix())
+        ins = Ins(loader, venv_path)
+        ins.load(suffix_last=None)
+    if isinstance(expectation, does_not_raise):
+        gen = ins.write()
+        list(gen)
+
+        # Verify
+        #    dev.unlock line count -- only lines matching pattern
+        num_lines_actual = sum(
+            1 for line in abspath_dest_0.open() if line.strip() == pattern
+        )
+        assert num_lines_actual == num_lines_expected

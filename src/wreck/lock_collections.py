@@ -799,7 +799,7 @@ class Ins(Collection[FilePins]):
                     lst_reqs_unsorted.append(package_line)
 
                 # reqs --> sorted --> file contents
-                lst_reqs_alphabetical = sorted(lst_reqs_unsorted)
+                lst_reqs_alphabetical = sorted(set(lst_reqs_unsorted))
                 contents = sep.join(lst_reqs_alphabetical)
                 is_has_contents = len(contents.strip()) != 0
                 if is_has_contents:

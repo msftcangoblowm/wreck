@@ -46,6 +46,9 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - feat: add reqs fix --verbose option
+   - refactor(cli_dependencies): use logging strict registry API
+   - fix: ensure .unlock have no duplicate lines (#15)
    - tests: fix tests after introduce additional dependency file
    - fix(requirements): add nudge pin for package virtualenv to mitigate CVE-2024-53899
    - fix(tox): rm dir build/lib/ before tox. coverage report avoid remnants

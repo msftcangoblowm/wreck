@@ -14,17 +14,20 @@ source code, as long has has required dependencies installed
 """
 
 import logging
+import logging.config
 import os
 import sys
 import traceback
 from pathlib import Path
 
 import click
+import strictyaml as s
 from logging_strict import (
+    LoggingConfigCategory,
     LoggingState,
-    ui_yaml_curated,
-    worker_yaml_curated,
 )
+from logging_strict.logging_yaml_validate import validate_yaml_dirty
+from logging_strict.register_config import ExtractorLoggingConfig
 
 # pep366 ...
 # https://stackoverflow.com/a/34155199
@@ -91,8 +94,10 @@ from .lock_compile import (
 from .lock_fixing import fix_requirements_lock
 from .pep518_venvs import VenvMapLoader
 
+# Use package logger, not module logger
 is_module_debug = True
-_logger = logging.getLogger(f"{g_app_name}.cli_dependencies")
+g_logger_dotted_path = g_app_name
+_logger = logging.getLogger(g_logger_dotted_path)
 
 # taken from pyproject.toml
 entrypoint_name = "reqs"  # noqa: F401
@@ -108,6 +113,7 @@ help_show_fixed = "Show fixed dependency issues"
 help_show_resolvable_shared = (
     "Show shared resolvable dependency conflicts. Needs manual intervention"
 )
+help_verbose = "For main logger, increase logging granularity"
 
 EPILOG_FIX_V2 = """
 EXIT CODES
@@ -133,6 +139,8 @@ EXIT CODES
 9 -- No such venv found
 
 10 -- timeout occurred. Check web connection
+
+11 -- YAML validation unsuccessful for either registry or logging config YAML file
 
 """
 
@@ -169,12 +177,13 @@ def present_results(
     show_resolvable_shared,
 ):
     """Present results groups by venv."""
+    dotted_path = f"{g_app_name}.cli_dependencies.present_results"
     resolved_msgs_count = len(msgs_for_venv)
     unresolvables_count = len(unresolvables_for_venv)
     applies_to_shared_count = len(applies_to_shared_for_venv)
 
     msg_info = (
-        f"unresolvables_count {unresolvables_count} "
+        f"{dotted_path} unresolvables_count {unresolvables_count} "
         f"{show_unresolvables}{os.linesep}"
         f"applies_to_shared_count {applies_to_shared_count} "
         f"{show_resolvable_shared}{os.linesep}"
@@ -272,6 +281,12 @@ def main():
     help=help_show_resolvable_shared,
     is_flag=True,
 )
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help=help_verbose,
+)
 def requirements_fix_v2(
     path,
     venv_relpath,
@@ -279,6 +294,7 @@ def requirements_fix_v2(
     show_unresolvables,
     show_fixed,
     show_resolvable_shared,
+    verbose,
 ):
     """Lock dependencies creates (``*.lock``) files
 
@@ -345,25 +361,54 @@ def requirements_fix_v2(
 
     :type show_resolvable_shared: bool
     """
+    global _logger
     str_path = path.as_posix()
     dotted_path = f"{g_app_name}.cli_dependencies.dependencies_lock"
 
-    # Need flag to better control logging
-    #    LOGGING["loggers"][g_app_name]["propagate"] = True
-    #    logging.config.dictConfig(LOGGING)
     _genre = "mp"
     _flavor = "asz"
     #    may raise strictyaml.YAMLValidationError
-    if LoggingState().is_state_app:
-        fcn = ui_yaml_curated
+    if LoggingState().is_state_app:  # pragma: no cover
+        """loading app logging config without having dependency installed
+        would cause side effect --> ImportError"""
+        cat = LoggingConfigCategory.UI
     else:
-        fcn = worker_yaml_curated
-    fcn(
-        _genre,
-        _flavor,
-        logger_package_name=g_app_name,
-        package_start_relative_folder="configs",
-    )
+        # normal case
+        cat = LoggingConfigCategory.WORKER
+    elc = ExtractorLoggingConfig(g_app_name)
+    try:
+        # may raise strictyaml.YAMLValidationError
+        elc.get_db()
+
+        elc.query_db(
+            cat,
+            genre=_genre,
+            flavor=_flavor,
+            logger_package_name=g_app_name,
+        )
+
+        if elc.logging_config_yaml_str is not None:
+            # may raise strictyaml.YAMLValidationError
+            yaml_config = validate_yaml_dirty(elc.logging_config_yaml_str)
+            d_config = yaml_config.data
+            # In tests, to skip applying logging config, patch this
+            logging.config.dictConfig(d_config)
+        else:  # pragma: no cover
+            pass
+    except s.YAMLValidationError as exc:
+        click.secho(str(exc), fg="red", err=True)
+        sys.exit(11)
+
+    is_increase_logging_verbosity = verbose > 0
+    if is_increase_logging_verbosity:
+        """Take logging level from package (not set for module).
+        To reduce side effects surface area, alter logger for module, not package
+        """
+        # logger_mod_this = logging.getLogger(g_logger_dotted_path)
+        log_level = max(logging.DEBUG, _logger.level - verbose * 10)
+        _logger.setLevel(log_level)
+    else:  # pragma: no cover
+        pass
 
     try:
         loader = VenvMapLoader(str_path)
