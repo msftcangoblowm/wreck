@@ -36,14 +36,14 @@
 
 \* Python 3.9 through 3.13, PyPy
 
+**new in 0.3.x**
+
+pyproject.toml tool.wreck section; tool.wreck.create_pins_unlock config option;
+
 **new in 0.2.x**
 
 compatible release operator support; arbitrary equality issue UnResolvable;
 add logging-strict and pytest-logging-strict support;
-
-**new in 0.1.x**
-
-fork portion of drain-swamp;
 
 .. raw:: html
 

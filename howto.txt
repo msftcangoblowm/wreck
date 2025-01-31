@@ -7,32 +7,19 @@
   $ git branch -D [branch name]
 - Check that the current virtualenv is activated and matches the current branch
 - Sanitize a semantic version str
-  $ python src/drain_swamp/cli_igor.py pretag "1.0.0"
+  Not using drain-swamp or igor.py Manually update.
 - Check current version. Do not use, `python setup.py --version`
   Initial version, manually edit _version.py
-  $ [means to initialize _version.py needed]
-  or for pre-release or post-release development versions
-  $ python src/drain_swamp/cli_igor.py current
   If not in dev mode,  in venv, update ``[prog name]._version.py`` as needed
 - What would the next version be?
-  Do not use if initial version like, ``v1.0.1-1-g3893340``
-  $ python src/drain_swamp/cli_igor.py cheats --kind="tag"
-  or
-  $ python src/drain_swamp/cli_igor.py cheats --kind="current"
+  Not using drain-swamp or igor.py Manually update.
 - start branch for release work
     $ make relbranch
 - Edit supported Python version numbers. Search for "PYVERSIONS".
     - README.rst
     - docs/index.rst
 - Update sphinx conf.py CHANGES.rst, and NOTICE.txt with release facts. Supply "next version":
-    Seed CHANGES.rst
-    $ python src/drain_swamp/cli_igor.py seed
-    Edit CHANGES.rst, NOTICE.txt and docs/conf.py
-    $ python src/drain_swamp/cli_igor.py edits --kind="1.0.0"
-    or
-    $ python src/drain_swamp/cli_igor.py edits --kind="current"
-    If doc?/conf.py snippet has a snippet id
-    $ python src/drain_swamp/cli_igor.py edits --kind="1.0.0" --snip="snippet_id"
+    Not using drain-swamp or igor.py Manually update.
 - Look over CHANGES.rst
   Takes time. Rewrite commit messages to be accessible by normies. Rewrite it again.
 - Update README.rst

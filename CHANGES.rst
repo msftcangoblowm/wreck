@@ -46,24 +46,27 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - docs: fix dup use noindex exclude VenvMapLoader.section_parent
-   - refactor(MANIFEST.in): categorize what to include into tarball
-   - refactor(Makefile): separate GNU Make standard targets
-   - fix: for reqs fix if yaml validation errors exit code 11
-   - fix: tool.venvs normalize to tool.wreck.venvs
-   - feat: add config section tool.wreck
-   - feat: add config option tool.wreck.create_pins_unlock default true (#16)
-   - feat: add reqs fix --verbose option
-   - refactor(cli_dependencies): use logging strict registry API
-   - fix: ensure .unlock have no duplicate lines (#15)
-   - tests: fix tests after introduce additional dependency file
-   - fix(requirements): add nudge pin for package virtualenv to mitigate CVE-2024-53899
-   - fix(tox): rm dir build/lib/ before tox. coverage report avoid remnants
-   - ci: separate rst2html5 and Sphinx jobs
-   - tox: separate venv and target for rst2html5 and Sphinx
-   - chore: bump dependencies
-
 .. scriv-start-here
+
+.. _changes_0-3-0:
+
+Version 0.3.0 — 2025-01-31
+--------------------------
+
+- refactor(MANIFEST.in): categorize what to include into tarball
+- refactor(Makefile): separate GNU Make standard targets
+- fix: for reqs fix if yaml validation errors exit code 11
+- fix: tool.venvs normalize to tool.wreck.venvs
+- feat: add config section tool.wreck
+- feat: add config option tool.wreck.create_pins_unlock default true (#16)
+- feat: add reqs fix --verbose option
+- refactor(cli_dependencies): use logging strict registry API
+- fix: ensure .unlock have no duplicate lines (#15)
+- tests: fix tests after introduce additional dependency file
+- fix(requirements): add nudge pin for package virtualenv to mitigate CVE-2024-53899
+- fix(tox): rm dir build/lib/ before tox. coverage report avoid remnants
+- ci: separate rst2html5 and Sphinx jobs
+- tox: separate venv and target for rst2html5 and Sphinx
 
 .. _changes_0-2-4:
 
