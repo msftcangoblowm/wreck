@@ -3,7 +3,7 @@ reqs fix
 
 From .in files, creates .lock, .unlock files and fix both.
 
-In ``pyproject.toml``, references ``[[tool.venvs]]`` sections one for each venv
+In ``pyproject.toml``, references ``[[tool.wreck.venvs]]`` sections one for each venv
 
 - Syncs multiple runs of :command:`pip-compile`
 
@@ -49,7 +49,7 @@ Excerpt from ``pyproject.toml``
 
    version = {attr = "[your package]._version.__version__"}
 
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.venv'
    reqs = [
        'requirements/dev',
@@ -62,7 +62,7 @@ Excerpt from ``pyproject.toml``
        'requirements/tox',
    ]
 
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.doc/.venv'
    reqs = [
        'docs/requirements',

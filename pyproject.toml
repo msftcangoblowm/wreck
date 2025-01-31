@@ -74,7 +74,10 @@ copyright_start_year = 2024
 # Each venv relative path is predetermined
 # Into which venv goes which requirements is predetermined
 # TOML format, paths **must be** single quoted
-[[tool.venvs]]
+[tool.wreck]
+create_pins_unlock = false
+
+[[tool.wreck.venvs]]
 venv_base_path = '.venv'
 reqs = [
     'requirements/dev',
@@ -87,7 +90,7 @@ reqs = [
     'requirements/tox',
 ]
 
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.doc/.venv'
 reqs = [
     'requirements/prod',
@@ -95,7 +98,7 @@ reqs = [
     'docs/requirements',
 ]
 
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.rst2html5'
 reqs = [
     'requirements/rst2html5',

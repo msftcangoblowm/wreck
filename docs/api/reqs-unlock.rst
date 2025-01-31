@@ -46,7 +46,7 @@ Excerpt from ``pyproject.toml``
 
    version = {attr = "[your package]._version.__version__"}
 
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.venv'
    reqs = [
        'requirements/dev',
@@ -59,7 +59,7 @@ Excerpt from ``pyproject.toml``
        'requirements/tox',
    ]
 
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.doc/.venv'
    reqs = [
        'docs/requirements',
@@ -75,13 +75,13 @@ Exit codes
 
 3 -- path given for config file reverse search cannot find a pyproject.toml file
 
-4 -- pyproject.toml config file parse issue. Expecting [[tool.venvs]] sections
+4 -- pyproject.toml config file parse issue. Expecting [[tool.wreck.venvs]] sections
 
 6 -- Missing some .in files. Support file(s) not checked
 
 7 -- venv base folder does not exist. Create it
 
-8 -- expecting [[tool.venvs]] field reqs to be a sequence
+8 -- expecting [[tool.wreck.venvs]] field reqs to be a sequence
 
 9 -- No such venv found
 

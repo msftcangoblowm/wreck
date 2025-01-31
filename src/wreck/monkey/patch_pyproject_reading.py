@@ -48,6 +48,7 @@ missing, raises :py:exc:`LookupError`.
 from __future__ import annotations
 
 import abc
+import copy
 import logging
 from collections.abc import (
     Mapping,
@@ -56,6 +57,7 @@ from collections.abc import (
 from pathlib import Path
 from typing import NamedTuple
 
+from ..check_type import is_ok
 from ..constants import g_app_name
 from .pyproject_reading import (
     TOML_RESULT,
@@ -82,12 +84,18 @@ class PyProjectData(NamedTuple):
     :vartype project: wreck.monkey.pyproject_reading.TOML_RESULT
     :cvar section: Section contents
     :vartype section: wreck.monkey.pyproject_reading.TOML_RESULT | collections.abc.Sequence[wreck.monkey.pyproject_reading.TOML_RESULT]
+    :cvar section_parent:
+
+       Read only and scalars only. Get configuration options from parent section
+
+    :vartype section_parent: wreck.monkey.pyproject_reading.TOML_RESULT
     """
 
     path: Path
     tool_name: str
     project: TOML_RESULT
     section: TOML_RESULT | Sequence[TOML_RESULT]
+    section_parent: TOML_RESULT
 
     @property
     def project_name(self):
@@ -209,12 +217,37 @@ class ReadPyprojectBase(abc.ABC):
         # Combine sections
         # Was preventing extending setuptools_scm
         d_section: TOML_RESULT = {}
+        d_section_parent: TOML_RESULT = {}
         lst_section: Sequence[TOML_RESULT] = []
         is_section_dict = False
         is_section_list = False
-        for tool_name in seq_tool:
+        # multiple tool -- do not get section_parent
+        is_single_tool = len(seq_tool) == 1
+        # remove tool_name that is: not a str, or empty string or just whitespace
+        seq_tool_clean = [tool_name for tool_name in seq_tool if is_ok(tool_name)]
+        for tool_name in seq_tool_clean:
             try:
-                section = defn.get("tool", {})[tool_name]
+                name_keys = tool_name.split(".")
+                section = {}
+                for idx, key in enumerate(name_keys):
+                    is_section_first = idx == 0
+
+                    if is_section_first:
+                        # no period. e.g. 'wreck'. Implies 'tool.wreck' or first period
+                        # Does not have a parent section
+                        section = defn.get("tool", {})[key]
+                    else:
+                        # Subsequent periods
+                        #    get section parent
+                        if is_single_tool:
+                            d_section_cpy = copy.deepcopy(section)
+                            d_section_cpy.pop(key, None)
+                            d_section_parent = d_section_cpy
+                        else:  # pragma: no cover
+                            pass
+                        #    get section
+                        section = section.get(key, {})
+
             except (KeyError, LookupError) as e:
                 error = f"{path} does not contain a tool.{tool_name} section"
                 msg_warn = f"toml section missing {error!r}"
@@ -238,35 +271,42 @@ class ReadPyprojectBase(abc.ABC):
                 if isinstance(section, Mapping) and not is_expect_list:
                     self.update(d_section, section)
                     is_section_dict = True
-                elif isinstance(section, Sequence) and is_key_name_ok:
+                elif isinstance(section, Sequence):
                     is_section_list = True
-                    for d_item in section:
-                        if is_module_debug:  # pragma: no cover
-                            msg_info = f"In {mod_path}, call update(before) {d_item}"
-                            log.info(msg_info)
-                        else:  # pragma: no cover
-                            pass
-
-                        self.update(
-                            lst_section,
-                            d_item,
-                            key_name=key_name,
-                            key_value=d_item[key_name],
-                        )
-
-                        if is_module_debug:  # pragma: no cover
-                            msg_info = (
-                                f"In {mod_path}, call update(after) {lst_section}"
-                            )
-                            log.info(msg_info)
-                        else:  # pragma: no cover
-                            pass
-
-                    if is_module_debug:  # pragma: no cover
-                        msg_info = f"In {mod_path}, finally {lst_section}"
-                        log.info(msg_info)
-                    else:  # pragma: no cover
+                    if not is_key_name_ok:
+                        # No key provided. Update will not occur
                         pass
+                    else:
+                        # Key provided. Update key/value pair
+                        for d_item in section:
+                            if is_module_debug:  # pragma: no cover
+                                msg_info = (
+                                    f"In {mod_path}, call update(before) {d_item}"
+                                )
+                                log.info(msg_info)
+                            else:  # pragma: no cover
+                                pass
+
+                            self.update(
+                                lst_section,
+                                d_item,
+                                key_name=key_name,
+                                key_value=d_item[key_name],
+                            )
+
+                            if is_module_debug:  # pragma: no cover
+                                msg_info = (
+                                    f"In {mod_path}, call update(after) {lst_section}"
+                                )
+                                log.info(msg_info)
+                            else:  # pragma: no cover
+                                pass
+
+                        if is_module_debug:  # pragma: no cover
+                            msg_info = f"In {mod_path}, finally {lst_section}"
+                            log.info(msg_info)
+                        else:  # pragma: no cover
+                            pass
                 else:  # pragma: no cover
                     pass
 
@@ -289,7 +329,7 @@ class ReadPyprojectBase(abc.ABC):
         else:
             section_mixed = lst_section
 
-        ret = PyProjectData(path, tool_name_2, project, section_mixed)
+        ret = PyProjectData(path, tool_name_2, project, section_mixed, d_section_parent)
 
         return ret
 

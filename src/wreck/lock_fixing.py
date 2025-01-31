@@ -512,7 +512,7 @@ class Fixing:
 
        - :py:exc:`NotADirectoryError` -- there is no cooresponding venv folder. Create it
 
-       - :py:exc:`ValueError` -- expecting [[tool.venvs]] field reqs should be a
+       - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs should be a
          list of relative path without .in .unlock or .lock suffix
 
        - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
@@ -705,7 +705,7 @@ def fix_requirements_lock(loader, venv_relpath, is_dry_run=False):
 
     :param loader: Contains some paths and loaded unparsed mappings
     :type loader: wreck.pep518_venvs.VenvMapLoader
-    :param venv_relpath: venv relative path is a key. To choose a tools.venvs.req
+    :param venv_relpath: venv relative path is a key. To choose a tools.wreck.venvs.req
     :type venv_relpath: str
     :param is_dry_run:
 
@@ -723,7 +723,7 @@ def fix_requirements_lock(loader, venv_relpath, is_dry_run=False):
 
        - :py:exc:`NotADirectoryError` -- there is no cooresponding venv folder. Create it
 
-       - :py:exc:`ValueError` -- expecting [[tool.venvs]] field reqs should be a
+       - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs should be a
          list of relative path without .in .unlock or .lock suffix
 
        - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --

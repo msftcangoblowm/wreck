@@ -89,7 +89,7 @@ def test_get_path_cwd_normal(
 
     # prepare
     """    using wreck pyproject.toml which definitely exists and
-    contains [[tool.venvs]] sections. No need to copy a pyproject.toml
+    contains [[tool.wreck.venvs]] sections. No need to copy a pyproject.toml
     into tmp_path"""
     pass
 
@@ -169,7 +169,7 @@ def test_pindatum_realistic(
     #    Careful path must be a str
     loader = VenvMapLoader(path_dest_config.as_posix())
 
-    #    venv folder must exist. other [[tool.venvs]] venv folders need not exist
+    #    venv folder must exist. other [[tool.wreck.venvs]] venv folders need not exist
     venvs_path = (Path(venv_path).joinpath(".python-version"),)
     prepare_folders_files(venvs_path, tmp_path)
 

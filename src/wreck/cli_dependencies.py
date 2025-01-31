@@ -126,7 +126,7 @@ EXIT CODES
 
 3 -- path given for config file reverse search cannot find a pyproject.toml file
 
-4 -- pyproject.toml config file parse issue. Expecting [[tool.venvs]] sections
+4 -- pyproject.toml config file parse issue. Expecting [[tool.wreck.venvs]] sections
 
 5 -- package pip-tools is required to lock package dependencies. Install it
 
@@ -134,7 +134,7 @@ EXIT CODES
 
 7 -- venv base folder does not exist. Create it
 
-8 -- expecting [[tool.venvs]] field reqs to be a sequence
+8 -- expecting [[tool.wreck.venvs]] field reqs to be a sequence
 
 9 -- No such venv found
 
@@ -153,13 +153,13 @@ EXIT CODES
 
 3 -- path given for config file reverse search cannot find a pyproject.toml file
 
-4 -- pyproject.toml config file parse issue. Expecting [[tool.venvs]] sections
+4 -- pyproject.toml config file parse issue. Expecting [[tool.wreck.venvs]] sections
 
 6 -- Missing some .in files. Support file(s) not checked
 
 7 -- venv base folder does not exist. Create it
 
-8 -- expecting [[tool.venvs]] field reqs to be a sequence
+8 -- expecting [[tool.wreck.venvs]] field reqs to be a sequence
 
 9 -- No such venv found
 
@@ -422,7 +422,9 @@ def requirements_fix_v2(
         click.secho(msg_exc, fg="red", err=True)
         sys.exit(3)
     except LookupError:
-        msg_exc = "In pyproject.toml, expecting sections [[tool.venvs]]. Create them"
+        msg_exc = (
+            "In pyproject.toml, expecting sections [[tool.wreck.venvs]]. Create them"
+        )
         click.secho(msg_exc, fg="red", err=True)
         sys.exit(4)
 
@@ -454,7 +456,7 @@ def requirements_fix_v2(
         click.secho(str(exc), fg="red", err=True)
         sys.exit(7)
     except ValueError as exc:
-        # expecting ``[[tool.venvs]]`` field reqs to be a sequence
+        # expecting ``[[tool.wreck.venvs]]`` field reqs to be a sequence
         click.secho(str(exc), fg="red", err=True)
         sys.exit(8)
     except KeyError as exc:
@@ -603,7 +605,9 @@ def requirements_unlock(path, venv_relpath):
         click.secho(msg_exc, fg="red", err=True)
         sys.exit(3)
     except LookupError:
-        msg_exc = "In pyproject.toml, expecting sections [[tool.venvs]]. Create them"
+        msg_exc = (
+            "In pyproject.toml, expecting sections [[tool.wreck.venvs]]. Create them"
+        )
         click.secho(msg_exc, fg="red", err=True)
         sys.exit(4)
 
@@ -620,7 +624,7 @@ def requirements_unlock(path, venv_relpath):
         click.secho(str(exc), fg="red", err=True)
         sys.exit(7)
     except ValueError as exc:
-        # expecting ``[[tool.venvs]]`` field reqs to be a sequence
+        # expecting ``[[tool.wreck.venvs]]`` field reqs to be a sequence
         click.secho(str(exc), fg="red", err=True)
         sys.exit(8)
     except KeyError as exc:

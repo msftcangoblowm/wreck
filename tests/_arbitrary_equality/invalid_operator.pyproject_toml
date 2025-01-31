@@ -30,7 +30,7 @@ version = {attr = 'wreck._version.__version__'}
 
 # TOML format -- single quote path values
 # dependencies requirements/prod.unlock left out
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.venv'
 reqs = [
     'requirements/invalid_operator_0',

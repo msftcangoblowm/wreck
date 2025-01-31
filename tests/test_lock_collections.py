@@ -162,8 +162,27 @@ testdata_ins_realistic = (
                 "requirements/pins-cffi.in",
             ),
         ),
+        (
+            ".venv/.python-version",
+            ".doc/.venv/.python-version",
+            "requirements/pins.shared.in",
+            "requirements/pins-typing.in",
+        ),
+        (
+            "docs/pip-tools",
+            "docs/requirements",
+            "requirements/pip-tools",
+            "requirements/pip",
+            "requirements/prod",
+            "requirements/kit",
+            "requirements/tox",
+            "requirements/mypy",
+            "requirements/manage",
+            "requirements/dev",
+        ),
         does_not_raise(),
         8,
+        3,
     ),
     (
         Path(__file__).parent.joinpath(
@@ -196,21 +215,122 @@ testdata_ins_realistic = (
                 "requirements/pins.shared.in",
             ),
         ),
+        (
+            ".venv/.python-version",
+            ".doc/.venv/.python-version",
+            "requirements/pins.shared.in",
+            "requirements/pins-typing.in",
+        ),
+        (
+            "docs/pip-tools",
+            "docs/requirements",
+            "requirements/pip-tools",
+            "requirements/pip",
+            "requirements/prod",
+            "requirements/kit",
+            "requirements/tox",
+            "requirements/mypy",
+            "requirements/manage",
+            "requirements/dev",
+        ),
         pytest.raises(MissingRequirementsFoldersFiles),
         8,
+        0,
+    ),
+    (
+        Path(__file__).parent.joinpath(
+            "_no_unlock_pins",
+            "prod_and_dev.pyproject_toml",
+        ),
+        ".venv",
+        (
+            (
+                Path(__file__).parent.joinpath(
+                    "_no_unlock_pins",
+                    "prod.in",
+                ),
+                "requirements/prod.in",
+            ),
+        ),
+        (
+            (
+                Path(__file__).parent.joinpath(
+                    "_no_unlock_pins",
+                    "dev.in",
+                ),
+                "requirements/dev.in",
+            ),
+            (
+                Path(__file__).parent.joinpath(
+                    "_no_unlock_pins",
+                    "pins-tomli.in",
+                ),
+                "requirements/pins-tomli.in",
+            ),
+        ),
+        (
+            ".venv/.python-version",
+            "requirements/pins-tomli.in",
+        ),
+        (
+            "requirements/prod",
+            "requirements/dev",
+            "requirements/pins-tomli",
+        ),
+        does_not_raise(),
+        2,
+        2,
+    ),
+    (
+        Path(__file__).parent.joinpath(
+            "_no_unlock_pins",
+            "prod_and_dev.pyproject_toml",
+        ),
+        ".venv",
+        (
+            (
+                Path(__file__).parent.joinpath(
+                    "_no_unlock_pins",
+                    "dev.in",
+                ),
+                "requirements/dev.in",
+            ),
+        ),
+        (
+            (
+                Path(__file__).parent.joinpath(
+                    "_no_unlock_pins",
+                    "support.in",
+                ),
+                "requirements/support.in",
+            ),
+        ),
+        (
+            ".venv/.python-version",
+            "requirements/dev.in",
+        ),
+        (
+            "requirements/dev",
+            "requirements/support",
+        ),
+        pytest.raises(MissingRequirementsFoldersFiles),
+        2,
+        0,
     ),
 )
 ids_ins_realistic = (
     "Has both requirements and constraints",
     "missing a support file",
+    "do not create pins unlock files",
+    "-r missing",
 )
 
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
-        "path_config, venv_path, seq_reqs_primary, seq_reqs_support, "
-        "expectation, pkg_pin_count_expected"
+        "path_config, venv_path, seq_reqs_primary, seq_reqs_support, seq_empties, "
+        "req_base_empties, expectation, pkg_pin_count_expected, path_unlocks_expected"
     ),
     testdata_ins_realistic,
     ids=ids_ins_realistic,
@@ -220,8 +340,11 @@ def test_ins_realistic(
     venv_path,
     seq_reqs_primary,
     seq_reqs_support,
+    seq_empties,
+    req_base_empties,
     expectation,
     pkg_pin_count_expected,
+    path_unlocks_expected,
     tmp_path,
     prep_pyproject_toml,
     prepare_folders_files,
@@ -229,6 +352,7 @@ def test_ins_realistic(
 ):
     """test wreck.lock_collections.Ins"""
     # pytest -vv --showlocals --log-level INFO -k "test_ins_realistic" tests
+    # pytest -vv --showlocals --log-level INFO tests/test_lock_collections.py::test_ins_realistic\[do\ not\ create\ pins\ unlock\ files\] tests
     t_two = logging_strict()
     logger, loggers = t_two
 
@@ -237,40 +361,18 @@ def test_ins_realistic(
     path_dest_config = prep_pyproject_toml(path_config, tmp_path)
 
     #    venv folders must exist. This fixture creates files. So .python-version
-    venvs_path = (
-        ".venv/.python-version",
-        ".doc/.venv/.python-version",
-    )
-    prepare_folders_files(venvs_path, tmp_path)
+    #    requirements empty files and folders; no .unlock or .lock files
+    prepare_folders_files(seq_empties, tmp_path)
 
     loader = VenvMapLoader(path_dest_config.as_posix())
 
-    #    requirements empty files and folders; no .unlock or .lock files
-    seq_rel_paths = (
-        "requirements/pins.shared.in",
-        "requirements/pins-typing.in",
-    )
-    prepare_folders_files(seq_rel_paths, tmp_path)
-
     #    requirements empty files and folders
-    bases_path = (
-        "docs/pip-tools",
-        "docs/requirements",
-        "requirements/pip-tools",
-        "requirements/pip",
-        "requirements/prod",
-        "requirements/kit",
-        "requirements/tox",
-        "requirements/mypy",
-        "requirements/manage",
-        "requirements/dev",
-    )
     suffixes = (SUFFIX_IN, SUFFIX_LOCKED)
-    seq_rel_paths = []
+    rel_paths = []
     for suffix in suffixes:
-        for base_path in bases_path:
-            seq_rel_paths.append(f"{base_path}{suffix}")
-    prepare_folders_files(seq_rel_paths, tmp_path)
+        for base_path in req_base_empties:
+            rel_paths.append(f"{base_path}{suffix}")
+    prepare_folders_files(rel_paths, tmp_path)
 
     for t_paths in seq_reqs_primary:
         src_abspath, dest_relpath = t_paths
@@ -284,7 +386,9 @@ def test_ins_realistic(
         #    careful no .shared
         src_abspath_lock = replace_suffixes_last(src_abspath, SUFFIX_LOCKED)
         abspath_dest_lock = replace_suffixes_last(abspath_dest, SUFFIX_LOCKED)
-        shutil.copy(src_abspath_lock, abspath_dest_lock)
+        #    not stopping if missing primary is so can cause MissingRequirementsFoldersFiles
+        if src_abspath_lock.exists():
+            shutil.copy(src_abspath_lock, abspath_dest_lock)
 
     is_first = True
     for t_paths in seq_reqs_support:
@@ -356,8 +460,9 @@ def test_ins_realistic(
 
         """
         gen = ins.write()
-        list(gen)
-
+        path_unlocks = list(gen)
+        path_unlocks_actual = len(path_unlocks)
+        assert path_unlocks_actual == path_unlocks_expected
         # Fixing.fix_unlock
         #    Would fix the unlock files using knowledge gleened from
         #    .lock pin version discrepancies

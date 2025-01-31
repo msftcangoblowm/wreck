@@ -12,6 +12,7 @@ Unit test -- Module
 """
 
 import sys
+from collections.abc import Sequence
 from contextlib import nullcontext as does_not_raise
 from pathlib import (
     Path,
@@ -39,21 +40,43 @@ testdata_pyproject_data = (
         "hope",
         {},
         {"name": "bob"},
+        {},
         "bob",
     ),
+    (
+        "hope.bob",
+        {"citizenship": "usa", "occupation": "actor", "country-of-birth": "uk"},
+        {"name": "famous"},
+        {"parents-resident-state": "ohio"},
+        "famous",
+    ),
 )
-ids_pyproject_data = ("empty section, pyproject.toml contains only name",)
+ids_pyproject_data = (
+    "empty section, pyproject.toml contains only name",
+    "dotted section with parent section",
+)
 
 
 @pytest.mark.parametrize(
-    "tool_name, section, project, expected",
+    "tool_name, section, project, section_parent, expected_project_name",
     testdata_pyproject_data,
     ids=ids_pyproject_data,
 )
-def test_pyproject_data(tool_name, section, expected, project, tmp_path):
+def test_pyproject_data(
+    tool_name,
+    section,
+    project,
+    section_parent,
+    expected_project_name,
+    tmp_path,
+):
     """From pyproject.toml confirm can get project name."""
-    data = PyProjectData(tmp_path, tool_name, project, section)
-    assert data.project_name == expected
+    # pytest --showlocals -vv --log-level INFO -k "test_pyproject_data" tests
+    data = PyProjectData(tmp_path, tool_name, project, section, section_parent)
+    actual_project_name = data.project_name
+    assert actual_project_name == expected_project_name
+    actual_section_parent = data.section_parent
+    assert actual_section_parent == section_parent
 
 
 testdata_read_pyproject_normal = (
@@ -84,11 +107,41 @@ testdata_read_pyproject_normal = (
         pytest.raises(tomllib.TOMLDecodeError),
         "drain-swamp",
     ),
+    (
+        ("wreck.venvs", 7),
+        Path(__file__).parent.joinpath(
+            "_duplicate_line",
+            "prod_and_dev.pyproject_toml",
+        ),
+        does_not_raise(),
+        "wreck.venvs",
+    ),
+    (
+        ("wreck.venvs", "   "),
+        Path(__file__).parent.joinpath(
+            "_duplicate_line",
+            "prod_and_dev.pyproject_toml",
+        ),
+        does_not_raise(),
+        "wreck.venvs",
+    ),
+    (
+        "wreck.venvs",
+        Path(__file__).parent.joinpath(
+            "_duplicate_line",
+            "prod_and_dev.pyproject_toml",
+        ),
+        does_not_raise(),
+        "wreck.venvs",
+    ),
 )
 ids_read_pyproject_normal = (
     "tool_name str",
     "tool_name Sequence[str]",
     "not a toml file",
+    "unsupported type ignored",
+    "empty str or whitespace ignored",
+    "tool name with multiple periods",
 )
 
 
@@ -107,6 +160,7 @@ def test_read_pyproject_normal(
 ):
     """Call ReadPyproject __call__. Pass in kwargs."""
     # pytest --showlocals -vv --log-level INFO -k "test_read_pyproject_normal" tests
+    # pytest --showlocals -vv --log-level INFO tests/test_patch_pyproject_reading.py::test_read_pyproject_normal\[empty\ str\ or\ whitespace\ ignored\] tests
     # prepare
     prep_pyproject_toml(p_toml_file, tmp_path)
 
@@ -115,7 +169,7 @@ def test_read_pyproject_normal(
     if isinstance(expectation, does_not_raise):
         assert issubclass(type(data.path), PurePath)
         assert isinstance(data.tool_name, str)
-        assert isinstance(data.section, dict)
+        assert isinstance(data.section, (dict, Sequence))
         assert isinstance(data.project, dict)
         assert data.path == p_toml_file
         assert data.tool_name == expected_tool_name
@@ -215,13 +269,13 @@ testdata_toml_array_of_tables = (
             "[project]\n"
             """name = 'whatever'\n"""
             """version = '0.0.1'\n"""
-            "[[tool.venvs]]\n"
+            "[[tool.wreck.venvs]]\n"
             """venv_base_path = '.doc/.venv'\n"""
             "reqs = [\n"
             """   'docs/pip-tools',\n"""
             """   'docs/requirements',\n"""
             "]\n"
-            "[[tool.venvs]]\n"
+            "[[tool.wreck.venvs]]\n"
             """venv_base_path = '.venv'\n"""
             "reqs = [\n"
             """   'requirements/pip-tools',\n"""
@@ -234,7 +288,7 @@ testdata_toml_array_of_tables = (
             """   'requirements/dev',\n"""
             "]\n"
         ),
-        "venvs",
+        f"{g_app_name}.venvs",
         "venv_base_path",
         does_not_raise(),
         2,
@@ -244,13 +298,13 @@ testdata_toml_array_of_tables = (
             "[project]\n"
             """name = 'whatever'\n"""
             """version = '0.0.1'\n"""
-            "[[tool.venvs]]\n"
+            "[[tool.wreck.venvs]]\n"
             """venv_base_path = '.doc/.venv'\n"""
             "reqs = [\n"
             """   'docs/pip-tools',\n"""
             """   'docs/requirements',\n"""
             "]\n"
-            "[[tool.venvs]]\n"
+            "[[tool.wreck.venvs]]\n"
             """venv_base_path = '.venv'\n"""
             "reqs = [\n"
             """   'requirements/pip-tools',\n"""
@@ -262,14 +316,14 @@ testdata_toml_array_of_tables = (
             """   'requirements/manage',\n"""
             """   'requirements/dev',\n"""
             "]\n"
-            "[[tool.venvs]]\n"
+            "[[tool.wreck.venvs]]\n"
             """venv_base_path = '.doc/.venv'\n"""
             "reqs = [\n"
             """   'docs/pip-tools',\n"""
             """   'docs/requirements',\n"""
             "]\n"
         ),
-        "venvs",
+        f"{g_app_name}.venvs",
         "venv_base_path",
         does_not_raise(),
         2,
@@ -279,10 +333,10 @@ testdata_toml_array_of_tables = (
             "[project]\n"
             """name = 'whatever'\n"""
             """version = '0.0.1'\n"""
-            "[tool.venvs]\n"
+            "[tool.wreck.venvs]\n"
             """venv_base_path = '.doc/.venv'\n"""
         ),
-        "venvs",
+        f"{g_app_name}.venvs",
         "venv_base_path",
         pytest.raises(LookupError),
         0,

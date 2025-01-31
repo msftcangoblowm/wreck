@@ -777,8 +777,22 @@ class Ins(Collection[FilePins]):
         else:  # pragma: no cover
             pass
 
+        # check tool.wreck.create_pins_unlock
+        opt_key = "create_pins_unlock"
+        is_has_key = opt_key in self.loader.section_parent.keys()
+
         for in_ in self.zeroes:
             abspath_zero = in_.file_abspath
+
+            if (
+                is_has_key
+                and isinstance(self.loader.section_parent[opt_key], bool)
+                and self.loader.section_parent[opt_key] is False
+                and abspath_zero.name.startswith("pins")
+            ):
+                # create_pins_unlock = False and a pin file. Do not write; skip
+                continue
+
             is_shared_pin = abspath_zero.name.startswith("pins") and is_shared(
                 abspath_zero.name
             )

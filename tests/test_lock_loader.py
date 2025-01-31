@@ -161,7 +161,7 @@ def test_loader_pindatum(
             filter_by_pin=None,
         )
 
-    #    venv folder must exist. other [[tool.venvs]] venv folders need not exist
+    #    venv folder must exist. other [[tool.wreck.venvs]] venv folders need not exist
     venvs_path = (
         ".doc/.venv/.python-version",
         ".venv/.python-version",

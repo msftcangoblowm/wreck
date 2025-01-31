@@ -348,7 +348,7 @@ testdata_venv_get_reqs = (
 ids_venv_get_reqs = (
     "venvs.pyproject_toml .venv",
     "venvs.pyproject_toml .doc/.venv",
-    "tool.venvs section no requirements",
+    "tool.wreck.venvs section no requirements",
     "venv_path unsupported type expected str",
     "missing top level docs/requirement requirement file",
 )
@@ -375,7 +375,7 @@ def test_venv_get_reqs(
 ):
     """Test get_reqs"""
     # pytest --showlocals --log-level INFO -k "test_venv_get_reqs" tests
-    # pytest --showlocals --log-level INFO tests/test_pep518_venvs.py::test_venv_get_reqs[tool.venvs\ section\ no\ requirements]
+    # pytest --showlocals --log-level INFO tests/test_pep518_venvs.py::test_venv_get_reqs[tool.wreck.venvs\ section\ no\ requirements]
     # prepare
     #    pyproject.toml
     path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)

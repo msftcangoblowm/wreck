@@ -216,7 +216,7 @@ def from_loader_filepins(
        - :py:exc:`NotADirectoryError` -- venv relative paths do not correspond to
          actual venv folders
 
-       - :py:exc:`ValueError` -- expecting [[tool.venvs]] field reqs to be a
+       - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs to be a
          sequence
 
        - :py:exc:`KeyError` -- No such venv found
@@ -277,7 +277,7 @@ def _from_loader_pindatum(
        - :py:exc:`NotADirectoryError` -- venv relative paths do not correspond to
          actual venv folders
 
-       - :py:exc:`ValueError` -- expecting [[tool.venvs]] field reqs to be a
+       - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs to be a
          sequence
 
        - :py:exc:`KeyError` -- No such venv found

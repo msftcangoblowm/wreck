@@ -48,7 +48,7 @@ endif
 help:					## (Default) Display this help -- Always up to date
 	@awk -F ':.*##' '/^[^: ]+:.*##/{printf "  \033[1m%-20s\033[m %s\n",$$1,$$2} /^##@/{printf "\n%s\n",substr($$0,5)}' $(MAKEFILE_LIST)
 
-##@ Build dependencies
+##@ Build dependencies (obsolete)
 
 .PHONY: upgrade doc_upgrade diff_upgrade _upgrade
 PIP_COMPILE = $(VENV_BIN_PYTHON) -m piptools compile --allow-unsafe --resolver=backtracking
@@ -128,20 +128,6 @@ ifeq ($(is_venv),1)
 	$(VENV_BIN_PYTHON) -m flake8 tests/
 endif
 
-# --cov-report=xml
-# Dependencies: pytest, pytest-cov, pytest-regressions
-# make [v=1] coverage
-# $(VENV_BIN)/pytest --showlocals --cov=wreck --cov-report=term-missing --cov-config=pyproject.toml $(verbose_text) tests
-.PHONY: coverage
-coverage: private verbose_text = $(if $(v),"--verbose")
-coverage:				## Run tests, generate coverage reports -- make [v=1] coverage
-ifeq ($(is_venv),1)
-	-@$(VENV_BIN_PYTHON) -m coverage erase
-	$(VENV_BIN_PYTHON) -m coverage run --parallel -m pytest --showlocals $(verbose_text) tests
-	$(VENV_BIN_PYTHON) -m coverage combine
-	$(VENV_BIN_PYTHON) -m coverage report --fail-under=95
-endif
-
 ##@ Kitting
 # Initial build
 # mkdir dist/ ||:; python -m build --outdir dist/ .
@@ -150,40 +136,43 @@ endif
 REPO_OWNER := msftcangoblowm/wreck
 REPO := $(REPO_OWNER)/wreck
 
-.PHONY: edit_for_release cheats relbranch kit_check kit_build kit_upload
+.PHONY: edit_for_release cheats relbranch kit_check kit_upload
 .PHONY: test_upload kits_build kits_download github_releases
 
-edit_for_release:               ## Edit sources to insert release facts (see howto.txt)
+edit_for_release:		## Edit sources to insert release facts (see howto.txt)
 	python igor.py edit_for_release
 
-cheats:                                 ## Create some useful snippets for releasing (see howto.txt)
+cheats:					## Create some useful snippets for releasing (see howto.txt)
 	python igor.py cheats | tee cheats.txt
 
-relbranch:                              ## Create the branch for releasing (see howto.txt)
+relbranch:				## Create the branch for releasing (see howto.txt)
 	@git switch -c $(REPO_OWNER)/release-$$(date +%Y%m%d)
 
 # Do not create a target(s) kit: or kits:
-kit_check:                              ## Check that dist/* are well-formed
+kit_check:				## Check that dist/* are well-formed
 	python -m twine check dist/*
 	@echo $$(ls -1 dist | wc -l) distribution kits
 
-kit_build:                              ## Make the source distribution
-	python igor.py build_next ""
-
-kit_upload:                             ## Upload the built distributions to PyPI
+kit_upload:				## Upload the built distributions to PyPI
 	twine upload --verbose dist/*
 
-test_upload:                    ## Upload the distributions to PyPI's testing server
+test_upload:			## Upload the distributions to PyPI's testing server
 	twine upload --verbose --repository testpypi --password $$TWINE_TEST_PASSWORD dist/*
 
-kits_build:                             ## Trigger GitHub to build kits
+kits_build:				## Trigger GitHub to build kits
 	python ci/trigger_build_kits.py $(REPO_OWNER)
 
-kits_download:                  ## Download the built kits from GitHub
+kits_download:			## Download the built kits from GitHub
 	python ci/download_gha_artifacts.py $(REPO_OWNER) 'dist-*' dist
 
-github_releases: $(DOCBIN)              ## Update GitHub releases.
+github_releases: $(DOCBIN)	## Update GitHub releases
 	$(DOCBIN)/python -m scriv github-release --all
+
+##@ GNU Make standard targets
+
+.PHONY: build
+build:					## Make the source distribution
+	python igor.py build_next ""
 
 .PHONY: install
 install: override usage := make [force=1]
@@ -206,3 +195,52 @@ endif
 .PHONY: install-force
 install-force: force := 1
 install-force: install	## Force install even if exact same version
+
+# --cov-report=xml
+# Dependencies: pytest, pytest-cov, pytest-regressions
+# make [v=1] check
+# $(VENV_BIN)/pytest --showlocals --cov=wreck --cov-report=term-missing --cov-config=pyproject.toml $(verbose_text) tests
+.PHONY: check
+check: private verbose_text = $(if $(v),"--verbose")
+check:					## Run tests, generate coverage reports -- make [v=1] check
+ifeq ($(is_venv),1)
+	-@$(VENV_BIN_PYTHON) -m coverage erase
+	$(VENV_BIN_PYTHON) -m coverage run --parallel -m pytest --showlocals $(verbose_text) tests
+	$(VENV_BIN_PYTHON) -m coverage combine
+	$(VENV_BIN_PYTHON) -m coverage report --fail-under=95
+endif
+
+.PHONY: distclean
+distclean:				## Clean build files
+	@rm -rf dist/ build/ || :;
+
+# Intended for maintainers use
+.PHONY: maintainer-clean
+maintainer-clean: distclean	## Delete files that may need special tools to rebuild
+	@rm .coverage || :;
+	rm -rf .mypy_cache/ || :;
+	rm -rf .pytest_cache/ || :;
+	rm -rf src/wreck/__pycache__/ || :;
+	rm -rf src/wreck/monkey/__pycache__/ || :;
+	rm -rf .tox/ || :;
+	rm -rf .doc/ .rst2html5/ .venv/ || :;
+	rm -rf docs/_build || :;
+
+# assumes already installed: pyenv and shims
+# .rst2html5/ needs to exist, but need not be an actual venv
+# .doc requires py310 cuz Sphinx
+# .tox contains all supported pyenv versions
+.PHONY: configure-pyenv
+configure-pyenv:			## Configure pyenv .python-version files
+	@which pyenv &>/dev/null
+	if [[ "$?" -eq 0 ]]; then
+
+	mkdir .venv || :;
+	pyenv version-name > .venv/.python-version
+	mkdir .doc || :;
+	echo "3.10.14\n" > .doc/.python-version
+	mkdir .tox || :;
+	pyenv versions --bare > .tox/.python-version
+	mkdir .rst2html5 || :;
+
+	fi

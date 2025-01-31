@@ -33,7 +33,7 @@ version = {attr = 'wreck._version.__version__'}
 
 [tool.drain-swamp]
 copyright_start_year = 1.2345
-# Legacy. Obsoleted by tool.venvs
+# Legacy. Obsoleted by tool.wreck.venvs
 folders = [
     'ci',
 ]

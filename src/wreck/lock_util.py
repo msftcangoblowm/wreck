@@ -76,7 +76,7 @@ def is_shared(file_name: str) -> bool:
 
     is_no_suffixes = len(Path(file_name).suffixes) == 0
     if is_no_suffixes:
-        # Possibly a [[tool.venvs]].reqs relpath which lacks an ENDING
+        # Possibly a [[tool.wreck.venvs]].reqs relpath which lacks an ENDING
         ret = False
     else:
         # Has at least one suffix

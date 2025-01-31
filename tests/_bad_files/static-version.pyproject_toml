@@ -35,7 +35,7 @@ include = ["complete_awesome_perfect*"]
 
 [tool.drain-swamp]
 copyright_start_year = 2024
-# Legacy. Obsoleted by tool.venvs
+# Legacy. Obsoleted by tool.wreck.venvs
 folders = [
     'ci',
 ]

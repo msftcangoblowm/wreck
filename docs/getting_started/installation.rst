@@ -39,7 +39,7 @@ Sample venv for production and dev tools.
 
 .. code-block:: text
 
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.venv'
    reqs = [
        'requirements/pip',
@@ -56,7 +56,7 @@ Sample venv for docs
 
 .. code-block:: text
 
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.doc/.venv'
    reqs = [
        'docs/requirements',

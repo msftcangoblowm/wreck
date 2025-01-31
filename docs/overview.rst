@@ -190,7 +190,7 @@ Exit codes
 
 3 -- path given for config file reverse search cannot find a pyproject.toml file
 
-4 -- pyproject.toml config file parse issue. Expecting [[tool.venvs]] sections
+4 -- pyproject.toml config file parse issue. Expecting [[tool.wreck.venvs]] sections
 
 5 -- package pip-tools is required to lock package dependencies. Install it
 
@@ -198,11 +198,13 @@ Exit codes
 
 7 -- venv base folder does not exist. Create it
 
-8 -- expecting [[tool.venvs]] field reqs to be a sequence
+8 -- expecting [[tool.wreck.venvs]] field reqs to be a sequence
 
 9 -- No such venv found
 
 10 -- timeout occurred. Check web connection
+
+11 -- YAML validation unsuccessful for either registry or logging config YAML file
 
 Theory
 -------

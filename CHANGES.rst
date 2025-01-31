@@ -46,6 +46,12 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - refactor(MANIFEST.in): categorize what to include into tarball
+   - refactor(Makefile): separate GNU Make standard targets
+   - fix: for reqs fix if yaml validation errors exit code 11
+   - fix: tool.venvs normalize to tool.wreck.venvs
+   - feat: add config section tool.wreck
+   - feat: add config option tool.wreck.create_pins_unlock default true
    - feat: add reqs fix --verbose option
    - refactor(cli_dependencies): use logging strict registry API
    - fix: ensure .unlock have no duplicate lines (#15)

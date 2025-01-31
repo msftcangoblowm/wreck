@@ -29,7 +29,7 @@ optional-dependencies.conflicts = { file = ['requirements/pip-lt.lock'] }
 version = {attr = 'wreck._version.__version__'}
 
 # dependencies requirements/prod.unlock left out
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.venv'
 reqs = [
     'requirements/pip-ge',

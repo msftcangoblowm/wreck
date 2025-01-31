@@ -31,7 +31,7 @@ optional-dependencies.docs = { file = ['docs/requirements.lock'] }
 
 version = {attr = 'wreck._version.__version__'}
 
-# Legacy. Obsoleted by tool.venvs
+# Legacy. Obsoleted by tool.wreck.venvs
 [tool.drain-swamp]
 folders = [
     "ci",

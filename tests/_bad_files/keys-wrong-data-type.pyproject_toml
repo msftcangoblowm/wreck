@@ -27,11 +27,11 @@ optional-dependencies.docs = { file = ['docs/requirements.lock'] }
 
 version = {attr = 'wreck._version.__version__'}
 
-# Legacy. Obsoleted by tool.venvs
+# Legacy. Obsoleted by tool.wreck.venvs
 [tool.drain-swamp]
 required = 4
 optionals = 4
 
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.venv'
 reqs = 4

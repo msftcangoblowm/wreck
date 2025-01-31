@@ -30,7 +30,7 @@ version = {attr = 'wreck._version.__version__'}
 
 [tool.drain-swamp]
 copyright_start_year = 2024
-# Legacy. Obsoleted by tool.venvs
+# Legacy. Obsoleted by tool.wreck.venvs
 folders = [
     'ci',
 ]
@@ -44,7 +44,7 @@ optionals = [
     { target = "docs", relative_path = 'docs/requirements.in' },
 ]
 
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.venv'
 reqs = [
     'requirements/prod',
@@ -53,7 +53,7 @@ reqs = [
     'requirements/dev',
     'requirements/manage',
 ]
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.doc/.venv'
 reqs = [
     'requirements/prod',

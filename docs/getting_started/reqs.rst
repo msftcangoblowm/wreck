@@ -86,7 +86,7 @@ Then link this to your ``pyproject.toml`` file
    # Each venv relative path is predetermined
    # Into which venv goes which requirements is predetermined
    # TOML format, paths **must be** single quoted
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.venv'
    reqs = [
        'requirements/dev',
@@ -99,7 +99,7 @@ Then link this to your ``pyproject.toml`` file
        'requirements/tox',
    ]
 
-   [[tool.venvs]]
+   [[tool.wreck.venvs]]
    venv_base_path = '.doc/.venv'
    reqs = [
        'docs/requirements',

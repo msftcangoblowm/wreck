@@ -23,6 +23,6 @@ dependencies = { file = [] }
 version = {attr = 'wreck._version.__version__'}
 
 # production venv has no requirement file relative paths. Package with no dependencies
-[[tool.venvs]]
+[[tool.wreck.venvs]]
 venv_base_path = '.venv'
 reqs = []

@@ -394,7 +394,7 @@ def lock_compile(loader, venv_relpath, timeout=15):
 
     :param loader: Contains some paths and loaded unparsed mappings
     :type loader: wreck.pep518_venvs.VenvMapLoader
-    :param venv_relpath: venv relative path is a key. To choose a tools.venvs.req
+    :param venv_relpath: venv relative path is a key. To choose a tools.wreck.venvs.req
     :type venv_relpath: str
     :param timeout: Default 15. Give ``pip --timeout`` in seconds
     :type timeout: typing.Any
@@ -441,7 +441,7 @@ def lock_compile(loader, venv_relpath, timeout=15):
         except (NotADirectoryError, ValueError, KeyError):
             """NotADirectoryError -- venv relative paths do not correspond
                                      to actual venv folders
-            ValueError -- expecting [[tool.venvs]] field reqs to be a sequence
+            ValueError -- expecting [[tool.wreck.venvs]] field reqs to be a sequence
             KeyError -- No such venv found
             """
             raise

@@ -1,25 +1,30 @@
-# Yes setuptools-scm could automate this
-# This is a base package trying to minimize the depedendencies
-include .gitignore
-include .pre-commit-config.yaml
-include .readthedocs.yml
-include CHANGES.rst
+# Base
+graft requirements
 include Makefile
-include codecov.yml
+include CHANGES.rst
 include howto.txt
+
+# test
+graft tests
+include .pre-commit-config.yaml
 include tox-req.ini tox-test.ini tox.ini
 
-recursive-include .github *.yml
-graft requirements
+# docs
 graft docs
 graft docs/_static
 graft docs/_templates
-graft tests
 
-# To document, where to place them
+# venvs -- where to place them
 # exclude .venv/.python-version  # normal default venv location
 exclude .doc/.python-version  # Sphinx requires py310+
 exclude .tox/.python-version  # list of all available py versions, not one
 exclude docs/.python-version  # Sphinx requires py310+
 
+# caches
 prune tests/__pycache__
+
+# git repo and configs
+# include .gitignore
+# recursive-include .github *.yml
+# include codecov.yml
+# include .readthedocs.yml

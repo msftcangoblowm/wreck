@@ -8,7 +8,7 @@
 
 .. py:data:: TOML_SECTION_VENVS
    :type: str
-   :value: "venvs"
+   :value: "wreck.venvs"
 
    pyproject.toml section excluding ``tool.`` prefix
 
@@ -47,7 +47,10 @@ from ._safe_path import (
     resolve_joinpath,
 )
 from .check_type import is_ok
-from .constants import SUFFIX_IN
+from .constants import (
+    SUFFIX_IN,
+    g_app_name,
+)
 from .exceptions import (
     MissingPackageBaseFolder,
     MissingRequirementsFoldersFiles,
@@ -69,7 +72,7 @@ if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
 else:  # pragma: no cover py-gte-310
     DC_SLOTS = {}
 
-TOML_SECTION_VENVS = "venvs"
+TOML_SECTION_VENVS = f"{g_app_name}.venvs"
 DICT_SEARCH_KEY = "venv_base_path"
 
 
@@ -248,7 +251,7 @@ class VenvReq:
 
 @dataclass(**DC_SLOTS)
 class VenvMapLoader:
-    """Load the pyproject.toml ``[[tool.venvs]]`` section
+    """Load the pyproject.toml ``[[tool.wreck.venvs]]`` section
 
     :ivar pyproject_toml_base_path:
 
@@ -269,8 +272,15 @@ class VenvMapLoader:
     .. py:attribute:: l_data
        :type: collections.abc.Sequence[wreck.monkey.pyproject_reading.TOML_RESULT]
 
-       TOML section ``[[tool.venvs]]`` are array of tables. Reading this
+       TOML section ``[[tool.wreck.venvs]]`` are array of tables. Reading this
        produces a list of Mapping
+
+    .. py:attribute:: section_parent
+       :type: wreck.monkey.pyproject_reading.TOML_RESULT
+
+       venv array of tables parent section. Does not include itself.
+       Intended to contain behavioral variables only. key/value pair
+       validation is needed.
 
     """
 
@@ -278,16 +288,18 @@ class VenvMapLoader:
     project_base: Path = field(init=False)
     pyproject_toml: Path = field(init=False)
     l_data: Sequence[TOML_RESULT] = field(init=False, default_factory=list)
+    section_parent: TOML_RESULT = field(init=False, default_factory=dict)
 
     def __post_init__(self, pyproject_toml_base_path):
         """Load data. Preferable if this occurs only once."""
         cls = type(self)
         # May raise TypeError, FileNotFoundError, or LookupError
         t_data = cls.load_data(pyproject_toml_base_path)
-        l_data, project_base, pyproject_toml = t_data
+        l_data, d_parent, project_base, pyproject_toml = t_data
         self.project_base = project_base
         self.pyproject_toml = pyproject_toml
         self.l_data = l_data
+        self.section_parent = d_parent
 
     @staticmethod
     def load_data(pyproject_toml_base_path):
@@ -305,14 +317,14 @@ class VenvMapLoader:
         :returns: TOML project and one section data along with a few paths
         :rtype:
 
-           tuple[collections.abc.Sequence[wreck.monkey.pyproject_reading.TOML_RESULT], pathlib.Path, pathlib.Path]
+           tuple[collections.abc.Sequence[wreck.monkey.pyproject_reading.TOML_RESULT], TOML_RESULT, pathlib.Path, pathlib.Path]
 
         :raises:
 
            - :py:exc:`FileNotFoundError` -- pyproject.toml file reverse search
              start path expecting Path or file not found
 
-           - :py:exc:`LookupError` -- no [[tools.venvs]] TOML array of tables
+           - :py:exc:`LookupError` -- no [[tools.wreck.venvs]] TOML array of tables
 
         """
         # Find pyproject.toml path
@@ -347,13 +359,14 @@ class VenvMapLoader:
                 is_expect_list=True,
             )
             l_data = cast("Sequence[TOML_RESULT]", proj_data.section)
+            d_parent = cast("TOML_RESULT", proj_data.section_parent)
         except LookupError:
             raise
 
         pyproject_toml = abspath_pyproject_toml
         project_base = abspath_pyproject_toml.parent
 
-        return l_data, project_base, pyproject_toml
+        return l_data, d_parent, project_base, pyproject_toml
 
     @property
     def venv_relpaths(self):
@@ -399,7 +412,7 @@ class VenvMapLoader:
            - :py:exc:`NotADirectoryError` -- venv relative paths do not correspond to
              actual venv folders
 
-           - :py:exc:`ValueError` -- expecting [[tool.venvs]] field reqs to be a
+           - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs to be a
              sequence
 
         """
@@ -547,7 +560,7 @@ class VenvMapLoader:
 
 
 class VenvMap(Iterator[VenvReq]):
-    """From ``pyproject.toml``, read [[tool.venvs]] array of tables.
+    """From ``pyproject.toml``, read [[tool.wreck.venvs]] array of tables.
 
     Each virtual environment should have a list of requirement files which
     maybe can recreate it.
@@ -559,14 +572,14 @@ class VenvMap(Iterator[VenvReq]):
 
     .. code-block:: text
 
-       [[tool.venvs]]
+       [[tool.wreck.venvs]]
        venv_base_path = '.doc/.venv'
        in_folder = 'docs'
        reqs = [
            'docs/pip-tools',
            'docs/requirements',
        ]
-       [[tool.venvs]]
+       [[tool.wreck.venvs]]
        venv_base_path = '.venv'
        in_folder = 'requirements'
        reqs = [
@@ -639,7 +652,7 @@ class VenvMap(Iterator[VenvReq]):
 
        - :py:exc:`FileNotFoundError` -- pyproject.toml not found
 
-       - :py:exc:`LookupError` -- no [[tools.venvs]] TOML array of tables
+       - :py:exc:`LookupError` -- no [[tools.wreck.venvs]] TOML array of tables
 
        - :py:exc:`NotADirectoryError` -- venv relative paths do not correspond to
          actual venv folders
@@ -929,7 +942,7 @@ def get_reqs(loader, venv_path=None, suffix_last=SUFFIX_IN):
        - :py:exc:`NotADirectoryError` -- venv relative paths do not correspond to
          actual venv folders
 
-       - :py:exc:`ValueError` -- expecting [[tool.venvs]] field reqs to be a
+       - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs to be a
          sequence
 
        - :py:exc:`KeyError` -- No such venv found
@@ -954,7 +967,7 @@ def get_reqs(loader, venv_path=None, suffix_last=SUFFIX_IN):
         pass
     venv_relpaths = loader.venv_relpaths
 
-    # Ensure requirements files defined in [[tool.venvs]] reqs exists
+    # Ensure requirements files defined in [[tool.wreck.venvs]] reqs exists
     try:
         venvs = VenvMap(
             loader,

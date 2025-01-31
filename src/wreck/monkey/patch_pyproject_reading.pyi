@@ -21,6 +21,7 @@ class PyProjectData(NamedTuple):
     tool_name: str
     project: TOML_RESULT
     section: TOML_RESULT | Sequence[TOML_RESULT]
+    section_parent: TOML_RESULT
 
     @property
     def project_name(self) -> str | None: ...

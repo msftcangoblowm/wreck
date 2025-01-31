@@ -165,7 +165,7 @@ def test_get_venv_python_abspath(
 
     is_skip_real_venv_check = (".rst2html5",)
 
-    # FileNotFoundError (pyproject.toml) or LookupError (section tool.venvs)
+    # FileNotFoundError (pyproject.toml) or LookupError (section tool.wreck.venvs)
     expectation = does_not_raise()
     with expectation:
         loader = VenvMapLoader(str(path_cwd))

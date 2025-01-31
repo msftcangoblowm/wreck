@@ -131,7 +131,7 @@ def test_venvmap_loader_exceptions(
         #    pyproject.toml
         prep_pyproject_toml(path_pyproject_toml, path_tmp_dir)
 
-        # In pyproject.toml, expecting sections [[tool.venvs]]. Create them (4)
+        # In pyproject.toml, expecting sections [[tool.wreck.venvs]]. Create them (4)
         result = runner.invoke(fcn, cmd)
         actual_exit_code = result.exit_code
         assert actual_exit_code == expected_exit_code
@@ -637,8 +637,8 @@ testdata_lock_compile_valueerror = (
     ),
 )
 ids_lock_compile_valueerror = (
-    "lock expecting tool.venvs.reqs to be a sequence",
-    "unlock expecting tool.venvs.reqs to be a sequence",
+    "lock expecting tool.wreck.venvs.reqs to be a sequence",
+    "unlock expecting tool.wreck.venvs.reqs to be a sequence",
 )
 
 
