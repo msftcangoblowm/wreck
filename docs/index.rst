@@ -39,6 +39,7 @@
 **new in 0.3.x**
 
 pyproject.toml tool.wreck section; tool.wreck.create_pins_unlock config option;
+remove .in file handling legacy implementation (\#17);
 
 **new in 0.2.x**
 

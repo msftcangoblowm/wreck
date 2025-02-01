@@ -46,9 +46,14 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - remove .in file handling legacy implementation (#17)
-
 .. scriv-start-here
+
+.. _changes_0-3-1:
+
+Version 0.3.1 — 2025-02-01
+--------------------------
+
+- remove .in file handling legacy implementation (#17)
 
 .. _changes_0-3-0:
 
