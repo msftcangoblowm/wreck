@@ -46,6 +46,8 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - remove .in file handling legacy implementation (#17)
+
 .. scriv-start-here
 
 .. _changes_0-3-0:

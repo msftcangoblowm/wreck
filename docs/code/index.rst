@@ -18,7 +18,6 @@ Code manual
    .. grid-item-card:: :material-twotone:`lock_open;2em;sd-text-success` fix requirements
       :class-card: sd-border-0
 
-      - :doc:`infile <core/lock_infile>`
       - :doc:`collections <core/lock_collections>`
       - :doc:`filepins <core/lock_filepins>`
       - :doc:`discrepancy <core/lock_discrepancy>`

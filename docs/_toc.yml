@@ -28,7 +28,6 @@ subtrees:
       - file: code/general/package_installed
     - file: code/core/index
       entries:
-      - file: code/core/lock_infile
       - file: code/core/lock_collections
       - file: code/core/lock_filepins
       - file: code/core/lock_discrepancy

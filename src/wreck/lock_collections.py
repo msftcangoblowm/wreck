@@ -79,10 +79,6 @@ __all__ = (
 class Ins(Collection[FilePins]):
     """Store the ``.in`` :py:class:`~wreck.lock_filepins.FilePins`.
 
-    Previously ``Pins.from_loader``. Moved to lock_loader. Split into two
-    implementations :py:class:`~wreck.lock_loader.LoaderPin` and
-    :py:class:`~wreck.lock_loader.LoaderPinDatum`
-
     Benefits
 
     - FilePins.by_pkg get (PinDatum) by package name returns a list, rather than one
@@ -347,10 +343,10 @@ class Ins(Collection[FilePins]):
 
     @property
     def files(self):
-        """Generator of sorted InFile
+        """Generator of sorted FilePins
 
         :returns: Yields InFile. These tend to contain constraints
-        :rtype: collections.abc.Generator[wreck.lock_infile.InFile, None, None]
+        :rtype: collections.abc.Generator[wreck.lock_filepins.FilePins, None, None]
         """
         yield from sorted(self._files)
 
@@ -396,10 +392,10 @@ class Ins(Collection[FilePins]):
 
     @property
     def zeroes(self):
-        """Generator of InFile
+        """Generator of FilePins
 
-        :returns: Yields InFile without any constraints
-        :rtype: collections.abc.Generator[wreck.lock_infile.InFile, None, None]
+        :returns: Yields FilePins without any constraints
+        :rtype: collections.abc.Generator[wreck.lock_filepins.FilePins, None, None]
         """
         yield from self._zeroes
 
@@ -479,7 +475,7 @@ class Ins(Collection[FilePins]):
 
         - extras (e.g. coverage[toml])
 
-        Drain swamp convention
+        wreck convention
 
         Requirements files for the purpose as constraints, file name is
         prefixed with ``pins-*[.shared].in``.

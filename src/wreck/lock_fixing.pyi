@@ -8,7 +8,6 @@ from typing import (
 from .lock_collections import Ins
 from .lock_datum import (
     DatumByPkg,
-    Pin,
     PinDatum,
 )
 from .lock_discrepancy import (
@@ -34,7 +33,7 @@ def _fix_resolvables(
     venv_relpath: str,
     is_dry_run: bool | None = False,
     suffixes: tuple[str, ...] = ...,
-) -> tuple[list[ResolvedMsg], list[tuple[str, str, Resolvable, Pin | PinDatum]]]: ...
+) -> tuple[list[ResolvedMsg], list[tuple[str, str, Resolvable, PinDatum]]]: ...
 
 class Fixing:
     _ins: Ins
@@ -61,5 +60,5 @@ def fix_requirements_lock(
 ) -> tuple[
     list[ResolvedMsg],
     list[UnResolvable],
-    list[tuple[str, Resolvable, Pin | PinDatum]],
+    list[tuple[str, Resolvable, PinDatum]],
 ]: ...

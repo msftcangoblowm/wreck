@@ -58,7 +58,6 @@ from .exceptions import (
 )
 from .lock_datum import (
     DatumByPkg,
-    Pin,
     PinDatum,
     pprint_pins,
 )
@@ -122,7 +121,7 @@ def has_discrepancies_version(d_by_pkg: DatumByPkg):
 
     Comparison limited to equality
 
-    :param d_by_pkg: Within one venv, all lock packages' ``set[Pin | PinDatum]``
+    :param d_by_pkg: Within one venv, all lock packages' ``set[PinDatum]``
     :type d_by_pkg: wreck.lock_datum.DatumByPkg
     :returns:
 
@@ -185,7 +184,7 @@ def get_ss_set(set_pindatum):
     """Create a set of all SpecifierSet
 
     :param set_pindatum: PinDatum for the same package, from all ``.lock`` files
-    :type set_pindatum: set[wreck.lock_datum.Pin | wreck.lock_datum.PinDatum]
+    :type set_pindatum: set[wreck.lock_datum.PinDatum]
     :returns: set of SpecifierSet
     :rtype: set[packaging.specifiers.SpecifierSet]
 
@@ -218,7 +217,7 @@ def _get_specifiers(set_pindatum):
     """Get specifiers from pins
 
     :param set_pindatum: PinDatum for the same package, from all ``.lock`` files
-    :type set_pindatum: set[wreck.lock_datum.Pin | wreck.lock_datum.PinDatum]
+    :type set_pindatum: set[wreck.lock_datum.PinDatum]
     :return: Specifiers lists
     :rtype: list[list[str]]
     """
@@ -317,7 +316,7 @@ def filter_acceptable(
     :py:meth:`~wreck.lock_discrepancy.get_ss_set` has already filtered invalid operators
 
     :param set_pindatum: PinDatum for the same package, from all ``.lock`` files
-    :type set_pindatum: set[wreck.lock_datum.Pin | wreck.lock_datum.PinDatum]
+    :type set_pindatum: set[wreck.lock_datum.PinDatum]
     :param set_ss: set of all SpecifierSet
     :type set_ss: set[packaging.specifiers.SpecifierSet]
     :param highest: Highest Version amongst the choices
@@ -852,7 +851,7 @@ class UnResolvable:
 
        Make this readable
 
-    :vartype pins: set[wreck.lock_datum.Pin] | set[wreck.lock_datum.PinDatum]
+    :vartype pins: set[wreck.lock_datum.PinDatum]
     """
 
     venv_path: str
@@ -861,7 +860,7 @@ class UnResolvable:
     sss: set[SpecifierSet]
     v_highest: Version
     v_others: set[Version]
-    pins: set[Pin] | set[PinDatum]
+    pins: set[PinDatum]
 
     def __repr__(self):
         """Emphasis is on presentation, not reproducing an instance.

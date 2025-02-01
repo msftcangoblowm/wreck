@@ -3,10 +3,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Final
 
-from .lock_datum import (
-    Pin,
-    PinDatum,
-)
+from .lock_datum import PinDatum
 from .lock_discrepancy import (
     Resolvable,
     ResolvedMsg,
@@ -35,7 +32,7 @@ def present_results(
     venv_relpath: str,
     msgs_for_venv: list[ResolvedMsg],
     unresolvables_for_venv: list[UnResolvable],
-    applies_to_shared_for_venv: list[tuple[str, Resolvable, Pin | PinDatum]],
+    applies_to_shared_for_venv: list[tuple[str, Resolvable, PinDatum]],
     show_unresolvables: bool,
     show_fixed: bool,
     show_resolvable_shared: bool,

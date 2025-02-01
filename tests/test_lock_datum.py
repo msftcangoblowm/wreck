@@ -25,10 +25,8 @@ from wreck.exceptions import MissingPackageBaseFolder
 from wreck.lock_collections import Ins
 from wreck.lock_datum import (
     InFileType,
-    Pin,
     PinDatum,
     _hash_pindatum,
-    _parse_qualifiers,
     has_qualifiers,
     in_generic,
     is_pin,
@@ -36,104 +34,6 @@ from wreck.lock_datum import (
 )
 from wreck.lock_filepins import FilePins
 from wreck.pep518_venvs import VenvMapLoader
-
-testdata_pin_is_pin = (
-    (
-        "typing-extensions",
-        '''typing-extensions; python_version<"3.10"''',
-        [],
-        '''; python_version<"3.10"''',
-        does_not_raise(),
-        False,
-    ),
-    (
-        "tomli",
-        '''tomli>=2.0.2; python_version<"3.11"''',
-        [">=2.0.2"],
-        '''; python_version<"3.11"''',
-        does_not_raise(),
-        True,
-    ),
-    (
-        "pip",
-        "pip>=24.2",
-        [">=24.2"],
-        None,
-        does_not_raise(),
-        True,
-    ),
-    (
-        "isort",
-        "isort",
-        [],
-        None,
-        does_not_raise(),
-        False,
-    ),
-)
-ids_pin_is_pin = (
-    "Not a pin, but has qualifiers",
-    "pin and has qualifiers",
-    "nudge pin",
-    "just a normal package. No package version nor qualifiers",
-)
-
-
-@pytest.mark.parametrize(
-    "pkg_name, line, specifiers, qualifiers_expected, expectation, expected_is_pin",
-    testdata_pin_is_pin,
-    ids=ids_pin_is_pin,
-)
-def test_pin_is_pin(
-    pkg_name,
-    line,
-    specifiers,
-    qualifiers_expected,
-    expectation,
-    expected_is_pin,
-):
-    """Defines whats a pin and whats not. Qualifiers is not enough."""
-    # pytest --showlocals --log-level INFO -k "test_pin_is_pin" tests
-    # act
-    file_abspath = Path(__file__).parent.joinpath(
-        "_qualifier_conflicts",
-        "qualifier_1.unlock",
-    )
-
-    with expectation:
-        pin = Pin(file_abspath, pkg_name)
-
-    if isinstance(expectation, does_not_raise):
-        # verify
-        actual_is_pin = Pin.is_pin(pin.specifiers)
-        assert actual_is_pin is expected_is_pin
-
-
-testdata_pin_exceptions = (
-    (
-        Path(__file__).parent.joinpath(
-            "_python_1byte",
-            "empty.unlock",
-        ),
-        "isort",
-        pytest.raises(KeyError),
-    ),
-)
-ids_pin_exceptions = ("nonexistant package",)
-
-
-@pytest.mark.parametrize(
-    "file_abspath, pkg_name, expectation",
-    testdata_pin_exceptions,
-    ids=ids_pin_exceptions,
-)
-def test_pin_exceptions(file_abspath, pkg_name, expectation):
-    """Normally requirements are loaded from file, not randomly requested."""
-    # pytest --showlocals --log-level INFO -k "test_pin_exceptions" tests
-    # literally an empty file
-    with expectation:
-        Pin(file_abspath, pkg_name)
-
 
 testdata_pin_methods = (
     (
@@ -183,58 +83,6 @@ ids_pin_methods = (
     "various constraints isort",
     "constraints conflicts normalize qualifer",
 )
-
-
-@pytest.mark.parametrize(
-    (
-        "abspath_req_src, dest_relpath, pkg_name, "
-        "qualifiers_expected_count, has_specifiers"
-    ),
-    testdata_pin_methods,
-    ids=ids_pin_methods,
-)
-def test_pin_methods(
-    abspath_req_src,
-    dest_relpath,
-    pkg_name,
-    qualifiers_expected_count,
-    has_specifiers,
-    tmp_path,
-    prepare_folders_files,
-):
-    """Pin class interface"""
-    # pytest --showlocals --log-level INFO -k "test_pin_methods" tests
-    # prepare
-    #    empty folders
-    seqs_reqs = ("requirements/.python-version",)
-    prepare_folders_files(seqs_reqs, tmp_path)
-
-    #    copy a .in file
-    src_abspath = str(abspath_req_src)
-    abspath_dest = cast("Path", resolve_joinpath(tmp_path, dest_relpath))
-    shutil.copy(src_abspath, abspath_dest)
-
-    pin_pip = Pin(abspath_dest, pkg_name)
-    # __repr__
-    repr(pin_pip)
-    # __hash__
-    assert isinstance(hash(pin_pip), int)
-    # Pin is not PinDatum
-    assert _hash_pindatum(abspath_dest, pkg_name, pin_pip.qualifiers) != hash(pin_pip)
-    # Pin.qualifiers
-    assert len(pin_pip.qualifiers) == qualifiers_expected_count
-    quals = _parse_qualifiers(pin_pip.line)
-    assert len(quals) == qualifiers_expected_count
-    # Pin.is_pin
-    is_spec = Pin.is_pin(pin_pip.specifiers)
-    assert is_spec is has_specifiers
-    # is_pin
-    is_spec = is_pin(pin_pip.specifiers)
-    assert is_spec is has_specifiers
-
-    # has_qualifiers
-    qualifiers_expected = qualifiers_expected_count != 0
-    assert has_qualifiers(pin_pip.qualifiers) is qualifiers_expected
 
 
 @pytest.mark.parametrize(
@@ -477,6 +325,14 @@ def test_pprint_pindatum(path_project_base):
         [],
     )
 
+    # has_qualifiers
+    t_qualifiers = (
+        (pin_colorama, True),
+        (pin_pip, False),
+    )
+    for pin, qualifiers_expected in t_qualifiers:
+        assert has_qualifiers(pin.qualifiers) is qualifiers_expected
+
     set_pins.add(pin_colorama)
     set_pins.add(pin_pip)
 
@@ -490,3 +346,75 @@ def test_pprint_pindatum(path_project_base):
         str_pretty = pprint_pins(set_pins)
         # verify
         assert isinstance(str_pretty, str)
+
+
+testdata_is_pin = (
+    (
+        "typing-extensions",
+        '''typing-extensions; python_version<"3.10"''',
+        [],
+        ['''; python_version<"3.10"'''],
+        does_not_raise(),
+        False,
+    ),
+    (
+        "tomli",
+        '''tomli>=2.0.2; python_version<"3.11"''',
+        [">=2.0.2"],
+        ['''; python_version<"3.11"'''],
+        does_not_raise(),
+        True,
+    ),
+    (
+        "pip",
+        "pip>=24.2",
+        [">=24.2"],
+        [],
+        does_not_raise(),
+        True,
+    ),
+    (
+        "isort",
+        "isort",
+        [],
+        [],
+        does_not_raise(),
+        False,
+    ),
+)
+ids_is_pin = (
+    "Not a pin, but has qualifiers",
+    "pin and has qualifiers",
+    "nudge pin",
+    "just a normal package. No package version nor qualifiers",
+)
+
+
+@pytest.mark.parametrize(
+    "pkg_name, line, specifiers, qualifiers_expected, expectation, expected_is_pin",
+    testdata_is_pin,
+    ids=ids_is_pin,
+)
+def test_is_pin(
+    pkg_name,
+    line,
+    specifiers,
+    qualifiers_expected,
+    expectation,
+    expected_is_pin,
+):
+    """Defines whats a pin and whats not. Qualifiers is not enough."""
+    # pytest --showlocals --log-level INFO -k "test_is_pin" tests
+    # act
+    file_abspath = Path(__file__).parent.joinpath(
+        "_qualifier_conflicts",
+        "qualifier_1.unlock",
+    )
+
+    with expectation:
+        pin = PinDatum(file_abspath, pkg_name, line, specifiers, qualifiers_expected)
+
+    if isinstance(expectation, does_not_raise):
+        # verify
+        actual_is_pin = is_pin(pin.specifiers)
+        assert actual_is_pin is expected_is_pin

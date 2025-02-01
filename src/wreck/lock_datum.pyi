@@ -22,26 +22,11 @@ __all__ = (
     "DATUM",
     "DatumByPkg",
     "InFileType",
-    "Pin",
     "PinDatum",
     "is_pin",
     "has_qualifiers",
     "pprint_pins",
 )
-
-@dataclass(**DC_SLOTS)
-class Pin(Hashable):
-    file_abspath: Path
-    pkg_name: str
-    line: str
-    specifiers: list[str] = ...
-
-    def __hash__(self) -> int: ...
-    def __post_init__(self) -> None: ...
-    @staticmethod
-    def is_pin(specifiers: list[str]) -> bool: ...
-    @property
-    def qualifiers(self) -> list[str]: ...
 
 def is_pin(specifiers: list[str]) -> bool: ...
 def has_qualifiers(qualifiers: list[str]) -> bool: ...
@@ -60,8 +45,8 @@ class PinDatum(Hashable):
     def __lt__(self, right: object) -> bool: ...
 
 # public, not private TypeVar
-DATUM = TypeVar("DATUM", bound=Pin | PinDatum)  # noqa: Y001
-DatumByPkg: TypeAlias = dict[str, set[Pin | PinDatum]]
+DATUM = TypeVar("DATUM", bound=PinDatum)  # noqa: Y001
+DatumByPkg: TypeAlias = dict[str, set[PinDatum]]
 
 def pprint_pins(pins: Iterable[DATUM]) -> str: ...
 

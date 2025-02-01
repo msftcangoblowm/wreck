@@ -18,14 +18,14 @@
 .. py:class:: DatumByPkg
 
 .. py:data:: DatumByPkg
-   :type: dict[str, set[wreck.lock_datum.Pin | wreck.lock_datum.PinDatum]]
+   :type: dict[str, set[wreck.lock_datum.PinDatum]]
    :noindex:
 
    Store by pkg_name. Either all or notable (has specifiers or qualifiers)
 
 .. py:data:: __all__
-   :type: tuple[str, str, str, str, str, str, str, str, str]
-   :value: ("DATUM", "DatumByPkg", "InFileType", "Pin", "PinDatum", \
+   :type: tuple[str, str, str, str, str, str, str, str]
+   :value: ("DATUM", "DatumByPkg", "InFileType", "PinDatum", \
    "in_generic", "is_pin", "has_qualifiers", "pprint_pins")
 
    Module exports
@@ -36,21 +36,13 @@ import enum
 import io
 import sys
 from collections.abc import Hashable
-from dataclasses import (
-    dataclass,
-    field,
-)
+from dataclasses import dataclass
 from pathlib import (
     Path,
     PurePath,
 )
 from pprint import pprint
-from typing import (
-    TypeVar,
-    Union,
-)
-
-from pip_requirements_parser import RequirementsFile
+from typing import TypeVar
 
 if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
     DC_SLOTS = {"slots": True}
@@ -61,7 +53,6 @@ __all__ = (
     "DATUM",
     "DatumByPkg",
     "InFileType",
-    "Pin",
     "PinDatum",
     "in_generic",
     "is_pin",
@@ -153,138 +144,6 @@ def _hash_pindatum(file_abspath, pkg_name, qualifiers):
     t_pieces = (file_abspath.as_posix(), pkg_name, str_qualifiers)
 
     return hash(t_pieces)
-
-
-@dataclass(**DC_SLOTS)
-class Pin(Hashable):
-    """A pin has a specifier e.g. 'pip>=24.2' and may have one or more qualifiers
-
-    Package dependencies w/o specifiers are not pins.
-
-    :ivar file_abspath: absolute path to requirements file
-    :vartype file_abspath: pathlib.Path
-    :ivar pkg_name: pkg name by itself
-    :vartype pkg_name: str
-    :ivar line:
-
-       Unaltered line. Spacing not normalized. Normalized with double quotes?
-       Will contain ``the rest``. e.g.
-
-       ``; python_version < "3.11"``
-       ``; sys_platform == "win32"``
-       `` ;platform_system=="Windows"``
-
-    :vartype line: str
-    :ivar specifiers: The package version constraints. Is a pin if a non-empty list.
-    :vartype specifiers: list[str]
-    :raises:
-
-       - :py:exc:`KeyError` -- in requirements file no such package
-
-    """
-
-    file_abspath: Path
-    pkg_name: str
-    line: str = field(init=False)
-    specifiers: list[str] = field(init=False, default_factory=list)
-
-    def __hash__(self):
-        """The file abspath and line are enough to produce a hash.
-
-        pkg name is redundant, already contained within the line.
-        specifiers is a view what's already within the line.
-
-        :returns: hash of Pin
-        :rtype: int
-        """
-        t_pieces = (self.file_abspath.as_posix(), self.line)
-        return hash(t_pieces)
-
-    def __post_init__(self):
-        """From the requirements file retrieve package requirements."""
-        rf = RequirementsFile.from_file(self.file_abspath)
-        d_rf_all = rf.to_dict()
-        rf_reqs = d_rf_all["requirements"]
-        is_found = False
-        is_nonempty_list = (
-            rf_reqs is not None and isinstance(rf_reqs, list) and len(rf_reqs) != 0
-        )
-        if is_nonempty_list:
-            for d_req in rf_reqs:
-                # fields: line, line_number
-                pkg_name_current = d_req.get("name", "")
-                if pkg_name_current == self.pkg_name:
-                    d_req_line = d_req.get("requirement_line", {})
-
-                    # list[specifier]
-                    self.specifiers = d_req.get("specifier", [])
-
-                    # paranoia check
-                    is_line_str = "line" in d_req_line.keys() and isinstance(
-                        d_req_line["line"], str
-                    )
-                    if is_line_str:
-                        self.line = d_req_line["line"]
-                    else:  # pragma: no cover
-                        self.line = ""
-
-                    is_found = True
-        else:  # pragma: no cover
-            pass
-
-        if not is_found:
-            msg_exc = (
-                f"Requirement file {self.file_abspath!r} does not "
-                f"contain package {self.pkg_name}"
-            )
-            raise KeyError(msg_exc)
-        else:  # pragma: no cover
-            # if not cls.is_pin(self.specifiers):
-            #    Package is not a pin. No specifier e.g. pip>=24.2"
-            pass
-
-    @staticmethod
-    def is_pin(specifiers):
-        """From a ``.unlock`` or ``.in`` file, identify a line as containing a pin.
-
-        :param line: raw line from a ``.unlock`` or ``.in`` file
-        :type line: list[str]
-        :returns: True if a pin otherwise False
-        :rtype: bool
-        """
-        ret = is_pin(specifiers)
-
-        return ret
-
-    @property
-    def qualifiers(self):
-        """From the Pin line, retrieve a clean qualifiers list
-
-        Strip whitespace and without semi colon
-
-        :returns: qualifiers
-        :rtype: list[str]
-        """
-        # Get qualifier e.g. '; python_version<"3.11"'
-        line = self.line
-
-        # clean qualifiers. strip and remove empties
-        qualifiers = []
-        if ";" not in line:
-            pass
-        else:
-            qualifiers_raw = line.split(";")
-            # nudge pin portion e.g. ``pip<24.2``
-            del qualifiers_raw[0]
-            qualifiers = []
-            for qualifier in qualifiers_raw:
-                str_qualifier = qualifier.strip()
-                if len(str_qualifier) != 0:
-                    qualifiers.append(str_qualifier)
-                else:  # pragma: no cover
-                    pass
-
-        return qualifiers
 
 
 @dataclass(**DC_SLOTS)
@@ -399,8 +258,8 @@ class PinDatum(Hashable):
         return is_lt
 
 
-DATUM = TypeVar("DATUM", bound=Union[Pin, PinDatum])
-DatumByPkg = dict[str, set[Union[Pin, PinDatum]]]
+DATUM = TypeVar("DATUM", bound=PinDatum)
+DatumByPkg = dict[str, set[PinDatum]]
 
 
 def pprint_pins(pins):
@@ -438,9 +297,9 @@ class InFileType(enum.Enum):
     ZEROES = "_zeroes"
 
     def __str__(self):
-        """Resolve to the InFiles set's name
+        """Get value
 
-        :returns: InFiles set's name
+        :returns: Ins set's name
         :rtype: str
         """
         return f"{self.value}"

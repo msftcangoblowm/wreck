@@ -40,7 +40,6 @@ import re
 import shutil
 import sys
 import tempfile
-from functools import singledispatch
 from pathlib import (
     Path,
     PurePath,
@@ -58,7 +57,6 @@ from .constants import (
     g_app_name,
 )
 from .exceptions import MissingRequirementsFoldersFiles
-from .lock_infile import InFiles
 from .lock_util import replace_suffixes_last
 from .pep518_venvs import get_reqs
 
@@ -71,23 +69,7 @@ __all__ = (
 )
 
 
-@singledispatch
-def prepare_pairs(t_ins):
-    """Fallback for unsupported data types without implementations
-
-    Do not add type annotations. It's correct as-is.
-
-    :raises:
-
-       - :py:exc:`NotImplementedError` -- No implementation for 1st arg unsupported type
-
-    """
-    msg_warn = f"No implemenatation for type {t_ins}"
-    raise NotImplementedError(msg_warn)
-
-
-@prepare_pairs.register(tuple)
-def _(t_ins: tuple[Path]):
+def prepare_pairs(t_ins: tuple[Path]):
     """Prepare (``.in`` ``.lock`` pairs) of only the direct requirements,
     not the support files.
 
@@ -99,36 +81,6 @@ def _(t_ins: tuple[Path]):
     for abspath_in in t_ins:
         abspath_locked = replace_suffixes_last(abspath_in, SUFFIX_LOCKED)
         yield str(abspath_in), str(abspath_locked)
-    yield from ()
-
-
-@prepare_pairs.register
-def _(in_files: InFiles, path_cwd=None):
-    """This would prepare (.in .lock pairs), not only for the reqs,
-    but also the support files. Compiling the support files is not needed.
-
-    But here is how to do that.
-
-    :param in_files:
-
-       Requirements. After resolution_loop, so contains both reqs and support files
-
-    :type in_files: wreck.lock_infile.InFiles
-    :param path_cwd: cwd so can get the requirement file's absolute path
-    :type path_cwd: pathlib.Path | None
-    :returns: Yield .in .lock pairs. Absolute paths.
-    :rtype: collections.abc.Generator[tuple[str, str], None, None]
-    """
-    assert path_cwd is not None and issubclass(type(path_cwd), PurePath)
-    gen = in_files.zeroes
-    for in_ in gen:
-        abspath_in = in_.abspath(path_cwd)
-        abspath_locked = replace_suffixes_last(abspath_in, SUFFIX_LOCKED)
-        t_yield = str(abspath_in), str(abspath_locked)
-        yield t_yield
-    else:  # pragma: no cover
-        yield from ()
-
     yield from ()
 
 

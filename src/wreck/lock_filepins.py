@@ -4,7 +4,6 @@
 When reading an ``.in`` file, in one shot, parse all pins.
 
 ``PinDatum`` do not ignore qualifiers.
-With :py:class:`~wreck.lock_datum.Pin`, qualifiers are not a first class citizen
 
 .. py:data:: __all__
    :type: tuple[str, str]
@@ -374,9 +373,6 @@ class FilePins(Collection[PinDatum], Hashable):
 
     def resolve(self, constraint, plural="constraints", singular="constraint"):
         """Constraint or requirement to discard
-
-        Signature differs from
-        :py:meth:`InFile.resolve <wreck.lock_infile.InFile.resolve>`
 
         :param constraint:
 

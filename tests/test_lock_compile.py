@@ -39,7 +39,6 @@ from wreck.lock_compile import (
     lock_compile,
     prepare_pairs,
 )
-from wreck.lock_infile import InFiles
 from wreck.pep518_venvs import (
     VenvMapLoader,
     get_reqs,
@@ -475,8 +474,8 @@ def test_lock_compile_live(
         try:
             t_abspath_in = get_reqs(loader, venv_path=venv_relpath)
             # Generic -- To test prepare_pairs, must be InFiles
-            files = InFiles(path_cwd, t_abspath_in)
-            files.resolution_loop()
+            # files = InFiles(path_cwd, t_abspath_in)
+            # files.resolution_loop()
         except MissingRequirementsFoldersFiles:
             raise
         except (NotADirectoryError, ValueError, KeyError):
@@ -486,18 +485,6 @@ def test_lock_compile_live(
         gen = prepare_pairs(t_abspath_in)
         assert isinstance(gen, Generator)
         list(gen)  # execute Generator
-        gen = prepare_pairs(files, path_cwd=tmp_path)
-        assert isinstance(gen, Generator)
-        list(gen)  # execute Generator
-        # path_cwd must be provided and be a Path
-        with pytest.raises(AssertionError):
-            gen = prepare_pairs(files, path_cwd=None)
-            list(gen)  # execute Generator
-
-        # Fallback
-        with pytest.raises(NotImplementedError):
-            gen = prepare_pairs(None)
-            list(gen)
 
     with expectation:
         """

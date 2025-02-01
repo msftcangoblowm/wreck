@@ -37,10 +37,7 @@ from .exceptions import (
     PinMoreThanTwoSpecifiers,
 )
 from .lock_collections import Ins
-from .lock_datum import (
-    Pin,
-    PinDatum,
-)
+from .lock_datum import PinDatum
 from .lock_discrepancy import (
     Resolvable,
     ResolvedMsg,
@@ -144,7 +141,7 @@ def _load_once(
         locks_by_pkg_w_issues: DatumByPkg
         d_qualifiers_in: dict[str, str]
         d_qualifiers_lock: dict[str, str]
-        set_datum: set[Pin | PinDatum]
+        set_datum: set[PinDatum]
 
     dotted_path = f"{g_app_name}.lock_fixing._load_once"
     """REMOVE duplicates from same requirements file.
@@ -405,7 +402,7 @@ def _fix_resolvables(
        Wrote messages. For shared, tuple of suffix, resolvable, and Pin (of .lock file).
        This is why the suffix is provided and first within the tuple
 
-    :rtype: tuple[list[wreck.lock_discrepancy.ResolvedMsg], list[tuple[str, str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.Pin]]]
+    :rtype: tuple[list[wreck.lock_discrepancy.ResolvedMsg], list[tuple[str, str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.PinDatum]]]
     :raises:
 
        - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
@@ -414,7 +411,7 @@ def _fix_resolvables(
     """
     if TYPE_CHECKING:
         fixed_issues: list[ResolvedMsg]
-        applies_to_shared: list[tuple[str, str, Resolvable, Pin]]
+        applies_to_shared: list[tuple[str, str, Resolvable, PinDatum]]
 
     is_dry_run = _check_is_dry_run(is_dry_run)
 
@@ -718,7 +715,7 @@ def fix_requirements_lock(loader, venv_relpath, is_dry_run=False):
        list contains tuples. venv path, resolves messages, unresolvable
        issues, resolvable3 issues dealing with .shared requirements file
 
-    :rtype: tuple[list[wreck.lock_discrepancy.ResolvedMsg], list[wreck.lock_discrepancy.UnResolvable], list[tuple[str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.Pin | wreck.lock_datum.PinDatum]]]
+    :rtype: tuple[list[wreck.lock_discrepancy.ResolvedMsg], list[wreck.lock_discrepancy.UnResolvable], list[tuple[str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.PinDatum]]]
     :raises:
 
        - :py:exc:`NotADirectoryError` -- there is no cooresponding venv folder. Create it
