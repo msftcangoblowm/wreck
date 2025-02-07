@@ -24,8 +24,8 @@
    Store by pkg_name. Either all or notable (has specifiers or qualifiers)
 
 .. py:data:: __all__
-   :type: tuple[str, str, str, str, str, str, str, str]
-   :value: ("DATUM", "DatumByPkg", "InFileType", "PinDatum", \
+   :type: tuple[str, str, str, str, str, str, str, str, str]
+   :value: ("DATUM", "DatumByPkg", "InFileType", "OutLastSuffix", "PinDatum", \
    "in_generic", "is_pin", "has_qualifiers", "pprint_pins")
 
    Module exports
@@ -44,6 +44,11 @@ from pathlib import (
 from pprint import pprint
 from typing import TypeVar
 
+from .constants import (
+    SUFFIX_LOCKED,
+    SUFFIX_UNLOCKED,
+)
+
 if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
     DC_SLOTS = {"slots": True}
 else:  # pragma: no cover py-gte-310
@@ -53,6 +58,7 @@ __all__ = (
     "DATUM",
     "DatumByPkg",
     "InFileType",
+    "OutLastSuffix",
     "PinDatum",
     "in_generic",
     "is_pin",
@@ -295,6 +301,44 @@ class InFileType(enum.Enum):
 
     FILES = "_files"
     ZEROES = "_zeroes"
+
+    def __str__(self):
+        """Get value
+
+        :returns: Ins set's name
+        :rtype: str
+        """
+        return f"{self.value}"
+
+    def __eq__(self, other):
+        """Equality check
+
+        :param other: Should be same Enum class
+        :type other: typing.Any
+        :returns: True if equal otherwise False
+        :rtype: bool
+        """
+        return self.__class__ is other.__class__ and other.value == self.value
+
+
+class OutLastSuffix(enum.Enum):
+    """Output file last suffix. File name may have other encoded
+    properties like ``.shared``
+
+    .. py:attribute:: LOCK
+       :value: ".lock"
+
+       A lock file
+
+    .. py:attribute:: UNLOCK
+       :value: ".unlock"
+
+       An unlock file
+
+    """
+
+    LOCK = SUFFIX_LOCKED
+    UNLOCK = SUFFIX_UNLOCKED
 
     def __str__(self):
         """Get value

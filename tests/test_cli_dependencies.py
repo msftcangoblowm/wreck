@@ -591,11 +591,11 @@ def test_lock_compile_requires_pip_tools(
                 f"{g_app_name}.lock_compile.is_package_installed",
                 return_value=False,
             ):
-                result = runner.invoke(requirements_fix_v2, cmd)
+                result = runner.invoke(fcn, cmd)
                 logger.info(f"output: {result.output}")
                 assert result.exit_code == expected_exit_code
         else:
-            result = runner.invoke(requirements_fix_v2, cmd, catch_exceptions=True)
+            result = runner.invoke(fcn, cmd, catch_exceptions=True)
 
             logger.info(f"exception: {result.exception}")
             logger.info(f"output: {result.output}")
@@ -620,6 +620,21 @@ testdata_lock_compile_valueerror = (
             "docs/pip-tools",
             "requirements/pins.shared",
         ),
+        ["-v"],
+        8,
+    ),
+    (
+        requirements_fix_v2,
+        Path(__file__).parent.joinpath(
+            "_bad_files",
+            "keys-wrong-data-type.pyproject_toml",
+        ),
+        ".venv",
+        (
+            "docs/pip-tools",
+            "requirements/pins.shared",
+        ),
+        [],
         8,
     ),
     (
@@ -633,18 +648,35 @@ testdata_lock_compile_valueerror = (
             "docs/pip-tools",
             "requirements/pins.shared",
         ),
+        [],
         8,
+    ),
+    (
+        requirements_fix_v2,
+        Path(__file__).parent.joinpath(
+            "_bad_files",
+            "keys-wrong-data-type.pyproject_toml",
+        ),
+        None,
+        (
+            "docs/pip-tools",
+            "requirements/pins.shared",
+        ),
+        [],
+        12,
     ),
 )
 ids_lock_compile_valueerror = (
-    "lock expecting tool.wreck.venvs.reqs to be a sequence",
+    "lock expecting tool.wreck.venvs.reqs to be a sequence verbose",
+    "lock expecting tool.wreck.venvs.reqs to be a sequence not verbose",
     "unlock expecting tool.wreck.venvs.reqs to be a sequence",
+    "venv_relpath not provided",
 )
 
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "fcn, path_pyproject_toml, venv_path, seqs_reqs, expected_exit_code",
+    "fcn, path_pyproject_toml, venv_path, seqs_reqs, extend_args, expected_exit_code",
     testdata_lock_compile_valueerror,
     ids=ids_lock_compile_valueerror,
 )
@@ -653,6 +685,7 @@ def test_lock_compile_valueerror(
     path_pyproject_toml,
     venv_path,
     seqs_reqs,
+    extend_args,
     expected_exit_code,
     tmp_path,
     prep_pyproject_toml,
@@ -671,12 +704,22 @@ def test_lock_compile_valueerror(
         #    Copy to base dir
         prep_pyproject_toml(path_pyproject_toml, path_tmp_dir)
 
-        cmd = (
+        #    Build cmd
+        cmd = [
             "--path",
             path_tmp_dir,
-            "--venv-relpath",
-            venv_path,
-        )
+        ]
 
+        if venv_path is not None:
+            cmd_venv = [
+                "--venv-relpath",
+                venv_path,
+            ]
+            cmd.extend(cmd_venv)
+
+        cmd.extend(extend_args)
+
+        # act
         result = runner.invoke(fcn, cmd, catch_exceptions=True)
+        # verify
         assert result.exit_code == expected_exit_code

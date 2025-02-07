@@ -199,7 +199,9 @@ urllib3==2.2.3
     #   requests
     #   twine
 validate-pyproject==0.23
-    # via -r requirements/dev.in
+    # via
+    #   -c requirements/pins-validate-pyproject-pep639.in
+    #   -r requirements/dev.in
 wheel==0.45.1
     # via pip-tools
 zipp==3.21.0

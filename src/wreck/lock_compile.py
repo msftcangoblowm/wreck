@@ -36,7 +36,6 @@ import filecmp
 import fileinput
 import logging
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -234,7 +233,7 @@ def _compile_one(
         """
         err = err.lstrip()
         if exit_code == 1 and "Failed to establish a new connection" in err:
-            err = "timeout (15s)"
+            err = f"timeout ({timeout!s}s)"
             err_details = err
         else:
             err_details = f"{err}{os.linesep}{exc}"
@@ -351,7 +350,7 @@ def lock_compile(loader, venv_relpath, timeout=15):
     :param timeout: Default 15. Give ``pip --timeout`` in seconds
     :type timeout: typing.Any
     :returns: Generator of abs path to .lock files
-    :rtype: tuple[tuple[str, ...], tuple[str, ...]]
+    :rtype: tuple[tuple[str, ...], tuple[tuple[str, pathlib.Path, str]]]
     :raises:
 
        - :py:exc:`AssertionError` -- package pip-tools is not installed
@@ -443,16 +442,20 @@ def lock_compile(loader, venv_relpath, timeout=15):
                 # if timeout cannot add to compiled. If no timeout, maybe failures empty
                 if optabspath_lock is None:  # pragma: no cover
                     # is_fail = True
-                    if "pip._internal.exceptions.InstallationError" in err_details:
-                        # pip-tools#2139 reproduce .in file contents ``>=24pip\n``
-                        msg = (
-                            f"venv {venv_relpath_tmp} {lock_abspath} "
-                            "pip-tools#2139 malformed .in file uncaught exception. "
-                            f"{err_details}"
-                        )
+                    if err_details is None:  # pragma: no cover
+                        pass
                     else:
-                        msg = f"venv {venv_relpath_tmp} {lock_abspath} {err_details}"
-                    failures.append(msg)
+                        if "pip._internal.exceptions.InstallationError" in err_details:
+                            # pip-tools#2139 reproduce .in file contents ``>=24pip\n``
+                            msg_info = (
+                                "pip-tools#2139 malformed .in file uncaught exception. "
+                                f"{err_details}"
+                            )
+                        else:
+                            msg_info = err_details
+                        # To be converted into wreck.lock_discrepancy.ResolvedMsg
+                        t_three = (venv_relpath_tmp, Path(lock_abspath), msg_info)
+                        failures.append(t_three)
                 else:  # pragma: no cover
                     # defaults already set
                     msg = lock_abspath
@@ -471,14 +474,17 @@ def is_timeout(failures):
     if the cause of the failure was timeout(s)
 
     :param failures: Sequence of verbose error message and traceback
-    :type failures: tuple[str, ...]
+    :type failures: tuple[tuple[str, pathlib.Path, str]]
     :returns: True if web (actually SSL) connection timeout occurred
     :rtype: bool
     """
-    if len(failures) != 0:  # pragma: no cover
-        failure_0 = failures[0]
-        is_timeout = re.search("timeout.+s", failure_0)
-    else:  # pragma: no cover
-        is_timeout = False
+    ret = False
+    for t_three in failures:
+        msg = t_three[2]
+        # is_timeout = re.search("timeout.+s", msg)
+        if "timeout" in msg:
+            ret = True
+        else:  # pragma: no cover
+            pass
 
-    return is_timeout
+    return ret

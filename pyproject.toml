@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=70.0.0",
+    "setuptools>=75.8.0",
     "wheel",
     "build",
     "click",
@@ -14,7 +14,16 @@ dynamic = [
     "dependencies",
     "version",
 ]
+# https://peps.python.org/pep-0639/
+# https://clearlydefined.io/?sort=releaseDate&sortDesc=true&name=wreck
+# waiting for setuptools maintainers to implement metadata v2.4 support
+# https://github.com/pypa/setuptools/issues/4759
 license = {file = "LICENSE"}
+# license = "AGPL-3.0-or-later"
+# license-files = [
+#     "LICEN[CS]E*",
+#     "NOTICE*",
+# ]
 description = "Manage and fix requirements files for Python package authors"
 keywords = ["pip", "pip-tools", "requirements", "constraints"]
 readme = "README.rst"

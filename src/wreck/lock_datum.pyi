@@ -11,6 +11,11 @@ from typing import (
     TypeVar,
 )
 
+from .constants import (
+    SUFFIX_LOCKED,
+    SUFFIX_UNLOCKED,
+)
+
 if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
     from typing import TypeAlias
 else:  # pragma: no cover py-gte-310
@@ -22,6 +27,7 @@ __all__ = (
     "DATUM",
     "DatumByPkg",
     "InFileType",
+    "OutLastSuffix",
     "PinDatum",
     "is_pin",
     "has_qualifiers",
@@ -53,6 +59,12 @@ def pprint_pins(pins: Iterable[DATUM]) -> str: ...
 class InFileType(enum.Enum):
     FILES = "_files"
     ZEROES = "_zeroes"
+
+    def __eq__(self, other: object) -> bool: ...
+
+class OutLastSuffix(enum.Enum):
+    LOCK = SUFFIX_LOCKED
+    UNLOCK = SUFFIX_UNLOCKED
 
     def __eq__(self, other: object) -> bool: ...
 

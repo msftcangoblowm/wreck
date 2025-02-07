@@ -1,0 +1,7 @@
+pytest==8.3.4
+    # via
+    #   -r prod.in
+pytest-logging-strict==0.2.0
+    # via
+    #    dev.in
+    #   -c prod.lock

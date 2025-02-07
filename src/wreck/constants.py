@@ -4,10 +4,10 @@
 package level constants
 
 .. py:data:: __all__
-   :type: tuple[str, str, str, str, str, str, str, str, str, str]
+   :type: tuple[str, str, str, str, str, str, str, str, str]
    :value: ("g_app_name", "package_name", "SUFFIX_IN", "SUFFIX_SHARED_IN", \
-   "SUFFIX_LOCKED", "SUFFIX_UNLOCKED", "SUFFIX_SYMLINK", "PATH_PIP_COMPILE", \
-   "PROG_LOCK", "PROG_UNLOCK")
+   "SUFFIX_LOCKED", "SUFFIX_UNLOCKED", "PATH_PIP_COMPILE", "PROG_LOCK", \
+   "PROG_UNLOCK")
 
    Module exports
 
@@ -52,10 +52,6 @@ package level constants
    be throughly documented to defend the justification for imposing
    such a restriction so know later whether to keep it or not
 
-.. py:data:: SUFFIX_SYMLINK
-   :type: str
-   :value: ".lnk"
-
 .. py:data:: PATH_PIP_COMPILE
    :type: pathlib.Path
 
@@ -84,7 +80,6 @@ __all__ = (
     "SUFFIX_SHARED_IN",
     "SUFFIX_LOCKED",
     "SUFFIX_UNLOCKED",
-    "SUFFIX_SYMLINK",
     "PATH_PIP_COMPILE",
     "PROG_LOCK",
     "PROG_UNLOCK",
@@ -98,7 +93,6 @@ SUFFIX_IN = ".in"
 SUFFIX_SHARED_IN = ".shared.in"
 SUFFIX_LOCKED = ".lock"
 SUFFIX_UNLOCKED = ".unlock"
-SUFFIX_SYMLINK = ".lnk"
 
 _PATH_VENV = Path(sys.exec_prefix) / "bin"
 PATH_PIP_COMPILE = _PATH_VENV / "pip-compile"

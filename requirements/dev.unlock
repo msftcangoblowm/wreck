@@ -20,4 +20,4 @@ tomli>=2.0.2; python_version<"3.11"
 twine
 types-setuptools>=75.8.0.20250110
 typing-extensions; python_version<"3.11"
-validate-pyproject
+validate-pyproject>=0.23

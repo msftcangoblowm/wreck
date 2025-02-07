@@ -98,6 +98,10 @@ diff_upgrade:			## Summarize the last `make upgrade`
 pre-commit:				## Run checks found in .pre-commit-config.yaml
 	@pre-commit run --all-files
 
+.PHONY: update-pre-commit
+update-pre-commit:
+	@pre-commit autoupdate
+
 #--strict is on
 .PHONY: mypy
 mypy:					## Static type checker (in strict mode)

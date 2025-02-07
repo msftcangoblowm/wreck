@@ -13,7 +13,7 @@
 
 .. py:data:: __all__
    :type: tuple[str]
-   :value: ("fix_requirements_lock",)
+   :value: ("Fixing",)
 
    Module exports
 
@@ -21,6 +21,7 @@
 
 import logging
 import os
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from packaging.specifiers import InvalidSpecifier
@@ -37,7 +38,10 @@ from .exceptions import (
     PinMoreThanTwoSpecifiers,
 )
 from .lock_collections import Ins
-from .lock_datum import PinDatum
+from .lock_datum import (
+    OutLastSuffix,
+    PinDatum,
+)
 from .lock_discrepancy import (
     Resolvable,
     ResolvedMsg,
@@ -65,7 +69,156 @@ if TYPE_CHECKING:
 is_module_debug = True
 _logger = logging.getLogger(f"{g_app_name}.lock_fixing")
 
-__all__ = ("fix_requirements_lock",)
+__all__ = ("Fixing",)
+
+
+class OutMessages:
+    """Per Out file holds three message lists
+
+    - unresolvables
+
+    - fixed (issues)
+
+    - shared
+
+    Create two instances. One for each output file type. OutLastSuffix.UNLOCK
+    will not have unresolvables messages
+
+    .. py:attribute:: __slots__
+       :type: tuple[str, str, str, str]
+       :value: ("_last_suffix", "_unresolvables", "_fixed_issues", \
+       "_resolvable_shared")
+
+       Slightly smaller footprint in terms of memory efficiency
+
+    :raises:
+
+       - :py:exc:`AssertionError` -- Unsupported output file last suffix
+
+    """
+
+    __slots__ = (
+        "_last_suffix",
+        "_unresolvables",
+        "_fixed_issues",
+        "_resolvable_shared",
+    )
+
+    def __init__(self, last_suffix: OutLastSuffix):
+        """Class constructor"""
+        assert isinstance(last_suffix, OutLastSuffix)
+        self._last_suffix = last_suffix
+        # Initialize message lists
+        self._unresolvables = []
+        self._fixed_issues = []
+        self._resolvable_shared = []
+
+    def append(self, item, last_suffix=OutLastSuffix.LOCK):
+        """Append out message.
+
+        OutLastSuffix must match, so can use haphazardly
+
+        :param item: An out message. Currently there are three out message types
+        :type item: typing.Any
+        :param last_suffix:
+
+           Out file type characterized by last suffix, not properties like .shared
+
+        :type last_suffix: wreck.datum.OutLastSuffix
+        """
+        is_type_match = (
+            last_suffix is not None
+            and isinstance(last_suffix, OutLastSuffix)
+            and last_suffix == self._last_suffix
+        )
+        is_item_ok = item is not None
+        if is_type_match and is_item_ok:
+            if isinstance(item, UnResolvable):
+                # Only applies to .lock files.
+                self._unresolvables.append(item)
+            elif isinstance(item, ResolvedMsg):
+                # Fixed or other messages
+                self._fixed_issues.append(item)
+            elif (
+                isinstance(item, Sequence)
+                and not isinstance(item, str)
+                and len(item) == 3
+            ):
+                # tuple[str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.PinDatum]
+                self._resolvable_shared.append(item)
+            else:  # pragma: no cover
+                # non-None Unsupported item
+                pass
+        else:
+            # Unsupported
+            pass
+
+    def extend(self, items, last_suffix=OutLastSuffix.LOCK):
+        """Append many items
+
+        :param items: Normally a sequence of supported item
+        :type items: typing.Any
+        :param last_suffix:
+
+           Out file type characterized by last suffix, not properties like .shared
+
+        :type last_suffix: wreck.datum.OutLastSuffix
+        """
+        if (
+            items is not None
+            and isinstance(items, Sequence)
+            and not isinstance(items, str)
+        ):
+            for item in items:
+                self.append(item, last_suffix=last_suffix)
+            else:  # pragma: no cover
+                pass
+        else:  # pragma: no cover
+            pass
+
+    @property
+    def resolvable_shared(self):
+        """``.shared.in`` do not try to resolve.
+
+        :returns: list of Resolvable issues
+        :rtype: list[tuple[str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.PinDatum]]
+        """
+        ret = self._resolvable_shared
+
+        return ret
+
+    @property
+    def unresolvables(self):
+        """Get unresolvable issues
+
+        :returns: list of unresolvable issues
+        :rtype: list[wreck.lock_discrepancy.UnResolvable]
+        """
+        ret = self._unresolvables
+
+        return ret
+
+    @property
+    def fixed_issues(self):
+        """Get fixed issue messages
+
+        :returns: list of fixed issues
+        :rtype: list[wreck.lock_discrepancy.ResolvedMsg]
+        """
+        ret = self._fixed_issues
+
+        return ret
+
+    @property
+    def has_unresolvables(self) -> bool:
+        """Check if any unresolvables, if so will need to skip creating .unlock file
+
+        :returns: True if there are unresolvables
+        :rtype: bool
+        """
+        ret = len(self._unresolvables) != 0
+
+        return ret
 
 
 def _check_is_dry_run(is_dry_run, default=False):
@@ -426,8 +579,8 @@ def _fix_resolvables(
     fixed_issues = []
     applies_to_shared = []
 
-    gen_fpins_zeroes = locks._file_pins
-    for fpin_zero in gen_fpins_zeroes:
+    # gen_fpins_zeroes = locks._file_pins
+    for fpin_zero in locks:
         # From FilePins --> list[PinDatum]
         for pindatum_lock in fpin_zero._pins:
             pkg_name = pindatum_lock.pkg_name
@@ -521,8 +674,10 @@ class Fixing:
     _locks: Ins
     _venv_relpath: str
     _loader: VenvMapLoader
+    _out_lock_messages: OutMessages
+    _out_unlock_messages: OutMessages
 
-    def __init__(self, loader, venv_relpath):
+    def __init__(self, loader, venv_relpath, out_lock_messages, out_unlock_messages):
         """Class constructor"""
         meth_dotted_path = f"{g_app_name}.lock_fixing.Fixing.__init__"
 
@@ -551,10 +706,25 @@ class Fixing:
         else:  # pragma: no cover
             pass
 
+        self._out_lock_messages = out_lock_messages
+        self._out_unlock_messages = out_unlock_messages
+
         # Store ``.in`` files ONCE. Auto resolution loop occurs
         try:
             ins = Ins(loader, venv_relpath)
-            ins.load()
+
+            """ins.load() split into three methods:
+            ins._load_filepins, ins._check_top_level, and ins._load_resolution_loop"""
+            ins._load_filepins()
+
+            # Check .in includes contain any .lock files
+            lst_issues = ins._check_top_level()
+            for t_three in lst_issues:
+                item = ResolvedMsg(*t_three)
+                self._out_unlock_messages.append(item, last_suffix=OutLastSuffix.UNLOCK)
+
+            ins._load_resolution_loop()
+
             self._ins = ins
 
             # Store ``.lock`` files ONCE
@@ -563,6 +733,71 @@ class Fixing:
             self._locks = locks
         except MissingRequirementsFoldersFiles:
             raise
+
+    @staticmethod
+    def fix_requirements_lock(loader, venv_relpath, is_dry_run=False):
+        """Factory that supplied OutMessages for both .lock and .unlock files
+
+        Iterate thru venv. ``.unlock`` may not yet exist. For each
+        ``.in`` file, resolution loop once
+
+        :param loader: Contains some paths and loaded unparsed mappings
+        :type loader: wreck.pep518_venvs.VenvMapLoader
+        :param venv_relpath: venv relative path is a key. To choose a tools.wreck.venvs.req
+        :type venv_relpath: str
+        :param is_dry_run:
+
+           Default False. Should be a bool. Do not make changes. Merely
+           report what would have been changed
+
+        :type is_dry_run: typing.Any | None
+        :returns:
+
+           list contains tuples. venv path, resolves messages, unresolvable
+           issues, resolvable3 issues dealing with .shared requirements file
+
+        :rtype: wreck.lock_fixing.Fixing
+        :raises:
+
+           - :py:exc:`NotADirectoryError` -- there is no cooresponding venv folder. Create it
+
+           - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs should be a
+             list of relative path without .in .unlock or .lock suffix
+
+           - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
+             missing constraints or requirements files or folders
+
+           - :py:exc:`wreck.exceptions.MissingPackageBaseFolder` --
+             Invalid loader. Does not provide package base folder
+
+           - :py:exc:`TypeError` -- venv relpath is None or unsupported type
+
+        """
+        # may raise MissingPackageBaseFolder
+        check_loader(loader)
+
+        is_dry_run = _check_is_dry_run(is_dry_run)
+
+        out_lock_messages = OutMessages(last_suffix=OutLastSuffix.LOCK)
+        out_unlock_messages = OutMessages(last_suffix=OutLastSuffix.UNLOCK)
+
+        try:
+            fixing = Fixing(
+                loader, venv_relpath, out_lock_messages, out_unlock_messages
+            )
+        except (
+            NotADirectoryError,
+            ValueError,
+            MissingRequirementsFoldersFiles,
+            TypeError,
+        ):
+            raise
+
+        fixing.get_issues()
+        fixing.fix_resolvables(is_dry_run=is_dry_run)
+        fixing.fix_unlock(is_dry_run=is_dry_run)
+
+        return fixing
 
     def fix_unlock(self, is_dry_run=False):
         """Create ``.unlock`` files then fix using knowledge gleened while
@@ -574,7 +809,8 @@ class Fixing:
         dotted_path = f"{g_app_name}.lock_fixing.Fixing.fix_unlock"
         is_dry_run = _check_is_dry_run(is_dry_run)
 
-        has_unresolvables = len(self._unresolvables) != 0
+        # has_unresolvables = len(self._unresolvables) != 0
+        has_unresolvables = self._out_lock_messages.has_unresolvables
         if has_unresolvables:
             msg_warn = (
                 f"{dotted_path} There are unresolved issues. Create "
@@ -596,15 +832,9 @@ class Fixing:
                 suffixes=(SUFFIX_UNLOCKED,),
             )
 
-            if is_module_debug:  # pragma: no cover
-                msg_info = (
-                    f"{dotted_path} (in .unlock){os.linesep}fixed "
-                    f"{fixed_issues}{os.linesep}"
-                    f"shared issues {applies_to_shared}"
-                )
-                _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
+            # Save unlock messages
+            self._out_unlock_messages.extend(fixed_issues)
+            self._out_unlock_messages.extend(applies_to_shared)
 
     def get_issues(self):
         """Identify resolvable and unresolvable issues.
@@ -614,7 +844,8 @@ class Fixing:
         """
         ret = _load_once(self._ins, self._locks, self._venv_relpath)
         self._resolvables = ret[0]
-        self._unresolvables = ret[1]
+        # self._unresolvables = ret[1]
+        self._out_lock_messages.extend(ret[1])
 
     def fix_resolvables(self, is_dry_run=False):
         """Resolve the resolvable dependency conflicts. Refrain from attempting to
@@ -632,24 +863,14 @@ class Fixing:
             is_dry_run=is_dry_run,
         )
         fixed_issues, applies_to_shared = t_results
-        self._fixed_issues = fixed_issues
-        # group by venv -- resolved_msgs
-        # d_resolved_msgs[self._venv_relpath] = fixed_issues
-        pass
-
-        # group by venv -- unresolvables
-        # d_unresolvables[self._venv_relpath] = lst_unresolvable
-        pass
+        # self._fixed_issues = fixed_issues
+        self._out_lock_messages.extend(fixed_issues)
 
         # group by venv -- resolvable .shared
         #     venv_path, suffix (.unlock or .lock), resolvable, pin
-        resolvable_shared_filtered = []
         for t_resolvable_shared in applies_to_shared:
             resolvable_shared_without_venv_path = t_resolvable_shared[1:]
-            resolvable_shared_filtered.append(resolvable_shared_without_venv_path)
-
-        # d_resolvable_shared[venv_relpath] = resolvable_shared_filtered
-        self._resolvable_shared = resolvable_shared_filtered
+            self._out_lock_messages.append(resolvable_shared_without_venv_path)
 
     @property
     def resolvables(self):
@@ -661,92 +882,3 @@ class Fixing:
         ret = self._resolvables
 
         return ret
-
-    @property
-    def resolvable_shared(self):
-        """``.shared.in`` do not try to resolve.
-
-        :returns: list of Resolvable issues
-        :rtype: list[wreck.lock_discrepancy.ResolvedMsg]
-        """
-        ret = self._resolvable_shared
-
-        return ret
-
-    @property
-    def unresolvables(self):
-        """Get unresolvable issues
-
-        :returns: list of unresolvable issues
-        :rtype: list[wreck.lock_discrepancy.UnResolvable]
-        """
-        ret = self._unresolvables
-
-        return ret
-
-    @property
-    def fixed_issues(self):
-        """Get fixed issue messages
-
-        :returns: list of fixed issues
-        :rtype: list[wreck.lock_discrepancy.ResolvedMsg]
-        """
-        ret = self._fixed_issues
-
-        return ret
-
-
-def fix_requirements_lock(loader, venv_relpath, is_dry_run=False):
-    """Iterate thru venv. ``.unlock`` may not yet exist. For each
-    ``.in`` file, resolution loop once
-
-    :param loader: Contains some paths and loaded unparsed mappings
-    :type loader: wreck.pep518_venvs.VenvMapLoader
-    :param venv_relpath: venv relative path is a key. To choose a tools.wreck.venvs.req
-    :type venv_relpath: str
-    :param is_dry_run:
-
-       Default False. Should be a bool. Do not make changes. Merely
-       report what would have been changed
-
-    :type is_dry_run: typing.Any | None
-    :returns:
-
-       list contains tuples. venv path, resolves messages, unresolvable
-       issues, resolvable3 issues dealing with .shared requirements file
-
-    :rtype: tuple[list[wreck.lock_discrepancy.ResolvedMsg], list[wreck.lock_discrepancy.UnResolvable], list[tuple[str, wreck.lock_discrepancy.Resolvable, wreck.lock_datum.PinDatum]]]
-    :raises:
-
-       - :py:exc:`NotADirectoryError` -- there is no cooresponding venv folder. Create it
-
-       - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs should be a
-         list of relative path without .in .unlock or .lock suffix
-
-       - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
-         missing constraints or requirements files or folders
-
-       - :py:exc:`wreck.exceptions.MissingPackageBaseFolder` --
-         Invalid loader. Does not provide package base folder
-
-    """
-    # may raise MissingPackageBaseFolder
-    check_loader(loader)
-
-    is_dry_run = _check_is_dry_run(is_dry_run)
-
-    try:
-        fixing = Fixing(loader, venv_relpath)
-    except (NotADirectoryError, ValueError, MissingRequirementsFoldersFiles):
-        raise
-
-    fixing.get_issues()
-    fixing.fix_resolvables(is_dry_run=is_dry_run)
-    fixing.fix_unlock(is_dry_run=is_dry_run)
-
-    # fixing.resolvables
-    lst_unresolvables = fixing.unresolvables
-    msgs_fixed = fixing.fixed_issues
-    msgs_shared = fixing.resolvable_shared
-
-    return msgs_fixed, lst_unresolvables, msgs_shared

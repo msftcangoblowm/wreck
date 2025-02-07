@@ -91,7 +91,7 @@ from .lock_compile import (
     is_timeout,
     lock_compile,
 )
-from .lock_fixing import fix_requirements_lock
+from .lock_fixing import Fixing
 from .pep518_venvs import VenvMapLoader
 
 # Use package logger, not module logger
@@ -142,6 +142,8 @@ EXIT CODES
 
 11 -- YAML validation unsuccessful for either registry or logging config YAML file
 
+12 -- venv relpath not provided. Be conscious of venv and python interpreter version
+
 """
 
 EPILOG_UNLOCK = """
@@ -169,53 +171,83 @@ EXIT CODES
 def present_results(
     fcn,
     venv_relpath,
-    msgs_for_venv,
-    unresolvables_for_venv,
-    applies_to_shared_for_venv,
+    lock_msgs_for_venv,
+    lock_unresolvables_for_venv,
+    lock_applies_to_shared_for_venv,
+    unlock_msgs_for_venv,
+    unlock_applies_to_shared_for_venv,
     show_unresolvables,
     show_fixed,
     show_resolvable_shared,
 ):
     """Present results groups by venv."""
     dotted_path = f"{g_app_name}.cli_dependencies.present_results"
-    resolved_msgs_count = len(msgs_for_venv)
-    unresolvables_count = len(unresolvables_for_venv)
-    applies_to_shared_count = len(applies_to_shared_for_venv)
+    lock_resolved_msgs_count = len(lock_msgs_for_venv)
+    lock_unresolvables_count = len(lock_unresolvables_for_venv)
+    lock_applies_to_shared_count = len(lock_applies_to_shared_for_venv)
 
+    unlock_resolved_msgs_count = len(unlock_msgs_for_venv)
+    unlock_applies_to_shared_count = len(unlock_applies_to_shared_for_venv)
+
+    # summary header
     msg_info = (
-        f"{dotted_path} unresolvables_count {unresolvables_count} "
+        f"{dotted_path} lock_unresolvables_count {lock_unresolvables_count} "
         f"{show_unresolvables}{os.linesep}"
-        f"applies_to_shared_count {applies_to_shared_count} "
+        f"lock_applies_to_shared_count {lock_applies_to_shared_count} "
         f"{show_resolvable_shared}{os.linesep}"
-        f"resolved_msgs_count {resolved_msgs_count} "
+        f"lock_resolved_msgs_count {lock_resolved_msgs_count} "
         f"{show_fixed}{os.linesep}"
+        f"unlock_resolved_msgs_count {unlock_resolved_msgs_count}{os.linesep}"
+        f"unlock_applies_to_shared_count {unlock_applies_to_shared_count}{os.linesep}"
     )
     _logger.info(msg_info)
 
-    is_show = unresolvables_count != 0 and show_unresolvables
+    # lock messages
+    is_show = lock_unresolvables_count != 0 and show_unresolvables
     if is_show:  # pragma: no cover
         zzz_unresolvables = f"Unresolvables ({venv_relpath}){os.linesep}"
-        for blob in unresolvables_for_venv:
+        for blob in lock_unresolvables_for_venv:
             zzz_unresolvables += f"{blob!r}{os.linesep}"
         fcn(zzz_unresolvables, err=True)
     else:  # pragma: no cover
         pass
 
-    is_show = applies_to_shared_count != 0 and show_resolvable_shared
+    is_show = lock_applies_to_shared_count != 0 and show_resolvable_shared
     if is_show:  # pragma: no cover
         zzz_resolvables_shared = (
             f".shared resolvable (manually {venv_relpath}):" f"{os.linesep}{os.linesep}"
         )
-        for blob in applies_to_shared_for_venv:
+        for blob in lock_applies_to_shared_for_venv:
             zzz_resolvables_shared += f"{blob!r}{os.linesep}"
         fcn(zzz_resolvables_shared, err=True)
     else:  # pragma: no cover
         pass
 
-    is_show = resolved_msgs_count != 0 and show_fixed
+    is_show = lock_resolved_msgs_count != 0 and show_fixed
     if is_show:  # pragma: no cover
         zzz_fixed = f"Fixed ({venv_relpath}):{os.linesep}{os.linesep}"
-        for blob in msgs_for_venv:
+        for blob in lock_msgs_for_venv:
+            zzz_fixed += f"{blob!r}{os.linesep}"
+        fcn(zzz_fixed, err=True)
+    else:  # pragma: no cover
+        pass
+
+    # unlock messages
+    is_show = unlock_applies_to_shared_count != 0 and show_resolvable_shared
+    if is_show:  # pragma: no cover
+        zzz_resolvables_shared = (
+            f".shared resolvable (manually {venv_relpath}):" f"{os.linesep}{os.linesep}"
+        )
+        for blob in unlock_applies_to_shared_for_venv:
+            zzz_resolvables_shared += f"{blob!r}{os.linesep}"
+        fcn(zzz_resolvables_shared, err=True)
+    else:  # pragma: no cover
+        pass
+
+    is_show = unlock_resolved_msgs_count != 0 and show_fixed
+    if is_show:  # pragma: no cover
+        zzz_fixed = f"Fixed ({venv_relpath}):{os.linesep}{os.linesep}"
+        for blob in unlock_msgs_for_venv:
             zzz_fixed += f"{blob!r}{os.linesep}"
         fcn(zzz_fixed, err=True)
     else:  # pragma: no cover
@@ -364,6 +396,20 @@ def requirements_fix_v2(
     global _logger
     str_path = path.as_posix()
     dotted_path = f"{g_app_name}.cli_dependencies.dependencies_lock"
+    fcn = click.secho
+
+    # Running all venv with the same python interpreter is a bad idea
+    # lock_compile allows, but Fixing.fix_requirements_lock and present_results does not
+    if venv_relpath is None:
+        msg_warn = (
+            "venv relpath not provided. Be conscious of venv and python "
+            "interpreter version"
+        )
+        fcn(msg_warn, fg="red", err=True)
+        sys.exit(12)
+    else:
+        # venv relpath provided ... continue
+        pass
 
     _genre = "mp"
     _flavor = "asz"
@@ -396,7 +442,7 @@ def requirements_fix_v2(
         else:  # pragma: no cover
             pass
     except s.YAMLValidationError as exc:
-        click.secho(str(exc), fg="red", err=True)
+        fcn(str(exc), fg="red", err=True)
         sys.exit(11)
 
     is_increase_logging_verbosity = verbose > 0
@@ -407,7 +453,7 @@ def requirements_fix_v2(
         # logger_mod_this = logging.getLogger(g_logger_dotted_path)
         log_level = max(logging.DEBUG, _logger.level - verbose * 10)
         _logger.setLevel(log_level)
-    else:  # pragma: no cover
+    else:
         pass
 
     try:
@@ -419,13 +465,13 @@ def requirements_fix_v2(
             f"find a pyproject.toml file. {traceback.format_exc()}"
         )
         # raise click.ClickException(msg_exc)
-        click.secho(msg_exc, fg="red", err=True)
+        fcn(msg_exc, fg="red", err=True)
         sys.exit(3)
     except LookupError:
         msg_exc = (
             "In pyproject.toml, expecting sections [[tool.wreck.venvs]]. Create them"
         )
-        click.secho(msg_exc, fg="red", err=True)
+        fcn(msg_exc, fg="red", err=True)
         sys.exit(4)
 
     if is_module_debug:  # pragma: no cover
@@ -441,7 +487,7 @@ def requirements_fix_v2(
         # Careful MissingRequirementsFoldersFiles is a subclass of AssertionError
         # Missing ``.in`` files. Support file(s) not checked
         if isinstance(exc, MissingRequirementsFoldersFiles):
-            click.secho(str(exc), fg="red", err=True)
+            fcn(str(exc), fg="red", err=True)
             sys.exit(6)
         else:
             msg_exc = (
@@ -449,19 +495,19 @@ def requirements_fix_v2(
                 f"it. {traceback.format_exc()}"
             )
             # raise click.ClickException(msg_exc)
-            click.secho(msg_exc, fg="red", err=True)
+            fcn(msg_exc, fg="red", err=True)
             sys.exit(5)
     except NotADirectoryError as exc:
         # venv folder needs to exist
-        click.secho(str(exc), fg="red", err=True)
+        fcn(str(exc), fg="red", err=True)
         sys.exit(7)
     except ValueError as exc:
         # expecting ``[[tool.wreck.venvs]]`` field reqs to be a sequence
-        click.secho(str(exc), fg="red", err=True)
+        fcn(str(exc), fg="red", err=True)
         sys.exit(8)
     except KeyError as exc:
         # No such venv found
-        click.secho(str(exc), fg="red", err=True)
+        fcn(str(exc), fg="red", err=True)
         sys.exit(9)
 
     is_tuple_two_items = (
@@ -472,71 +518,50 @@ def requirements_fix_v2(
     assert isinstance(t_failures, tuple)
     assert isinstance(t_compiled, tuple)
     if is_timeout(t_failures):
-        click.secho("Timeout occurred. Check web connection", err=True)
+        fcn("Timeout occurred. Check web connection", err=True)
         sys.exit(10)
     else:
         is_failures = len(t_failures) != 0
         if is_failures:
             """To cause a failure, an ``.in`` would have to: be
             wrong file format or contain invalid entries"""
-            click.secho(f"failures {t_failures}", err=True)
+            fcn(f"failures {t_failures}", err=True)
             sys.exit(1)
         else:  # pragma: no cover
             # 2nd pass. Fixes locked, creates unlock, fixes unlock
             try:
-                t_whats_fixed = fix_requirements_lock(loader, venv_relpath)
+                fixing = Fixing.fix_requirements_lock(loader, venv_relpath)
             except MissingRequirementsFoldersFiles as exc:
-                click.secho(str(exc), fg="red", err=True)
+                fcn(str(exc), fg="red", err=True)
                 sys.exit(6)
 
-            # present results
-            msgs_fixed, lst_unresolvables, msgs_shared = t_whats_fixed
-            fcn = click.secho
-            if venv_relpath is not None:
-                msgs_for_venv = msgs_fixed
-                unresolvables_for_venv = lst_unresolvables
-                applies_to_shared_for_venv = msgs_shared
+            """Present results.
 
-                present_results(
-                    fcn,
-                    venv_relpath,
-                    msgs_for_venv,
-                    unresolvables_for_venv,
-                    applies_to_shared_for_venv,
-                    show_unresolvables,
-                    show_fixed,
-                    show_resolvable_shared,
-                )
-            else:
-                # loop filters by venv_relpath
-                t_venvs = loader.venv_relpaths
-                for relpath_venv in t_venvs:
-                    msgs_for_venv = [
-                        msg
-                        for msg in msgs_fixed
-                        if msg.venv_path == relpath_venv.as_posix()
-                    ]
-                    unresolvables_for_venv = [
-                        msg
-                        for msg in lst_unresolvables
-                        if msg.venv_path == relpath_venv.as_posix()
-                    ]
-                    applies_to_shared_for_venv = [
-                        msg
-                        for msg in msgs_shared
-                        if msg.venv_path == relpath_venv.as_posix()
-                    ]
+            Only deals with one venv at a time cuz environments and venv
+            required python interpreter version could and most likely will differ
+            """
+            lock_msgs_for_venv = fixing._out_lock_messages.fixed_issues
+            lock_unresolvables_for_venv = fixing._out_lock_messages.unresolvables
+            lock_applies_to_shared_for_venv = (
+                fixing._out_lock_messages.resolvable_shared
+            )
+            unlock_msgs_for_venv = fixing._out_unlock_messages.fixed_issues
+            unlock_applies_to_shared_for_venv = (
+                fixing._out_unlock_messages.resolvable_shared
+            )
 
-                    present_results(
-                        fcn,
-                        relpath_venv.as_posix(),
-                        msgs_for_venv,
-                        unresolvables_for_venv,
-                        applies_to_shared_for_venv,
-                        show_unresolvables,
-                        show_fixed,
-                        show_resolvable_shared,
-                    )
+            present_results(
+                fcn,
+                venv_relpath,
+                lock_msgs_for_venv,
+                lock_unresolvables_for_venv,
+                lock_applies_to_shared_for_venv,
+                unlock_msgs_for_venv,
+                unlock_applies_to_shared_for_venv,
+                show_unresolvables,
+                show_fixed,
+                show_resolvable_shared,
+            )
 
             sys.exit(0)
 

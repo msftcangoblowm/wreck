@@ -21,10 +21,15 @@ from typing import cast
 import pytest
 
 from wreck._safe_path import resolve_joinpath
+from wreck.constants import (
+    SUFFIX_LOCKED,
+    SUFFIX_UNLOCKED,
+)
 from wreck.exceptions import MissingPackageBaseFolder
 from wreck.lock_collections import Ins
 from wreck.lock_datum import (
     InFileType,
+    OutLastSuffix,
     PinDatum,
     _hash_pindatum,
     has_qualifiers,
@@ -418,3 +423,35 @@ def test_is_pin(
         # verify
         actual_is_pin = is_pin(pin.specifiers)
         assert actual_is_pin is expected_is_pin
+
+
+testdata_outlastsuffix = (
+    (
+        OutLastSuffix.LOCK,
+        SUFFIX_LOCKED,
+        True,
+    ),
+    (
+        OutLastSuffix.UNLOCK,
+        SUFFIX_UNLOCKED,
+        False,
+    ),
+)
+ids_outlastsuffix = (
+    "lock",
+    "unlock",
+)
+
+
+@pytest.mark.parametrize(
+    "enum_item, str_item_expected, is_lock_expected",
+    testdata_outlastsuffix,
+    ids=ids_outlastsuffix,
+)
+def test_outlastsuffix(enum_item, str_item_expected, is_lock_expected):
+    """Exercise OutLastSuffix"""
+    # pytest --showlocals --log-level INFO -k "test_outlastsuffix" tests
+    str_value_actual = str(enum_item)
+    assert str_value_actual == str_item_expected
+    is_lock_actual = enum_item == OutLastSuffix.LOCK
+    assert is_lock_actual is is_lock_expected

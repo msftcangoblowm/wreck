@@ -52,7 +52,7 @@ jobs:
     - id: prepare-config-settings
       name: >-
         Build Plugin parameters
-      uses: 'msftcangoblowm/drain-swamp-action@1.0.2'
+      uses: 'msftcangoblowm/drain-swamp-action@1.0.5'
       with:
         plugin_parameters: '{"kind": "current"}'
         checkout: true
@@ -65,7 +65,7 @@ jobs:
         path: '${{ runner.temp }}'
 
     - name: Trans jobs artifact -- upload
-      uses: actions/upload-artifact@v4.5.0
+      uses: actions/upload-artifact@v4.6.0
       with:
           name: config-settings-toml-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
           path: '${{ env.DS_CONFIG_SETTINGS }}'
@@ -114,7 +114,7 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5.3.0
+      uses: actions/setup-python@v5.4.0
       with:
         python-version: "${{ matrix.python-version }}"
         # cache: pip
@@ -147,7 +147,7 @@ jobs:
         python -m coverage xml --fail-under=95
 
     - name: "Upload to Codecov"
-      uses: codecov/codecov-action@v5.1.2
+      uses: codecov/codecov-action@v5.3.1
       with:
         name: unittest-py${{ matrix.python-version }}
         token: ${{ secrets.CODECOV_TOKEN }}

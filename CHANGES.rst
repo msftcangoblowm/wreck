@@ -46,6 +46,12 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - feat: warn .in include .lock (#23)
+   - feat: .lock and .unlock out messages
+   - chore: update pre-commit. add Makefile target
+   - chore: pep639 compliance. delayed setuptools#4759
+   - ci: bump dependencies version
+
 .. scriv-start-here
 
 .. _changes_0-3-1:

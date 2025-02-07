@@ -277,7 +277,8 @@ def test_compile_one_normal(
         timeout=PurePath,
     )
     # verify
-    t_failures = (err_details,)
+    t_msg_failure = (context, Path(out_abspath), err_details)
+    t_failures = (t_msg_failure,)
     if err_details is not None and is_timeout(t_failures):
         pytest.skip("lock_compile requires a web connection")
     else:
@@ -590,14 +591,46 @@ def test_compile_malformed_in(
         context,
         timeout=PurePath,
     )
-    t_failures = (err_details,)
-
     # verify
     assert err_details is not None
+    #    requirements parsing error occurs before web connection check.
+    t_msg_failure = (context, Path(out_abspath), err_details)
+    t_failures = (t_msg_failure,)
 
-    if is_timeout(t_failures):
-        pytest.skip("lock_compile requires a web connection")
-    else:
-        # ugly traceback cuz pip-compile upstream bug
-        assert optabspath_out is None
-        assert "pip._internal.exceptions.InstallationError" in err_details
+    is_no_web_connection = is_timeout(t_failures)
+    # pytest.skip("lock_compile requires a web connection")
+    assert is_no_web_connection is False
+
+    # ugly traceback cuz pip-compile upstream bug
+    assert optabspath_out is None
+    assert "pip._internal.exceptions.InstallationError" in err_details
+
+
+testdata_is_timeout = (
+    (
+        "blah blah blah timeout blah blah blah",
+        True,
+    ),
+    (
+        "blah blah blah blah blah blah",
+        False,
+    ),
+)
+ids_is_timeout = (
+    "failure msg contains timeout",
+    "failure msg does not contain timeout",
+)
+
+
+@pytest.mark.parametrize(
+    "msg, timeout_expected",
+    testdata_is_timeout,
+    ids=ids_is_timeout,
+)
+def test_is_timeout(msg, timeout_expected):
+    """Exercise is_timeout"""
+    # pytest -vv --showlocals --log-level INFO -k "test_is_timeout" tests
+    t_three = (None, None, msg)
+    t_failure = (t_three,)
+    timeout_actual = is_timeout(t_failure)
+    assert timeout_actual is timeout_expected

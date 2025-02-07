@@ -43,6 +43,7 @@ from pathlib import (
 from .check_type import is_ok
 from .constants import (
     SUFFIX_IN,
+    SUFFIX_LOCKED,
     SUFFIX_UNLOCKED,
     g_app_name,
 )
@@ -60,6 +61,7 @@ from .lock_util import (
     ENDINGS,
     abspath_relative_to_package_base_folder,
     is_shared,
+    is_suffixes_ok,
     replace_suffixes_last,
 )
 from .pep518_venvs import (
@@ -114,13 +116,13 @@ class Ins(Collection[FilePins]):
        Automatically reusable Iterator
 
     .. py:attribute:: _files
-       :type: set[FilePins]
+       :type: set[wreck.lock_filepins.FilePins]
 
        Set of FilePins. Which contains the relative path to a Requirement
        file. May contain unresolved constraints
 
     .. py:attribute:: _zeroes
-       :type: set[FilePins]
+       :type: set[wreck.lock_filepins.FilePins]
 
        Set of FilePins that have all constraints resolved
 
@@ -184,16 +186,13 @@ class Ins(Collection[FilePins]):
 
         return ret
 
-    def load(self, suffix_last=SUFFIX_IN):
-        """Load ``.in`` files
+    def _load_filepins(self, suffix_last=SUFFIX_IN):
+        """Loads filepins, but does not run resolution_loop
 
-        :raises:
-
-           - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
-             missing requirements file(s). Create it
-
+        :param suffix_last: Default .in process in file last suffix
+        :type suffix_last: str | None
         """
-        dotted_path = f"{g_app_name}.lock_collections.Ins.load"
+        dotted_path = f"{g_app_name}.lock_collections.Ins._load_filepins"
         if suffix_last is None or suffix_last not in ENDINGS:
             suffix_last = SUFFIX_IN
         else:  # pragma: no cover
@@ -222,7 +221,60 @@ class Ins(Collection[FilePins]):
                 _logger.info(msg_info)
             else:  # pragma: no cover
                 pass
+        else:  # pragma: no cover
+            pass
 
+    def _check_top_level(self):
+        """Before constraints and requirements are resolved, check if
+        any are .lock files
+
+        Gather for reporting feedback
+        """
+        lst_issues = []
+        for fpin in self._files:
+            abspath_f = fpin.file_abspath
+            includes = (
+                (fpin.constraints, "constraints"),
+                (fpin.requirements, "requirements"),
+            )
+            for t_two in includes:
+                lst, lst_name = t_two
+                for val_relpath in lst:
+                    try:
+                        is_suffix_good = is_suffixes_ok(val_relpath)
+                    except (ValueError, TypeError):
+                        continue
+                    is_lock = PurePath(val_relpath).suffix == SUFFIX_LOCKED
+                    if is_suffix_good and is_lock:
+                        msg_warn = (
+                            f"{lst_name} {val_relpath} too restrictive. Instead use .in"
+                        )
+                        t_msg = (self._venv_relpath, abspath_f, msg_warn)
+                        lst_issues.append(t_msg)
+                    else:  # pragma: no cover
+                        pass
+
+        return lst_issues
+
+    def _load_resolution_loop(self, suffix_last=SUFFIX_IN):
+        """After filepins loaded, resolution loop. Only run when suffix is ``.in``
+
+        :param suffix_last: Default .in process in file last suffix
+        :type suffix_last: str | None
+        :raises:
+
+           - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
+             missing requirements file(s). Create it
+
+        """
+        dotted_path = f"{g_app_name}.lock_collections.Ins._load_resolution_loop"
+        if suffix_last is None or suffix_last not in ENDINGS:
+            suffix_last = SUFFIX_IN
+        else:  # pragma: no cover
+            pass
+
+        is_suffix_dot_in = suffix_last == SUFFIX_IN
+        if is_suffix_dot_in:
             # resolution loop
             try:
                 self.resolution_loop()
@@ -240,9 +292,23 @@ class Ins(Collection[FilePins]):
                 _logger.info(msg_info)
             else:  # pragma: no cover
                 pass
-
         else:  # pragma: no cover
             pass
+
+    def load(self, suffix_last=SUFFIX_IN):
+        """Load ``.in`` files
+
+        :param suffix_last: Default .in process in file last suffix
+        :type suffix_last: str | None
+        :raises:
+
+           - :py:exc:`wreck.exceptions.MissingRequirementsFoldersFiles` --
+             missing requirements file(s). Create it
+
+        """
+        # Part I and II. Split to check for .in containing includes to .lock files
+        self._load_filepins(suffix_last=suffix_last)
+        self._load_resolution_loop(suffix_last=suffix_last)
 
     def __len__(self):
         """Item count.
@@ -352,7 +418,7 @@ class Ins(Collection[FilePins]):
 
     @files.setter
     def files(self, val):
-        """Append an FilePins, requirement or constraint
+        """Append an FilePins, requirement, or constraint
 
         :param val:
 

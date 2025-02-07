@@ -29,7 +29,7 @@ from wreck.lock_collections import Ins
 from wreck.lock_compile import lock_compile
 from wreck.lock_datum import InFileType
 from wreck.lock_filepins import FilePins
-from wreck.lock_fixing import fix_requirements_lock
+from wreck.lock_fixing import Fixing
 from wreck.lock_util import replace_suffixes_last
 from wreck.pep518_venvs import VenvMapLoader
 
@@ -161,6 +161,13 @@ testdata_ins_realistic = (
                 ),
                 "requirements/pins-cffi.in",
             ),
+            (
+                Path(__file__).parent.parent.joinpath(
+                    "requirements",
+                    "pins-validate-pyproject-pep639.in",
+                ),
+                "requirements/pins-validate-pyproject-pep639.in",
+            ),
         ),
         (
             ".venv/.python-version",
@@ -182,7 +189,7 @@ testdata_ins_realistic = (
         ),
         does_not_raise(),
         8,
-        3,
+        4,
     ),
     (
         Path(__file__).parent.joinpath(
@@ -352,6 +359,7 @@ def test_ins_realistic(
 ):
     """test wreck.lock_collections.Ins"""
     # pytest -vv --showlocals --log-level INFO -k "test_ins_realistic" tests
+    # pytest -vv --showlocals --log-level INFO tests/test_lock_collections.py::test_ins_realistic\[Has\ both\ requirements\ and\ constraints\] tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_collections.py::test_ins_realistic\[do\ not\ create\ pins\ unlock\ files\] tests
     t_two = logging_strict()
     logger, loggers = t_two
@@ -412,7 +420,7 @@ def test_ins_realistic(
         #    correct python interpreter
         lock_compile(loader, venv_path)
         # Fix .lock files
-        fix_requirements_lock(loader, venv_path)
+        Fixing.fix_requirements_lock(loader, venv_path)
         # Read .in files once
         ins = Ins(loader, venv_path)
         ins.load(suffix_last=None)

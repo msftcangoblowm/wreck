@@ -36,7 +36,7 @@ jobs:
     # checkout and python-setup
     # Not using drain-swamp; outputs are ignored
     - name: "Build Plugin parameters"
-      uses: 'msftcangoblowm/drain-swamp-action@v1'
+      uses: 'msftcangoblowm/drain-swamp-action@1.0.5'
       with:
         plugin_parameters: '{"kind": "tag"}'
         checkout: true
@@ -65,7 +65,7 @@ jobs:
         echo "tag=$(git describe --tags)" >> $GITHUB_OUTPUT
 
     - name: "Install Python"
-      uses: actions/setup-python@v5.3.0
+      uses: actions/setup-python@v5.4.0
       with:
         python-version: "3.9" # Minimum of PYVERSIONS
         # cache: pip
@@ -83,7 +83,7 @@ jobs:
         python -m build
 
     - name: Store the distribution packages
-      uses: actions/upload-artifact@v4.5.0
+      uses: actions/upload-artifact@v4.6.0
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
