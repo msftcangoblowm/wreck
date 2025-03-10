@@ -62,13 +62,18 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - tests(test_lock_compile): remove lines with only posix line separator
-   - ci: bump versions
-   - tests(test_lock_compile): ~/.pip/pip.conf affects pip-compile output
-   - chore(pre-commit): yaml formatting auto fix
-   - chore(pre-commit): typos auto fix
-
 .. scriv-start-here
+
+.. _changes_0-3-3:
+
+Version 0.3.3 — 2025-03-10
+--------------------------
+
+- tests(test_lock_compile): remove lines with only posix line separator
+- ci: bump versions
+- tests(test_lock_compile): ~/.pip/pip.conf affects pip-compile output
+- chore(pre-commit): yaml formatting auto fix
+- chore(pre-commit): typos auto fix
 
 .. _changes_0-3-2:
 
