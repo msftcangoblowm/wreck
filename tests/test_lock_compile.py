@@ -145,6 +145,7 @@ def test_pipcompile_creates_1byte(
         if not line.startswith("--extra-index-url")
         and not line.startswith("--index-url")
         and len(line) != 0
+        and line != "\n"
     ]
     line_count = len(lines_minus_flags)
 
@@ -335,6 +336,7 @@ def test_compile_one_normal(
                 if not line.startswith("--extra-index-url")
                 and not line.startswith("--index-url")
                 and len(line) != 0
+                and line != "\n"
             ]
             line_count = len(lines_minus_flags)
             assert line_count == 0
