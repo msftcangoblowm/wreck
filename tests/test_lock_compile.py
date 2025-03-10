@@ -69,7 +69,32 @@ def test_pipcompile_creates_1byte(
     out_relpath,
     tmp_path,
 ):
-    """Prove pip-compile creates 1B file, from 0B .in"""
+    """Prove pip-compile creates 1B file, from 0B .in
+
+    If ``~/.pip/pip.conf`` has ``extra-index-url`` or ``index-url``
+    will bleed into .lock file. Which throws off the output file size
+    in bytes.
+
+    Without ~/.pip/pip.conf interfering, ``pip-compile`` produces
+    output file
+
+    - expected: 0B
+
+    - actual:   1B
+
+    The 1B is a single posix line separator
+
+    pip-compile puts ``--extra-index-url`` or ``--index-url`` flag
+    lines into lock files. Those are environment specific and should be
+    passed in on the cli
+
+    Example installing package ``decimals`` available from local pypiserver
+
+    .. code-block:: shell
+
+       python -m pip install --extra-index-url="http://localhost:8081/simple/" decimals
+
+    """
     # pytest -vv --showlocals --log-level INFO -k "test_pipcompile_creates_1byte" tests
     # prepare
     #    dest folders
@@ -110,9 +135,20 @@ def test_pipcompile_creates_1byte(
     assert stderr is not None
     #    whitespace or empty
     assert stdout is None
-    #    pip-compile 0B --> 1B proof
-    abspath_out_size_pipcompile = abspath_out.stat().st_size
-    assert abspath_out_size_pipcompile == 1
+
+    str_contents = abspath_out.read_text()
+    sep = os.linesep
+    lines = str_contents.split(sep)
+    lines_minus_flags = [
+        line
+        for line in lines
+        if not line.startswith("--extra-index-url")
+        and not line.startswith("--index-url")
+        and len(line) != 0
+    ]
+    line_count = len(lines_minus_flags)
+
+    assert line_count == 0
 
 
 testdata_empty_in_empty_out = (
@@ -289,9 +325,19 @@ def test_compile_one_normal(
         if expected_file_size_bytes is not None:
             #    To confirm file size
             #    stat -c %s testfile.txt
-            actual_size_bytes = optabspath_out.stat().st_size
-            expected_size_bytes = len(os.linesep)
-            assert actual_size_bytes == expected_size_bytes
+            # ~/.pip/pip.conf could add lines starting with extra-link
+            str_contents = optabspath_out.read_text()
+            sep = os.linesep
+            lines = str_contents.split(sep)
+            lines_minus_flags = [
+                line
+                for line in lines
+                if not line.startswith("--extra-index-url")
+                and not line.startswith("--index-url")
+                and len(line) != 0
+            ]
+            line_count = len(lines_minus_flags)
+            assert line_count == 0
 
 
 testdata_lock_file_paths_to_relpath = (
@@ -343,7 +389,7 @@ def test_lock_file_paths_to_relpath(
     tmp_path,
     prepare_folders_files,
 ):
-    """When creating .lock files post processer abs path --> relative path."""
+    """When creating .lock files post processor abs path --> relative path."""
     # pytest --showlocals --log-level INFO -k "test_lock_file_paths_to_relpath" tests
     # prepare
     #    .in

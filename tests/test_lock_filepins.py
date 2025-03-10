@@ -204,7 +204,7 @@ def test_pindatum_realistic(
     )
     with pytest.raises(ValueError):
         FilePins(abspath_pins_shared_nonsense)
-    # verify -- nonexistant requirement file --> MissingRequirementsFoldersFiles
+    # verify -- nonexistent requirement file --> MissingRequirementsFoldersFiles
     abspath_dogfood_in = cast(
         "Path",
         resolve_joinpath(
@@ -365,9 +365,9 @@ def test_filepins_resolve(
     """Read a FilePins. Resolve, from a set, discards a constraint."""
     # pytest -vv --showlocals --log-level INFO -k "test_filepins_resolve" tests
     fpins_0 = FilePins(abspath_f)
-    # nonexistant FilePins attribute, plural --> AssertionError
+    # nonexistent FilePins attribute, plural --> AssertionError
     with pytest.raises(AssertionError):
         fpins_0.resolve(constraint_relpath, plural="dogfood")
 
-    # nonsense singular --> 'constaint'
+    # nonsense singular --> 'constraint'
     fpins_0.resolve(constraint_relpath, singular="dogfood")

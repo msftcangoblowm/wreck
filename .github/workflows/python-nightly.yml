@@ -1,17 +1,17 @@
 # Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0
 # For details: https://github.com/nedbat/coveragepy/blob/master/NOTICE.txt
 
-name: "Python Nightly Tests"
+name: Python Nightly Tests
 
 on:
   push:
     branches:
-      - "**/*nightly*"
+    - '**/*nightly*'
   schedule:
     # Run at 2:22am early every morning Eastern time (6/7:22 UTC)
     # so that we get tips of CPython development tested.
     # https://crontab.guru/#22_7_%2a_%2a_%2a
-    - cron: "22 7 * * *"
+  - cron: 22 7 * * *
   workflow_dispatch:
 
 defaults:
@@ -20,19 +20,19 @@ defaults:
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: 1
-  LOCK_SUFFIX: '.lock'
+  LOCK_SUFFIX: .lock
 
 permissions:
   contents: read
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.ref }}"
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   tests:
-    name: "${{ matrix.python-version }} on ${{ matrix.platform }}"
-    runs-on: "${{ matrix.platform }}"
+    name: ${{ matrix.python-version }} on ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
     # If it doesn't finish in an hour, it's not going to. Don't spin for six
     # hours needlessly.
     timeout-minutes: 60
@@ -48,23 +48,23 @@ jobs:
           # See https://github.com/deadsnakes/nightly for the source of the nightly
           # builds.
           # bionic: 18, focal: 20, jammy: 22, noble: 24
-          - "ubuntu-22.04"
+        - ubuntu-22.04
         python-version:
           # When changing this list, be sure to check the [gh] list in
           # tox.ini so that tox will run properly. PYVERSIONS
           # Available versions:
           # https://launchpad.net/~deadsnakes/+archive/ubuntu/nightly/+packages
           # https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa
-          - "3.12"
-          - "3.13"
+        - '3.12'
+        - '3.13'
           # - "3.14-full"
           # https://github.com/actions/setup-python#available-versions-of-pypy
-          - "pypy-3.9-nightly"
-          - "pypy-3.10-nightly"
+        - pypy-3.9-nightly
+        - pypy-3.10-nightly
       fail-fast: false
 
     steps:
-    - name: "Check out the repo"
+    - name: Check out the repo
       uses: actions/checkout@v4.2.2
 
     - name: Get latest tag
@@ -72,26 +72,26 @@ jobs:
       run: |
         echo "tag=$(git describe --tags)" >> $GITHUB_OUTPUT
 
-    - name: "Install ${{ matrix.python-version }} with deadsnakes"
+    - name: Install ${{ matrix.python-version }} with deadsnakes
       uses: deadsnakes/action@v3.2.0
       if: "!startsWith(matrix.python-version, 'pypy-')"
       with:
-        python-version: "${{ matrix.python-version }}"
+        python-version: ${{ matrix.python-version }}
 
-    - name: "Install ${{ matrix.python-version }} with setup-python"
+    - name: Install ${{ matrix.python-version }} with setup-python
       uses: actions/setup-python@v5.4.0
-      if: "startsWith(matrix.python-version, 'pypy-')"
+      if: startsWith(matrix.python-version, 'pypy-')
       with:
-        python-version: "${{ matrix.python-version }}"
+        python-version: ${{ matrix.python-version }}
 
-    - name: "Show diagnostic info"
+    - name: Show diagnostic info
       run: |
         set -xe
         python -VV
         python -m site
         env
 
-    - name: "Install dependencies"
+    - name: Install dependencies
       run: |
         python -m pip install -r requirements/tox${{ env.LOCK_SUFFIX }}  -r requirements/prod${{ env.LOCK_SUFFIX }}  -r requirements/kit${{ env.LOCK_SUFFIX }}
 
@@ -108,7 +108,7 @@ jobs:
         python -c 'import os; lst="${{ matrix.platform }}".split("-"); os_short = lst[0]; env_file = os.environ.get("GITHUB_ENV"); f = open(env_file, "a"); print(f"OS_SHORT={os_short}", file=f); f.close();'
         python -c 'import os; pyclean = "${{ matrix.python-version }}" if not "${{ matrix.python-version }}".endswith("-nightly") else "${{ matrix.python-version }}".strip("-nightly"); env_file = os.environ.get("GITHUB_ENV"); f = open(env_file, "a"); print(f"PY_CLEAN={pyclean}", file=f); f.close();'
 
-    - name: "Run tox"
+    - name: Run tox
       run: |
         echo "env.OS_SHORT ${{ env.OS_SHORT }}"
         echo "env.PY_CLEAN ${{ env.PY_CLEAN }}"

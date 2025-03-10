@@ -36,6 +36,22 @@ Changelog
    Known regressions
    ..................
 
+   - in pyproject.toml of [tools.piptools] section will interfere with wreck
+     hashes not supported and findlinks not supported
+
+   - venv missing folder(s). pep518_venvs.py --> NotADirectoryError
+
+     ensure ``.doc/.venv`` does not exist. Then call
+
+     reqs fix --path=/mnt/sda1/dev_parent/decimals --venv-relpath='.venv'
+
+     Not caught Exception results in nasty traceback.
+
+     All venv base folder(s) must exist. Missing folder
+     PosixPath('/mnt/sda1/dev_parent/decimals/.doc/.venv'). Create it
+
+     Should report in one line, not the uncaught traceback
+
    - During ``.in`` load process, line with unknown operator (e.g. ``~~``)
      is silently ignored (#7)
 
@@ -45,6 +61,10 @@ Changelog
 
    Commit items for NEXT VERSION
    ..............................
+
+   - tests(test_lock_compile): ~/.pip/pip.conf affects pip-compile output
+   - chore(pre-commit): yaml formatting auto fix
+   - chore(pre-commit): typos auto fix
 
 .. scriv-start-here
 
@@ -128,7 +148,7 @@ Version 0.2.0 — 2024-12-08
 --------------------------
 
 - docs: fix some in-code links to use intersphinx
-- feat: add support for compatiable release operator (#6)
+- feat: add support for compatible release operator (#6)
 - fix(lock_discrepancy): catch invalid SpecifierSet early. Fcn get_ss_set separated out
 - refactor: move fcn pprint_pins to module lock_datum
 - docs: remove mentions to nonexistent module wreck.lock_inspect

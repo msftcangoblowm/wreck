@@ -104,7 +104,7 @@ New suffixes
    :header: file, description
    :widths: auto
 
-   "\*.in", "raw requirement or contraints file"
+   "\*.in", "raw requirement or constraints file"
    "\*.shared.in", "constraints file shared by more than one venv"
    "\*[.shared].lock", "locked requirement file"
    "\*[.shared].unlock", "unlocked requirement file"
@@ -268,7 +268,7 @@ Any/all known shortcomings are tracked within ``CHANGES.rst`` section
 ``Known regressions``.
 
 Accepted feature requests are tracked within ``CHANGES.rst`` section ``Feature request``.
-There should also be a cooresponding issue.
+There should also be a corresponding issue.
 
 Contributing advice
 --------------------
@@ -284,7 +284,7 @@ The short ramifications are:
 
 - commercial/public entities must obtain a license waiver
 
-Meaning pay to support the project and towards funding ongoing package maintainance.
+Meaning pay to support the project and towards funding ongoing package maintenance.
 
 - Do not change the copyright notice; that's serious IP theft.
 

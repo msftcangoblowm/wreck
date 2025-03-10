@@ -18,7 +18,7 @@ The only thing that is important is to confirm that the semantic version str is 
 Managing version file
 ----------------------
 
-The version file is manually editted.
+The version file is manually edited.
 
 Initialized, once, using setuptools-scm. After that setuptools-scm is not needed.
 

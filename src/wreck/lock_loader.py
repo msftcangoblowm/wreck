@@ -222,7 +222,7 @@ class LoaderImplementation(abc.ABC):
         filter_by_pin=True,
     ) -> set[DATUM]:
         """Implementation is a Callable. For the given task, choose
-        the cooresponding implementation
+        the corresponding implementation
 
         ``.lock`` and ``.unlock`` would expect a Pin
 

@@ -86,7 +86,7 @@ ids_pin_methods = (
     "various constraints pip",
     "various constraints tomli",
     "various constraints isort",
-    "constraints conflicts normalize qualifer",
+    "constraints conflicts normalize qualifier",
 )
 
 

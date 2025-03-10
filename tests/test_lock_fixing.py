@@ -555,7 +555,7 @@ testdata_check_in_includes_lock = (
         1,
     ),
 )
-ids_check_in_includes_lock = ("An .in file includes contraint to .lock file",)
+ids_check_in_includes_lock = ("An .in file includes constraint to .lock file",)
 
 
 @pytest.mark.parametrize(

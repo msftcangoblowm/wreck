@@ -22,7 +22,7 @@ qualifier_0.lock::
     # Solution: temporary nudge pin `tomli>=2.0.2` or just sync to latest
     tomli==2.0.1
 
-    # constaints-various.lock chose 4.12.2 constaints-conflicts.unlock `typing-extensions<4.12.2`
+    # constraints-various.lock chose 4.12.2 constraints-conflicts.unlock `typing-extensions<4.12.2`
     # missing qualifier(s) --> warning message. Not the priority; don't fix
     # Solution: sync chose constrained (previous tagged release) 4.12.1
     typing-extensions==4.12.1

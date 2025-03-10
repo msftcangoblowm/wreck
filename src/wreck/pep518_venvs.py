@@ -695,7 +695,7 @@ class VenvMap(Iterator[VenvReq]):
         """During each iteration, check that requirement files exists
         is performed. The results are stored rather than raising exceptions.
 
-        Checks for existance of ``.in``, ``.unlock`` and ``.lock`` files.
+        Checks for existence of ``.in``, ``.unlock`` and ``.lock`` files.
 
         Does not check for ``.lnk``
 
@@ -1020,7 +1020,7 @@ def get_reqs(loader, venv_path=None, suffix_last=SUFFIX_IN):
 
 
 def fix_check_suffixes(check_suffixes):
-    """Passthrough a Sequence[str]. Coerse str into a non str Sequence.
+    """Passthrough a Sequence[str]. Coerce str into a non str Sequence.
     If unsupported type or None return None
 
     :param check_suffixes: Should be a Sequence[str] or a str

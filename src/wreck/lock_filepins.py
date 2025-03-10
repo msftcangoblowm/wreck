@@ -222,7 +222,7 @@ class FilePins(Collection[PinDatum], Hashable):
             else:  # pragma: no cover
                 pass
 
-        # constraints and requirements are relpath. Existance not checked
+        # constraints and requirements are relpath. Existence not checked
         # lock_infile.InFile checked only the constraints and not the requirements
         self.constraints = set_constraints
         self.requirements = set_requirements

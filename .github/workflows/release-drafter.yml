@@ -4,9 +4,9 @@ on:
   push:
     # branches to consider in the event; optional, defaults to all
     branches:
-      - master
-      - "releases/**"
-      - "stable/**"
+    - master
+    - releases/**
+    - stable/**
 
 jobs:
   update_release_draft:
@@ -17,6 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Drafts your next release notes as Pull Requests are merged into "main"
-      - uses: release-drafter/release-drafter@v6.1.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: release-drafter/release-drafter@v6.1.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

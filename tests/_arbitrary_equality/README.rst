@@ -1,4 +1,4 @@
-There is no support for arbritrary equality operator ``===``
+There is no support for arbitrary equality operator ``===``
 
 Exception ``wreck.exceptions.ArbitraryEqualityNotImplemented`` is raised,
 caught, and converted into ``wreck.lock_discrepancy.UnResolvable`` message

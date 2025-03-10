@@ -102,7 +102,7 @@ def _specifier_length(specifier):
     t_len_3 = "==="
     t_negatives = ("!==",)
     if specifier.startswith(t_len_3):
-        # === artibrary equality
+        # === arbitrary equality
         # https://peps.python.org/pep-0440/#arbitrary-equality
         specifier_len = 3
     elif specifier.startswith(t_len_2) and not specifier.startswith(t_negatives):
@@ -143,7 +143,7 @@ def has_discrepancies_version(d_by_pkg: DatumByPkg):
         has_changed = False
         for pin in pins:
             """Get version. Since a ``.lock`` file, there will only be one
-            specifer ``==[sem version]``"""
+            specifier ``==[sem version]``"""
             specifier = pin.specifiers[0]
             specifier_len = _specifier_length(specifier)
             pkg_sem_version = specifier[specifier_len:]
@@ -679,8 +679,8 @@ def get_the_fixes(
             pass
 
         specifier_len = _specifier_length(unlock_operator)
-        is_arbritrary_equality = specifier_len == 3 and unlock_operator == "==="
-        if is_arbritrary_equality:
+        is_arbitrary_equality = specifier_len == 3 and unlock_operator == "==="
+        if is_arbitrary_equality:
             # ArbitraryEqualityNotImplemented --> UnResolvable
             msg_info = f"{dotted_path} operator not implemented {unlock_operator}"
             raise ArbitraryEqualityNotImplemented(msg_info)
@@ -793,7 +793,7 @@ class UnResolvable:
     details on the issue.
 
     The most prominent details being the package name and Pins
-    (from relevent ``.unlock`` files).
+    (from relevant ``.unlock`` files).
 
     **Track down issue**
 

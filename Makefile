@@ -38,7 +38,7 @@ ifeq ($(is_venv),1)
   is_wheel ?= $(call IS_PACKAGE,wheel)
   is_piptools ?= $(call IS_PACKAGE,pip-tools)
 
-  find_whl = $(shell [[ -z "$(3)" ]] && extention=".whl" || extention="$(3)"; [[ -z "$(2)" ]] && srcdir="dist" || srcdir="$(2)/dist"; [[ -z "$(1)" ]] && whl=$$(ls $$srcdir/$(APP_NAME)*.whl  --format="single-column") || whl=$$(ls $$srcdir/$(1)*.whl --format="single-column"); echo $${whl##*/})
+  find_whl = $(shell [[ -z "$(3)" ]] && extension=".whl" || extension="$(3)"; [[ -z "$(2)" ]] && srcdir="dist" || srcdir="$(2)/dist"; [[ -z "$(1)" ]] && whl=$$(ls $$srcdir/$(APP_NAME)*.whl  --format="single-column") || whl=$$(ls $$srcdir/$(1)*.whl --format="single-column"); echo $${whl##*/})
 endif
 
 ##@ Helpers
@@ -99,7 +99,7 @@ pre-commit:				## Run checks found in .pre-commit-config.yaml
 	@pre-commit run --all-files
 
 .PHONY: update-pre-commit
-update-pre-commit:
+update-pre-commit:		## Bump package to latest version
 	@pre-commit autoupdate
 
 #--strict is on
@@ -239,12 +239,12 @@ configure-pyenv:			## Configure pyenv .python-version files
 	@which pyenv &>/dev/null
 	if [[ "$?" -eq 0 ]]; then
 
-	mkdir .venv || :;
+	mkdir -p .venv || :;
 	pyenv version-name > .venv/.python-version
-	mkdir .doc || :;
+	mkdir -p .doc || :;
 	echo "3.10.14\n" > .doc/.python-version
-	mkdir .tox || :;
+	mkdir -p .tox || :;
 	pyenv versions --bare > .tox/.python-version
-	mkdir .rst2html5 || :;
+	mkdir -p .rst2html5 || :;
 
 	fi

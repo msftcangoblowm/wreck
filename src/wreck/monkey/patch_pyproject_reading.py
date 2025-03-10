@@ -432,7 +432,7 @@ class ReadPyprojectStrict(ReadPyprojectBase):
         :type key_value: str | None
         """
         # import dataclasses
-        # from setuptools_scm._config import Configuation
+        # from setuptools_scm._config import Configuration
         # [field.name for field in fields(Configuration)]
         keys_allowed = (
             "relative_to",

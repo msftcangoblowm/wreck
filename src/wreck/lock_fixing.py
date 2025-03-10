@@ -222,7 +222,7 @@ class OutMessages:
 
 
 def _check_is_dry_run(is_dry_run, default=False):
-    """Coerse into a bool. Might not be possible to support feature is_dry_run
+    """Coerce into a bool. Might not be possible to support feature is_dry_run
 
     :param is_dry_run: Dry run would ideally not write to disk
     :type is_dry_run: typing.Any
@@ -356,7 +356,7 @@ def _load_once(
                 set_pindatums.add(pindatum_lock)
                 d_subset_all_lock.update({pkg_name: set_pindatums})
 
-    """In .lock files search for version discrepencies
+    """In .lock files search for version discrepancies
     See Pins.by_pkg_with_issues
     """
     locks_pkg_by_versions = has_discrepancies_version(d_subset_all_lock)
@@ -498,7 +498,7 @@ def _load_once(
             nudge_pin_lock = f"{pkg_name}{lock_nudge_pin}"
 
             msg_warn = (
-                f"{dotted_path} resolveable conflict. "
+                f"{dotted_path} resolvable conflict. "
                 f"During .unlock fix, will add nudge pin {nudge_pin_unlock}"
             )
             _logger.warning(msg_warn)
@@ -660,7 +660,7 @@ class Fixing:
 
        - :py:exc:`TypeError` -- unsupported type for venv_relpath expects str
 
-       - :py:exc:`NotADirectoryError` -- there is no cooresponding venv folder. Create it
+       - :py:exc:`NotADirectoryError` -- there is no corresponding venv folder. Create it
 
        - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs should be a
          list of relative path without .in .unlock or .lock suffix
@@ -759,7 +759,7 @@ class Fixing:
         :rtype: wreck.lock_fixing.Fixing
         :raises:
 
-           - :py:exc:`NotADirectoryError` -- there is no cooresponding venv folder. Create it
+           - :py:exc:`NotADirectoryError` -- there is no corresponding venv folder. Create it
 
            - :py:exc:`ValueError` -- expecting [[tool.wreck.venvs]] field reqs should be a
              list of relative path without .in .unlock or .lock suffix

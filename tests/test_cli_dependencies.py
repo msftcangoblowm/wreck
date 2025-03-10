@@ -267,7 +267,7 @@ def test_lock_unlock_docs_venv(
             shutil.copy2(abspath_src, abspath_dest)
 
         #    Needed by '.venv'
-        seq_in_supplamental = [
+        seq_in_supplemental = [
             "requirements/pip.in",
             "requirements/pip-tools.in",
             "requirements/dev.in",
@@ -276,8 +276,8 @@ def test_lock_unlock_docs_venv(
             "requirements/pins.shared.in",
             "requirements/pins-typing.in",
         ]
-        prepare_folders_files(seq_in_supplamental, path_tmp_dir)
-        for relpath_f in seq_in_supplamental:
+        prepare_folders_files(seq_in_supplemental, path_tmp_dir)
+        for relpath_f in seq_in_supplemental:
             abspath_src = resolve_joinpath(path_cwd, relpath_f)
             abspath_dest = resolve_joinpath(path_tmp_dir, relpath_f)
             shutil.copy2(abspath_src, abspath_dest)
@@ -410,8 +410,8 @@ testdata_lock_unlock_compile_with_prepare = (
 ids_lock_unlock_compile_with_prepare = (
     "lock missing folders and files",
     "unlock missing folders and files",
-    "lock nonexistant venv path",
-    "unlock nonexistant venv path",
+    "lock nonexistent venv path",
+    "unlock nonexistent venv path",
 )
 
 

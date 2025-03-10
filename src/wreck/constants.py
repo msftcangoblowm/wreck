@@ -49,7 +49,7 @@ package level constants
 
    requirements ``in`` files do not set dependency version restrictions
    unless absolutely unavoidable. In which case, every restriction **must**
-   be throughly documented to defend the justification for imposing
+   be thoroughly documented to defend the justification for imposing
    such a restriction so know later whether to keep it or not
 
 .. py:data:: PATH_PIP_COMPILE

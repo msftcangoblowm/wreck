@@ -220,7 +220,7 @@ testdata_read_pyproject_copyright_and_version = (
     ),
 )
 ids_read_pyproject_copyright_and_version = (
-    "Nonexistant pyproject.toml",
+    "Nonexistent pyproject.toml",
     "No such section [tool.Bob]",
     "str",
     "Sequence[str]",
@@ -351,7 +351,10 @@ ids_toml_array_of_tables = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    ("toml_contents, tool_name, key_name, expection, " "expected_section_items_count"),
+    (
+        "toml_contents, tool_name, key_name, expectation, "
+        "expected_section_items_count"
+    ),
     testdata_toml_array_of_tables,
     ids=ids_toml_array_of_tables,
 )
@@ -359,7 +362,7 @@ def test_toml_array_of_tables(
     toml_contents,
     tool_name,
     key_name,
-    expection,
+    expectation,
     expected_section_items_count,
     tmp_path,
     logging_strict,
@@ -374,14 +377,14 @@ def test_toml_array_of_tables(
     path_f = tmp_path / "pyproject.toml"
     path_f.write_text(toml_contents)
 
-    with expection:
+    with expectation:
         data_1 = ReadPyproject()(
             path=path_f,
             tool_name=tool_name,
             key_name=key_name,
             is_expect_list=True,
         )
-    if isinstance(expection, does_not_raise):
+    if isinstance(expectation, does_not_raise):
         assert isinstance(data_1, PyProjectData)
 
         section_items = data_1.section

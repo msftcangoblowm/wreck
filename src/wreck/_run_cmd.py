@@ -52,7 +52,7 @@ def run_cmd(cmd, cwd=None, env=None):
         - :py:exc:`TypeError` -- Unsupported type for 1st arg cmd
 
     """
-    # Coerse into a str. Use shlex.split on the str
+    # Coerce into a str. Use shlex.split on the str
     is_nonstr_sequence = isinstance(cmd, Sequence) and not isinstance(cmd, str)
     if is_nonstr_sequence:
         # os.fspath(x)
@@ -63,7 +63,7 @@ def run_cmd(cmd, cwd=None, env=None):
         msg_warn = f"expected 1st param cmd to be a Sequence got {type(cmd)}"
         raise TypeError(msg_warn)
 
-    # splitting Windows path will remove all path seperators
+    # splitting Windows path will remove all path separators
     # https://ss64.com/nt/syntax-esc.html
     cmd_2 = shlex.split(cmd_1, posix=not is_win)
 

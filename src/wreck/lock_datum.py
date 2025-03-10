@@ -141,7 +141,7 @@ def _hash_pindatum(file_abspath, pkg_name, qualifiers):
     :type file_abspath: pathlib.Path
     :param pkg_name: Package name
     :type pkg_name: str
-    :param qualifiers: List of qualifers. May
+    :param qualifiers: List of qualifiers. May
     :type qualifiers: list[str]
     :returns: hash of PinDatum or subclass
     :rtype: int
@@ -284,7 +284,7 @@ def pprint_pins(pins):
 
 
 class InFileType(enum.Enum):
-    """Each .in files constaints and requirements have to be resolved.
+    """Each .in files constraints and requirements have to be resolved.
     This occurs recursively. Once resolved, InFile is moved from FILES --> ZEROES set
 
     .. py:attribute:: FILES

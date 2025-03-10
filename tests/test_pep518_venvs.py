@@ -120,7 +120,7 @@ def test_venvmaploader(
         venv_map[20000]
 
     with pytest.raises(KeyError):
-        venv_map.reqs("nonexistant-file.in")
+        venv_map.reqs("nonexistent-file.in")
 
     # ensure_abspath unsupported type. Expects str or Path
     with pytest.raises(TypeError):
@@ -457,7 +457,7 @@ def test_venv_get_reqs(
                 assert actual_req_file_count_c == expected_req_file_count
             else:
                 # skipped which Exception?
-                exceptation_exc = expectation.expected_exception  # noqa: F841
+                expectation_exc = expectation.expected_exception  # noqa: F841
 
 
 def test_check_venv_relpath(

@@ -134,3 +134,6 @@ dmypy.json
 # Removed from project
 .coverage
 .coverage-*
+
+# posts for raise awareness
+marketing/

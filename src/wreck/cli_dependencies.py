@@ -359,7 +359,7 @@ def requirements_fix_v2(
        ``pypi.org`` and swapping out an obscure package with their own.
 
     3. The stars align in the cosmos, miraculously, all package authors regularly
-       update their packages dependencys' locks. Get that warm feeling inside
+       update their packages dependencies' locks. Get that warm feeling inside
        knowing we are alive, loved, and appreciated. We shout,
        ``it's a miracle!`` and be right!
 

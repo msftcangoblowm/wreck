@@ -600,7 +600,7 @@ class Ins(Collection[FilePins]):
                     else:  # pragma: no cover
                         pass
 
-        # Add new (contraint|requirement to self.files)
+        # Add new (constraint|requirement to self.files)
         for abspath_constraint in add_these:
             if is_module_debug:  # pragma: no cover
                 msg_info = (
@@ -612,15 +612,15 @@ class Ins(Collection[FilePins]):
                 pass
             self.files = abspath_constraint
 
-        # Any contraints zeroes?
+        # Any constraints zeroes?
         self.move_zeroes()
 
         # Resolve with zeroes
         for in_ in self.files:
             for plural, singular in attrib_and_singular:
                 set_plural = getattr(in_, plural)
-                constaints_copy = copy.deepcopy(set_plural)
-                for constraint_relpath in constaints_copy:
+                constraints_copy = copy.deepcopy(set_plural)
+                for constraint_relpath in constraints_copy:
                     # may raise FileNotFoundError
                     try:
                         abspath_constraint = abspath_relative_to_package_base_folder(
@@ -804,13 +804,13 @@ class Ins(Collection[FilePins]):
             is_result_same = is_result_same_files and is_result_same_zeroes
             if not is_resolved and is_result_same:
                 remaining_files = [in_.file_abspath for in_ in self.files]
-                missing_contraints = [in_.constraints for in_ in self.files]
+                missing_constraints = [in_.constraints for in_ in self.files]
                 missing_requirements = [in_.requirements for in_ in self.files]
                 msg_warn = (
                     f"{dotted_path} Missing .in requirements file(s). "
                     "Unable to resolve constraint(s) or requirements(s). "
                     f"Files remaining: {remaining_files}. "
-                    f"Missing constraints (-c): {missing_contraints} "
+                    f"Missing constraints (-c): {missing_constraints} "
                     f"Missing requirements (-r): {missing_requirements}"
                 )
                 _logger.warning(msg_warn)

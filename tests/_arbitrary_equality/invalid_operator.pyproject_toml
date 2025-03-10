@@ -23,7 +23,7 @@ dependencies = { file = ['requirements/prod.unlock'] }
 optional-dependencies.various = { file = ['requirements/invalid_operator_0.lock'] }
 optional-dependencies.conflicts = { file = ['requirements/invalid_operator_1.lock'] }
 
-# Editted manually. From package base folder:
+# Edited manually. From package base folder:
 # get tagged version, :code:`scm-version get`
 # get current version :code:`drain-swamp current`
 version = {attr = 'wreck._version.__version__'}
