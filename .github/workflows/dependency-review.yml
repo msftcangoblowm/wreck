@@ -30,7 +30,7 @@ jobs:
       uses: actions/checkout@v4.2.2
 
     - name: Dependency Review
-      uses: actions/dependency-review-action@0e562a634bc78112666f13074ce17c57dbc75592
+      uses: actions/dependency-review-action@ce3cf9537a52e8119d91fd484ab5b8a807627bf8
       with:
         base-ref: ${{ github.event.pull_request.base.sha || 'master' }}
         head-ref: ${{ github.event.pull_request.head.sha || github.ref }}
