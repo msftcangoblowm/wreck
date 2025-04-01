@@ -44,7 +44,7 @@ jobs:
         python_version: '3.9'
 
     - name: Download artifact
-      uses: actions/download-artifact@v4.1.9
+      uses: actions/download-artifact@v4.2.1
       with:
         name: config-settings-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
         path: ${{ runner.temp }}
@@ -103,7 +103,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v4.1.9
+      uses: actions/download-artifact@v4.2.1
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
@@ -133,7 +133,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v4.1.9
+      uses: actions/download-artifact@v4.2.1
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
@@ -178,7 +178,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v4.1.9
+      uses: actions/download-artifact@v4.2.1
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
