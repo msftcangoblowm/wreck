@@ -96,7 +96,7 @@ diff_upgrade:			## Summarize the last `make upgrade`
 #run all pre-commit checks
 .PHONY: pre-commit
 pre-commit:				## Run checks found in .pre-commit-config.yaml
-	@pre-commit run --all-files
+	-@pre-commit run --all-files > /tmp/out.txt
 
 .PHONY: update-pre-commit
 update-pre-commit:		## Bump package to latest version

@@ -62,6 +62,10 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - ci: bump gh actions version
+   - chore: bump logging-strict pytest-logging-strict mypy types-setuptools
+   - fix: remove dependency setuptools from requirement files
+
 .. scriv-start-here
 
 .. _changes_0-3-3:

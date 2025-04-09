@@ -24,7 +24,7 @@ certifi==2024.8.30
     #   sphobjinv
 charset-normalizer==3.4.0
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   -r docs/../requirements/prod.in
     #   click-log
@@ -75,7 +75,7 @@ jsonschema==4.23.0
     # via sphobjinv
 jsonschema-specifications==2024.10.1
     # via jsonschema
-logging-strict==1.5.0
+logging-strict==1.6.0.post2
     # via -r docs/../requirements/prod.in
 markdown-it-py==3.0.0
     # via
@@ -223,5 +223,3 @@ pip==24.1.2
     #   -r docs/requirements.in
     #   pip-tools
     #   sphinx-external-toc-strict
-setuptools==75.6.0
-    # via pip-tools

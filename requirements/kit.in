@@ -13,7 +13,6 @@ importlib-metadata>=8.5.0
 # Things needed to make distribution kits.
 # "make upgrade" turns this into requirements/kit.pip.
 build
-setuptools>=75.1.0
 
 auditwheel
 cibuildwheel  # .github/workflows/kit.yml

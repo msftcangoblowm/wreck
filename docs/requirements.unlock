@@ -1,7 +1,7 @@
 click
 importlib-metadata>=8.5.0
 interrogate
-logging-strict>=1.5.0
+logging-strict>=1.6.0.post2
 packaging
 pip-requirements-parser
 pip-tools

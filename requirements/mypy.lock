@@ -1,4 +1,4 @@
-mypy==1.14.1
+mypy==1.15.0
     # via -r requirements/mypy.in
 mypy-extensions==1.0.0
     # via mypy
@@ -6,7 +6,7 @@ tomli==2.2.1 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   mypy
-types-setuptools==75.8.0.20250110
+types-setuptools==78.1.0.20250329
     # via -r requirements/pins-typing.in
 typing-extensions==4.12.2 ; python_version < "3.11"
     # via

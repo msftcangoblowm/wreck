@@ -68,7 +68,7 @@ jeepney==0.8.0
     #   secretstorage
 keyring==25.5.0
     # via twine
-logging-strict==1.5.0
+logging-strict==1.6.0.post2
     # via
     #   -r requirements/dev.in
     #   -r requirements/prod.in
@@ -84,7 +84,7 @@ more-itertools==10.6.0
     #   blackdoc
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.14.1
+mypy==1.15.0
     # via -r requirements/dev.in
 mypy-extensions==1.0.0
     # via
@@ -139,7 +139,7 @@ pytest==8.3.4
     #   pytest-regressions
 pytest-datadir==1.5.0
     # via pytest-regressions
-pytest-logging-strict==0.2.0
+pytest-logging-strict==0.2.2
     # via -r requirements/dev.in
 pytest-regressions==2.5.0
     # via -r requirements/dev.in
@@ -184,7 +184,7 @@ tomli==2.2.1 ; python_version < "3.11"
     #   pytest
 twine==5.1.1
     # via -r requirements/dev.in
-types-setuptools==75.8.0.20250110
+types-setuptools==78.1.0.20250329
     # via -r requirements/pins-typing.in
 typing-extensions==4.12.2 ; python_version < "3.11"
     # via
@@ -209,6 +209,4 @@ zipp==3.21.0
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.3.1
-    # via pip-tools
-setuptools==75.8.0
     # via pip-tools

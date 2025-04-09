@@ -12,7 +12,7 @@ importlib-metadata==8.5.0
     # via
     #   -r requirements/prod.in
     #   build
-logging-strict==1.5.0
+logging-strict==1.6.0.post2
     # via -r requirements/prod.in
 packaging==24.2
     # via
@@ -51,6 +51,4 @@ zipp==3.21.0
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.3.1
-    # via pip-tools
-setuptools==75.8.0
     # via pip-tools

@@ -8,16 +8,16 @@ flake8-pyi
 flake8-pyproject
 importlib-metadata>=8.5.0
 isort
-logging-strict>=1.5.0
+logging-strict>=1.6.0.post2
 mypy
 packaging
 pip-requirements-parser
 pip-tools
-pytest-logging-strict>=0.2.0
+pytest-logging-strict>=0.2.2
 pytest-regressions
 pytest>=7.1
 tomli>=2.0.2; python_version<"3.11"
 twine
-types-setuptools>=75.8.0.20250110
+types-setuptools>=78.1.0.20250329
 typing-extensions; python_version<"3.11"
 validate-pyproject>=0.23

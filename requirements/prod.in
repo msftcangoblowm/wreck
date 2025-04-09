@@ -20,4 +20,4 @@ pip-requirements-parser
 importlib-metadata>=8.5.0
 
 # registry API release
-logging-strict>=1.5.0
+logging-strict>=1.6.0.post2
