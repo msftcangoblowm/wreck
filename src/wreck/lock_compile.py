@@ -189,11 +189,12 @@ def _compile_one(
 
     cmd = (
         ep_path,
-        "--allow-unsafe",
+        "--no-allow-unsafe",
         "--no-header",
         "--resolver",
         "backtracking",
         "--pip-args='--isolated'",
+        "--no-emit-options",
         f"--pip-args='--timeout={timeout!s}'",
         f"{line_python}",
         "-o",

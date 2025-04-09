@@ -62,6 +62,8 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - fix: do not allow unsafe dependencies (#35)
+   - fix: do not emit build front end options (#30)
    - ci: bump gh actions version
    - chore: bump logging-strict pytest-logging-strict mypy types-setuptools
    - fix: remove dependency setuptools from requirement files

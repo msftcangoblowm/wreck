@@ -198,8 +198,9 @@ tomli==2.2.1 ; python_version < "3.11"
     #   logging-strict
     #   pip-tools
     #   sphinx
-typing-extensions==4.12.2
+typing-extensions==4.12.2 ; python_version < "3.11"
     # via
+    #   -c docs/../requirements/pins.shared.in
     #   anyio
     #   domdf-python-tools
     #   logging-strict
@@ -218,8 +219,5 @@ zipp==3.21.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==24.1.2
-    # via
-    #   -r docs/requirements.in
-    #   pip-tools
-    #   sphinx-external-toc-strict
+# pip
+# setuptools
