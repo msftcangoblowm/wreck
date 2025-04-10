@@ -62,14 +62,20 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - tests: use logging_strict_tech_niques.get_locals_dynamic remove get_locals
-   - fix: do not allow unsafe dependencies (#35)
-   - fix: do not emit build front end options (#30)
-   - ci: bump gh actions version
-   - chore: bump logging-strict pytest-logging-strict mypy types-setuptools
-   - fix: remove dependency setuptools from requirement files
-
 .. scriv-start-here
+
+.. _changes_0-3-4:
+
+Version 0.3.4 — 2025-04-10
+--------------------------
+
+- chore: pep639 compliance
+- tests: use logging_strict_tech_niques.get_locals_dynamic remove get_locals
+- fix: do not allow unsafe dependencies (#35)
+- fix: do not emit build front end options (#30)
+- ci: bump gh actions version
+- chore: bump logging-strict pytest-logging-strict mypy types-setuptools
+- fix: remove dependency setuptools from requirement files
 
 .. _changes_0-3-3:
 
