@@ -20,7 +20,7 @@ from pathlib import (
 from typing import cast
 
 import pytest
-from logging_strict.tech_niques import get_locals  # noqa: F401
+from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
 
 from wreck._safe_path import resolve_joinpath
 from wreck.constants import (  # g_app_name,  # noqa: F401
@@ -126,10 +126,11 @@ def test_lock_util_is_shared(file_name, expectation, expected_is_shared):
     with expectation:
         actual = is_shared(file_name)
     if isinstance(expectation, does_not_raise):
-        # func_path = f"{g_app_name}.lock_util.is_shared"
-        # args = (file_name,)
-        # kwargs = {}
-        # t_ret = get_locals(func_path, is_shared, *args, **kwargs)
+        """
+        args = (file_name,)
+        kwargs = {}
+        t_ret = get_locals_dynamic(is_shared, *args, **kwargs)
+        """
         pass
 
         assert actual is expected_is_shared

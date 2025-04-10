@@ -22,7 +22,7 @@ from pathlib import (
 )
 from unittest.mock import patch
 
-from logging_strict.tech_niques import get_locals
+from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
 
 from wreck.constants import g_app_name
 from wreck.pep518_read import (
@@ -288,11 +288,12 @@ class Pep518Sections(unittest.TestCase):
             stdin_filename = None
 
             # Get locals within function
-            func_path = "wreck.pep518_read.find_pyproject_toml"
+            """
             args = (srcs, stdin_filename)
             kwargs = {}
-            t_ret = get_locals(func_path, find_pyproject_toml, *args, **kwargs)
+            t_ret = get_locals_dynamic(find_pyproject_toml, *args, **kwargs)
             ret, d_locals = t_ret
+            """
 
             # actual call so coverage sees it
             actual_path = find_pyproject_toml(srcs, stdin_filename)

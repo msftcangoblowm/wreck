@@ -307,10 +307,10 @@ def test_pindatum_realistic(
 
     # Failing here under Windows. See what is happening inside the function
     """
-    func_path = f"{g_app_name}.lock_inspect._wrapper_pins_by_pkg"
+    from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
     args = (loader, venv_path)
     kwargs = {"suffix": None, "filter_by_pin": None}
-    t_ret = get_locals(func_path, _wrapper_pins_by_pkg, *args, **kwargs)  # noqa: F841
+    t_ret = get_locals_dynamic(_wrapper_pins_by_pkg, *args, **kwargs)  # noqa: F841
     """
 
     # Reorganize Pin by pkgname. Need to prepare .lock file

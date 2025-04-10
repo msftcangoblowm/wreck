@@ -62,6 +62,7 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - tests: use logging_strict_tech_niques.get_locals_dynamic remove get_locals
    - fix: do not allow unsafe dependencies (#35)
    - fix: do not emit build front end options (#30)
    - ci: bump gh actions version

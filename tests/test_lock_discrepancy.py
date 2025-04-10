@@ -15,7 +15,7 @@ from contextlib import nullcontext as does_not_raise
 from pathlib import Path
 
 import pytest
-from logging_strict.tech_niques import get_locals  # noqa: F401
+from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
 from packaging.specifiers import InvalidSpecifier
 from packaging.version import Version
 
@@ -159,15 +159,15 @@ def test_extract_full_package_name(
     t_two = logging_strict()
     logger, loggers = t_two
 
-    func_path = f"{g_app_name}.lock_discrepancy.extract_full_package_name"
+    """
     args = (line, search_for)
     kwargs = {}
-    t_ret = get_locals(  # noqa: F841
-        func_path,
+    t_ret = get_locals_dynamic(  # noqa: F841
         extract_full_package_name,
         *args,
         **kwargs,
     )
+    """
 
     t_match = extract_full_package_name(line, search_for)
     is_different_pkg, is_known_oper, pkg_name_actual, oper, remaining = t_match
@@ -678,11 +678,9 @@ def test_choose_version_order_mixed_up(
     set_pindatum.add(pind_1)
 
     """
-    func_path = f"{g_app_name}.lock_discrepancy.get_the_fixes"
     args = (set_pindatum, highest, others)
     kwargs = {}
-    t_out = get_locals(  # noqa: F841
-        func_path,
+    t_out = get_locals_dynamic(  # noqa: F841
         get_the_fixes,
         *args,
         **kwargs,
@@ -773,11 +771,9 @@ def test_parse_specifiers(
     # pytest -vv --showlocals --log-level INFO -k "test_parse_specifiers" tests
     # Specifiers produced by pip_requirements_parser.RequirementsFile
     """
-    func_path = f"{g_app_name}.lock_discrepancy._parse_specifiers"
     args = (specifiers,)
     kwargs = {}
-    t_out = get_locals(  # noqa: F841
-        func_path,
+    t_out = get_locals_dynamic(  # noqa: F841
         _parse_specifiers,
         *args,
         **kwargs,

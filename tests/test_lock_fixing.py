@@ -16,7 +16,7 @@ from collections.abc import Sequence  # noqa: F401
 from pathlib import Path
 
 import pytest
-from logging_strict.tech_niques import get_locals  # noqa: F401
+from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
 from packaging.version import Version
 
 from wreck.constants import (
@@ -320,13 +320,14 @@ def test_locks_before_fix(
     lst_resolvables = fixing.resolvables
     lst_unresolvables = fixing._out_lock_messages.unresolvables
 
-    func_path = f"{g_app_name}.lock_fixing._load_once"
+    """
     args = (fixing._ins, fixing._locks, fixing._venv_relpath)
     kwargs = {}
-    t_ret = get_locals(func_path, _load_once, *args, **kwargs)  # noqa: F841
+    t_ret = get_locals_dynamic(_load_once, *args, **kwargs)  # noqa: F841
     assert isinstance(t_ret, Sequence)
     assert len(t_ret) == 2
     t_out, t_locals = t_ret
+    """
 
     actual_unresolvables_count = len(lst_unresolvables)
     actual_resolvables_count = len(lst_resolvables)

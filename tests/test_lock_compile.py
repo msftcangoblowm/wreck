@@ -537,10 +537,10 @@ def test_lock_compile_live(
 
     with expectation:
         """
-        func_path = f"{g_app_name}.lock_inspect.lock_compile"
+        from logging_strict.tech_niques import get_locals_dynamic
         args = (loader, venv_relpath)
         kwargs = {}
-        t_ret = get_locals(func_path, lock_compile, *args, **kwargs)  # noqa: F841
+        t_ret = get_locals_dynamic(lock_compile, *args, **kwargs)  # noqa: F841
         t_status, t_locals = t_ret
         """
         t_status = lock_compile(
