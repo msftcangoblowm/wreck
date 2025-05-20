@@ -1,6 +1,7 @@
-click
-importlib-metadata>=8.5.0
-logging-strict>=1.6.0.post2
+click==8.1.7; python_version < "3.10"
+click==8.2.0; python_version >= "3.10"
+importlib-metadata>=8.7.0
+logging-strict>=1.6.1
 packaging
 pip-requirements-parser
 pip-tools

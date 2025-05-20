@@ -1,5 +1,4 @@
 import logging
-import sys
 from collections.abc import Sequence
 from typing import (
     Any,
@@ -19,17 +18,17 @@ from .lock_discrepancy import (
 )
 from .pep518_venvs import VenvMapLoader
 
-if sys.version_info >= (3, 11):  # pragma: no cover py-ge-311-else
-    from typing import Self
-else:  # pragma: no cover py-ge-311
-    from typing_extensions import Self
-
 __all__ = ("Fixing",)
 is_module_debug: Final[bool]
 _logger: Final[logging.Logger]
 
 class OutMessages:
-    __slots__: tuple[str, str, str, str]
+    __slots__ = (
+        "_last_suffix",
+        "_unresolvables",
+        "_fixed_issues",
+        "_resolvable_shared",
+    )
 
     def __init__(self, last_suffix: OutLastSuffix) -> None: ...
     def append(self, item: Any, last_suffix: OutLastSuffix = ...) -> None: ...

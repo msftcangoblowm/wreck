@@ -192,6 +192,8 @@ linkcheck_request_headers = {
 # in conf.py --> nitpicky = True
 nitpick_ignore = [
     ("py:class", "ValidatorType"),
+    ("py:class", "t.Any"),
+    ("py:class", "pathlib._local.Path"),
 ]
 
 favicons = [

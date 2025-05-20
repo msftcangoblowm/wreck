@@ -1,23 +1,24 @@
 black
 blackdoc
 cffi>=1.17.1
-click
+click==8.1.7; python_version < "3.10"
+click>=8.2.0; python_version >= "3.10"
 coverage
 flake8
 flake8-pyi
 flake8-pyproject
-importlib-metadata>=8.5.0
+importlib-metadata>=8.7.0
 isort
-logging-strict>=1.6.0.post2
+logging-strict>=1.6.1
 mypy
 packaging
 pip-requirements-parser
 pip-tools
-pytest-logging-strict>=0.2.2
+pytest-logging-strict>=0.2.3
 pytest-regressions
 pytest>=7.1
-tomli>=2.0.2; python_version<"3.11"
+tomli>=2.2.1; python_version<"3.11"
 twine
 types-setuptools>=78.1.0.20250329
 typing-extensions; python_version<"3.11"
-validate-pyproject>=0.23
+validate-pyproject>=0.24.1

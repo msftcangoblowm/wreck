@@ -8,11 +8,7 @@
 colorama>=0.4.6; platform_system=="Windows"
 
 # pip-tools --> build --> importlib-metadata
-importlib-metadata>=8.5.0
-
-# Things needed to make distribution kits.
-# "make upgrade" turns this into requirements/kit.pip.
-build
+importlib-metadata>=8.7.0
 
 auditwheel
 cibuildwheel  # .github/workflows/kit.yml

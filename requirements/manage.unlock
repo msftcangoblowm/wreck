@@ -1,11 +1,12 @@
 cffi>=1.17.1
-click
-importlib-metadata>=8.5.0
-logging-strict>=1.6.0.post2
+click==8.1.7; python_version < "3.10"
+click>=8.2.0; python_version >= "3.10"
+importlib-metadata>=8.7.0
+logging-strict>=1.6.1
 packaging
 pip-requirements-parser
 pip-tools
 pre-commit
-tomli>=2.0.2; python_version<"3.11"
+tomli>=2.2.1; python_version<"3.11"
 typing-extensions; python_version<"3.11"
-virtualenv>=20.26.6
+virtualenv>=20.29.0

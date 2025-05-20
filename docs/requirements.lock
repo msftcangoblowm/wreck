@@ -1,12 +1,12 @@
 alabaster==1.0.0
     # via sphinx
-anyio==4.6.2.post1
+anyio==4.8.0
     # via
     #   starlette
     #   watchfiles
 appdirs==1.4.4
     # via logging-strict
-attrs==24.3.0
+attrs==24.2.0
     # via
     #   interrogate
     #   jsonschema
@@ -16,23 +16,12 @@ attrs==24.3.0
     #   sphobjinv
 babel==2.16.0
     # via sphinx
-build==1.2.2.post1
-    # via pip-tools
-certifi==2024.8.30
+certifi==2025.4.26
     # via
     #   requests
     #   sphobjinv
-charset-normalizer==3.4.0
+charset-normalizer==3.4.2
     # via requests
-click==8.1.8
-    # via
-    #   -r docs/../requirements/prod.in
-    #   click-log
-    #   interrogate
-    #   pip-tools
-    #   scriv
-    #   sphinx-external-toc-strict
-    #   uvicorn
 click-log==0.4.0
     # via scriv
 colorama==0.4.6
@@ -62,11 +51,11 @@ idna==3.10
     #   requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==8.5.0
+importlib-metadata==8.7.0
     # via -r docs/../requirements/prod.in
 interrogate==1.7.0
     # via -r docs/requirements.in
-jinja2==3.1.4
+jinja2==3.1.5
     # via
     #   myst-parser
     #   scriv
@@ -75,7 +64,7 @@ jsonschema==4.23.0
     # via sphobjinv
 jsonschema-specifications==2024.10.1
     # via jsonschema
-logging-strict==1.6.0.post2
+logging-strict==1.6.1
     # via -r docs/../requirements/prod.in
 markdown-it-py==3.0.0
     # via
@@ -92,7 +81,7 @@ myst-parser==4.0.0
     # via sphinx-external-toc-strict
 natsort==8.4.0
     # via domdf-python-tools
-packaging==24.2
+packaging==25.0
     # via
     #   -r docs/../requirements/prod.in
     #   build
@@ -104,7 +93,7 @@ pip-tools==7.4.1
     # via -r docs/../requirements/prod.in
 py==1.11.0
     # via interrogate
-pygments==2.18.0
+pygments==2.19.1
     # via
     #   sphinx
     #   sphinx-tabs
@@ -128,7 +117,7 @@ requests==2.32.3
     # via
     #   scriv
     #   sphinx
-rpds-py==0.21.0
+rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
@@ -157,7 +146,7 @@ sphinx-copybutton==0.5.2
     # via -r docs/requirements.in
 sphinx-design==0.6.1
     # via -r docs/requirements.in
-sphinx-external-toc-strict==2.0.1
+sphinx-external-toc-strict==2.0.3.post5
     # via -r docs/requirements.in
 sphinx-favicon==1.0.1
     # via -r docs/requirements.in
@@ -179,9 +168,9 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sphobjinv==2.3.1.1
+sphobjinv==2.3.1.2
     # via -r docs/requirements.in
-starlette==0.41.3
+starlette==0.45.2
     # via sphinx-autobuild
 strictyaml==1.7.3
     # via
@@ -205,19 +194,13 @@ typing-extensions==4.12.2 ; python_version < "3.11"
     #   domdf-python-tools
     #   logging-strict
     #   uvicorn
-urllib3==2.3.0
+urllib3==2.2.3
     # via requests
-uvicorn==0.32.1
+uvicorn==0.34.0
     # via sphinx-autobuild
-watchfiles==1.0.0
+watchfiles==1.0.4
     # via sphinx-autobuild
 websockets==14.1
     # via sphinx-autobuild
-wheel==0.45.1
-    # via pip-tools
 zipp==3.21.0
     # via importlib-metadata
-
-# The following packages are considered to be unsafe in a requirements file:
-# pip
-# setuptools

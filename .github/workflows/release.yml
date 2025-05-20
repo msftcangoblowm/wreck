@@ -65,7 +65,7 @@ jobs:
         echo "tag=$(git describe --tags)" >> $GITHUB_OUTPUT
 
     - name: Install Python
-      uses: actions/setup-python@v5.5.0
+      uses: actions/setup-python@v5.6.0
       with:
         python-version: '3.9' # Minimum of PYVERSIONS
         # cache: pip
@@ -74,7 +74,7 @@ jobs:
 
     - name: Install tools
       run: |
-        python -m pip install --upgrade -r requirements/kit${{ env.LOCK_SUFFIX }}
+        python -m pip install build wheel setuptools-scm 'click==8.1.7; python_version < "3.10"' 'click==8.2.0; python_version >= "3.10"' -r requirements/kit${{ env.LOCK_SUFFIX }}
 
     - name: build
       env:
@@ -103,7 +103,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v4.2.1
+      uses: actions/download-artifact@v4.3.0
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
@@ -133,7 +133,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v4.2.1
+      uses: actions/download-artifact@v4.3.0
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}
@@ -178,7 +178,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v4.2.1
+      uses: actions/download-artifact@v4.3.0
       with:
         name: python-package-distributions
         path: ${{ env.DEST_FOLDER }}

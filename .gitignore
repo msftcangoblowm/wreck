@@ -137,3 +137,5 @@ dmypy.json
 
 # posts for raise awareness
 marketing/
+
+src/wreck/_version.py

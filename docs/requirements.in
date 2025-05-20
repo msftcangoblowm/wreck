@@ -4,9 +4,9 @@
 -r ../requirements/prod.in
 -c ../requirements/pins.shared.in
 
-pip<24.2
+# pip<24.2
 sphinx>=8
-sphinx-external-toc-strict>=2.0.0.post1
+sphinx-external-toc-strict>=2.0.3.post5
 
 sphinx-pyproject
 sphinx-autobuild

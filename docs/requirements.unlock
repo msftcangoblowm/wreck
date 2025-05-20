@@ -1,15 +1,14 @@
 click
-importlib-metadata>=8.5.0
+importlib-metadata>=8.7.0
 interrogate
-logging-strict>=1.6.0.post2
+logging-strict>=1.6.1
 packaging
 pip-requirements-parser
 pip-tools
-pip<24.2
 scriv
 sphinx-autobuild
 sphinx-copybutton
-sphinx-external-toc-strict>=2.0.0.post1
+sphinx-external-toc-strict>=2.0.3.post5
 sphinx-favicon
 sphinx-paramlinks
 sphinx-pyproject
@@ -17,5 +16,5 @@ sphinx-tabs
 sphinx>=8
 sphinx_design
 sphobjinv
-tomli>=2.0.2; python_version<"3.11"
+tomli>=2.2.1; python_version<"3.11"
 typing-extensions; python_version<"3.11"

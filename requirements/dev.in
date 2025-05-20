@@ -3,7 +3,7 @@
 
 -c pins.shared.in
 -c pins-cffi.in
--c pins-validate-pyproject-pep639.in
+-r pins-validate-pyproject-pep639.in
 -r prod.in
 -r pins-typing.in
 
@@ -14,12 +14,11 @@ flake8
 flake8-pyi
 flake8-pyproject
 # registry implementation
-logging-strict>=1.6.0.post2
+logging-strict>=1.6.1
 mypy
 coverage
 twine
-validate-pyproject
 pytest>=7.1
 # registry implementation
-pytest-logging-strict>=0.2.2
+pytest-logging-strict>=0.2.3
 pytest-regressions

@@ -22,6 +22,7 @@ from .wd_wrapper import WorkDir
 
 pytest_plugins = [
     "logging_strict",
+    "has_logging_occurred",
 ]
 
 
@@ -113,50 +114,6 @@ def pytest_runtest_makereport(item, call):
     test_report = (yield).get_result()
     if test_report.when == "call":
         item.test_report = test_report
-
-
-@pytest.fixture()
-def has_logging_occurred():
-    """Display caplog capture text.
-
-    Usage
-
-    .. code-block: text
-
-       import pytest
-       from wreck.constants import g_app_name
-
-       @pytest.mark.logging_package_name(g_app_name)
-       def test_something(logging_strict, caplog, has_logging_occurred):
-           t_two = logging_strict()
-           logger, loggers = t_two
-
-           assert has_logging_occurred(caplog)
-
-    .. seealso::
-
-       https://github.com/pytest-dev/pytest/discussions/11011
-       https://github.com/thebuzzstop/pytest_caplog/tree/master
-       `pass params fixture <https://stackoverflow.com/a/44701916>`_
-
-    """
-
-    def _method(caplog) -> bool:
-        """Check if there is at least one log message. Print log messages.
-
-        :returns: True if logging occurred otherwise False
-        :rtype: bool
-        """
-        print("\nCAPLOG:")
-        output = caplog.text.rstrip("\n").split(sep="\n")
-        if output == [""]:
-            print("Nothing captured")
-            return False
-        for i in range(len(output)):
-            print(f"{i}: {output[i]}")
-        return True
-
-    return _method
 
 
 @pytest.fixture()

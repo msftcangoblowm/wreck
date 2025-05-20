@@ -1,9 +1,11 @@
 [build-system]
 requires = [
-    "setuptools>=78.1.0",
+    "setuptools>=80.7.1",
     "wheel",
     "build",
-    "click",
+    "click==8.1.7; python_version < '3.10'",
+    "click==8.2.0; python_version >= '3.10'",
+    "setuptools-scm>=8.3.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -120,10 +122,10 @@ generate_hashes = false  # From setuptools 69.0.2, parsing dependencies with has
 # ################################################
 # PREVENT setuptools-scm FROM RUNNING BUILD HOOKS
 # ################################################
-# [tool.setuptools_scm]
-# SETUPTOOLS_SCM_PRETEND_VERSION_FOR_DRAIN_SWAMP="1.0.2" python -m setuptools_scm
+[tool.setuptools_scm]
+# SETUPTOOLS_SCM_PRETEND_VERSION_FOR_WRECK="1.0.2" python -m setuptools_scm
 # fallback_version = "1.0.2"
-# version_file = 'src/wreck/_version.py'
+version_file = 'src/wreck/_version.py'
 
 [tool.mypy]
 mypy_path = "src"

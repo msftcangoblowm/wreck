@@ -1,5 +1,4 @@
 auditwheel
-build
 cibuildwheel
 colorama>=0.4.6; platform_system=="Windows"
-importlib-metadata>=8.5.0
+importlib-metadata>=8.7.0

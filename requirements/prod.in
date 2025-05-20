@@ -5,7 +5,8 @@
 # setuptools-scm toml reading code vendored
 
 # entrypoints
-click
+click==8.1.7; python_version < "3.10"
+click>=8.2.0; python_version >= "3.10"
 
 # .in --> .lock file
 pip-tools
@@ -17,7 +18,7 @@ packaging
 pip-requirements-parser
 
 # wreck._package_installed
-importlib-metadata>=8.5.0
+importlib-metadata>=8.7.0
 
 # registry API release
-logging-strict>=1.6.0.post2
+logging-strict>=1.6.1
