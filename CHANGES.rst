@@ -62,11 +62,16 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - docs: use py313+ avoid ruamel.yaml clib package
-   - chore: bump versions
-   - ci: bump versions
-
 .. scriv-start-here
+
+.. _changes_0-3-5:
+
+Version 0.3.5 — 2025-05-20
+--------------------------
+
+- docs: use py313+ avoid ruamel.yaml clib package
+- chore: bump versions
+- ci: bump versions
 
 .. _changes_0-3-4:
 

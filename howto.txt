@@ -85,4 +85,4 @@
     $ make tag
     or
     $ git tag -as -m "Version 1.0.0" 1.0.0
-    # git push --follow-tags
+    $ git push --follow-tags
