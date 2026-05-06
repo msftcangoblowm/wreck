@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -s -vv --showlocals tests/test_lock_datum.py
+
+With Coverage
 
 .. code-block:: shell
 
@@ -16,7 +22,10 @@ from __future__ import annotations
 import shutil
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 
@@ -40,42 +49,40 @@ from wreck.lock_datum import (
 from wreck.lock_filepins import FilePins
 from wreck.pep518_venvs import VenvMapLoader
 
+if TYPE_CHECKING:
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import Union
+
+    from tests.typing_only import DOES_NOT_OR_DOES
+
 testdata_pin_methods = (
     (
-        Path(__file__).parent.joinpath(
-            "_qualifier_conflicts",
-            "qualifier_1.unlock",
-        ),
+        Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
         "requirements/qualifier_1.in",
         "pip",
         0,
         True,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_qualifier_conflicts",
-            "qualifier_1.unlock",
-        ),
+        Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
         "requirements/qualifier_1.in",
         "tomli",
         1,
         True,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_qualifier_conflicts",
-            "qualifier_1.unlock",
-        ),
+        Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
         "requirements/qualifier_1.in",
         "isort",
         0,
         False,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_qualifier_conflicts",
-            "qualifier_0.unlock",
-        ),
+        Path("_qualifier_conflicts").joinpath("qualifier_0.unlock"),
         "requirements/qualifier_0.in",
         "colorama",
         1,
@@ -92,24 +99,26 @@ ids_pin_methods = (
 
 @pytest.mark.parametrize(
     (
-        "abspath_req_src, dest_relpath, pkg_name, "
+        "relpath_req_src, dest_relpath, pkg_name, "
         "qualifiers_expected_count, has_specifiers"
     ),
     testdata_pin_methods,
     ids=ids_pin_methods,
 )
 def test_pindatum_type(
-    abspath_req_src,
-    dest_relpath,
-    pkg_name,
-    qualifiers_expected_count,
-    has_specifiers,
-    tmp_path,
-    prepare_folders_files,
-    path_project_base,
-):
+    relpath_req_src: "Path",
+    dest_relpath: str,
+    pkg_name: str,
+    qualifiers_expected_count: int,
+    has_specifiers: bool,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    path_project_base: "Callable[[], Path]",
+) -> None:
     """Test PinDatum"""
     # pytest --showlocals --log-level INFO -k "test_pindatum_type" tests
+    abspath_tests_dir = request.path.parent
     path_cwd = path_project_base()
     # prepare
     #    empty folders
@@ -117,9 +126,9 @@ def test_pindatum_type(
     prepare_folders_files(seqs_reqs, tmp_path)
 
     #    copy a .in file
-    src_abspath = str(abspath_req_src)
+    abspath_src = abspath_tests_dir.joinpath(relpath_req_src)
     abspath_dest = cast("Path", resolve_joinpath(tmp_path, dest_relpath))
-    shutil.copy(src_abspath, abspath_dest)
+    shutil.copy(abspath_src.as_posix(), abspath_dest.as_posix())
 
     fp = FilePins(abspath_dest)
     lst_pins_pip = fp.by_pkg(pkg_name)
@@ -137,8 +146,8 @@ def test_pindatum_type(
     assert isinstance(sorted(lst), list)
 
     with pytest.raises(TypeError):
-        lst.insert(0, 1.2)
-        lst.append(7)
+        lst.insert(0, 1.2)  # type: ignore[arg-type]
+        lst.append(7)  # type: ignore[arg-type]
         sorted(lst)
 
     # PinDatum from different files
@@ -203,31 +212,36 @@ def test_pindatum_type(
 
 
 def test_in_generic(
-    tmp_path,
-    path_project_base,
-    prepare_folders_files,
-    prep_pyproject_toml,
-):
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    path_project_base: "Callable[[], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+) -> None:
     """Generic __contains__ implementation"""
-    # pytest --showlocals --log-level INFO -k "test_in_generic" tests
+    # pytest -s -vv --showlocals -k "test_in_generic" tests
+    abspath_tests_dir = request.path.parent
     path_cwd = path_project_base()
     venv_path = ".venv"
     dest_relpath = "requirements/pip-tools.in"
     abspath_file_src = cast(
         "Path", resolve_joinpath(path_cwd, "requirements/pip-tools.in")
     )
-    path_pyproject_toml = Path(__file__).parent.joinpath(
+    path_pyproject_toml = abspath_tests_dir.joinpath(
         "_req_files",
         "venvs_minimal.pyproject_toml",
     )
 
     loader = None
     with pytest.raises(MissingPackageBaseFolder):
-        Ins(loader, venv_path)
+        Ins(
+            loader,  # type: ignore[arg-type]
+            venv_path,
+        )
 
     # prepare
     #    pyproject.toml
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
 
     #    venv and requirements folders
@@ -246,7 +260,8 @@ def test_in_generic(
     fpins_0 = FilePins(abspath_dest)
     ins_0 = Ins(loader, venv_path)
     ins_0._file_pins = list()
-    ins_0.files = fpins_0
+    # property getter is a Generator. property setter accepts Any. This confuses mypy
+    ins_0.files = fpins_0  # type: ignore[assignment]
 
     # InFileType.__eq__
     assert InFileType.FILES != InFileType.ZEROES
@@ -282,7 +297,7 @@ def test_in_generic(
             ins_0,
             abspath_dest,
             "file_abspath",
-            set_name=invalid,
+            set_name=invalid,  # type: ignore[arg-type]
             is_abspath_ok=True,
         )
         assert is_in is True
@@ -298,13 +313,15 @@ def test_in_generic(
             ins_0,
             dest_relpath,
             "file_abspath",
-            set_name=invalid,
-            is_abspath_ok=invalid,
+            set_name=invalid,  # type: ignore[arg-type]
+            is_abspath_ok=invalid,  # type: ignore[arg-type]
         )
         assert is_in is False
 
 
-def test_pprint_pindatum(path_project_base):
+def test_pprint_pindatum(
+    path_project_base: "Callable[[], Path]",
+) -> None:
     """Create a set of PinDatum to pprint"""
     # pytest --showlocals --log-level INFO -k "test_pprint_pindatum" tests
     path_f = Path(__file__).parent.joinpath(
@@ -352,6 +369,11 @@ def test_pprint_pindatum(path_project_base):
         # verify
         assert isinstance(str_pretty, str)
 
+
+if TYPE_CHECKING:
+    testdata_is_pin: Sequence[
+        tuple[str, str, list[str], list[str], DOES_NOT_OR_DOES, bool]
+    ]
 
 testdata_is_pin = (
     (
@@ -401,24 +423,25 @@ ids_is_pin = (
     ids=ids_is_pin,
 )
 def test_is_pin(
-    pkg_name,
-    line,
-    specifiers,
-    qualifiers_expected,
-    expectation,
-    expected_is_pin,
-):
+    pkg_name: str,
+    line: str,
+    specifiers: "list[str]",
+    qualifiers_expected: "list[str]",
+    expectation: "DOES_NOT_OR_DOES",
+    expected_is_pin: bool,
+    request: "pytest.FixtureRequest",
+) -> None:
     """Defines whats a pin and whats not. Qualifiers is not enough."""
-    # pytest --showlocals --log-level INFO -k "test_is_pin" tests
+    # pytest -s -vv --showlocals -k "test_is_pin" tests
     # act
-    file_abspath = Path(__file__).parent.joinpath(
+    abspath_tests_dir = request.path.parent
+    file_abspath = abspath_tests_dir.joinpath(
         "_qualifier_conflicts",
         "qualifier_1.unlock",
     )
 
     with expectation:
         pin = PinDatum(file_abspath, pkg_name, line, specifiers, qualifiers_expected)
-
     if isinstance(expectation, does_not_raise):
         # verify
         actual_is_pin = is_pin(pin.specifiers)
@@ -448,7 +471,11 @@ ids_outlastsuffix = (
     testdata_outlastsuffix,
     ids=ids_outlastsuffix,
 )
-def test_outlastsuffix(enum_item, str_item_expected, is_lock_expected):
+def test_outlastsuffix(
+    enum_item: "OutLastSuffix",
+    str_item_expected: str,
+    is_lock_expected: bool,
+) -> None:
     """Exercise OutLastSuffix"""
     # pytest --showlocals --log-level INFO -k "test_outlastsuffix" tests
     str_value_actual = str(enum_item)

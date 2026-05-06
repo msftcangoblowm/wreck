@@ -50,18 +50,13 @@ jobs:
           # Available versions:
           # https://github.com/actions/python-versions/blob/main/versions-manifest.json
           # https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#available-versions-of-python-and-pypy
-        - '3.9'
         - '3.10'
         - '3.11'
         - '3.12'
         - '3.13'
-          # - "3.14" not available yet
-        - pypy-3.9
+        - '3.14'
         - pypy-3.10
-        exclude:
-          # https://github.com/pypy/pypy/issues/4958
-        - platform: windows-latest
-          python-version: pypy-3.9
+        - pypy-3.11
       fail-fast: false
 
     steps:
@@ -75,20 +70,20 @@ jobs:
         python_version: ${{ matrix.python-version }}
 
     - name: Download artifact
-      uses: actions/download-artifact@v4.3.0
+      uses: actions/download-artifact@v8.0.1
       with:
         name: config-settings-${{ matrix.platform || matrix.os }}-${{ matrix.python-version }}
         path: ${{ runner.temp }}
 
     - name: Check out the repo
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v6.0.2
       with:
         repository: ${{ github.repository }}
         # fetch all branches and tags instead of only fetching the ref/SHA that triggered the workflow
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v5.6.0
+      uses: actions/setup-python@v6.2.0
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true

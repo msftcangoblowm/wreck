@@ -1,7 +1,9 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-..
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_cli_dependencies.py
 
 Unittest for entrypoint, cli_dependencies
 
@@ -17,7 +19,10 @@ import shutil
 import sys
 import traceback
 from pathlib import Path
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 from unittest.mock import patch
 
 import pytest
@@ -36,8 +41,22 @@ from wreck.constants import (
 )
 from wreck.lock_util import replace_suffixes_last
 
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import (
+        Any,
+        Union,
+    )
 
-def test_cli_main():
+    import click
+
+
+def test_cli_main() -> None:
     """Minimally test package version is printed."""
     runner = CliRunner()
     # --version
@@ -50,7 +69,10 @@ def test_cli_main():
 
     # --help
     cmd = ["--help"]
-    result = runner.invoke(main, cmd)
+    result = runner.invoke(
+        cast("click.Command", main),
+        cast("Union[str, Sequence[str], None]", cmd),
+    )
     assert result.exit_code == 0
     assert f"Command-line for {entrypoint_name}. Prints usage" in result.stdout
 
@@ -58,9 +80,7 @@ def test_cli_main():
 test_data_venvmap_loader_exceptions = (
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath(
-            "_bad_files", "section_misspelled.pyproject_toml"
-        ),
+        Path("_bad_files").joinpath("section_misspelled.pyproject_toml"),
         ".doc/.venv",
         (
             "requirements/pins.shared.in",
@@ -72,9 +92,7 @@ test_data_venvmap_loader_exceptions = (
     ),
     (
         requirements_unlock,
-        Path(__file__).parent.joinpath(
-            "_bad_files", "section_misspelled.pyproject_toml"
-        ),
+        Path("_bad_files").joinpath("section_misspelled.pyproject_toml"),
         ".doc/.venv",
         (
             "requirements/pins.shared.in",
@@ -93,24 +111,28 @@ ids_venvmap_loader_exceptions = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "fcn, path_pyproject_toml, venv_path, seq_in, expected_exit_code",
+    "fcn, relpath_pyproject_toml, venv_path, seq_in, expected_exit_code",
     test_data_venvmap_loader_exceptions,
     ids=ids_venvmap_loader_exceptions,
 )
 def test_venvmap_loader_exceptions(
-    fcn,
-    path_pyproject_toml,
-    venv_path,
-    seq_in,
-    expected_exit_code,
-    tmp_path,
-    prep_pyproject_toml,
-    logging_strict,
-):
+    fcn: "click.Command",
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    seq_in: "Sequence[str]",
+    expected_exit_code: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test VenvMapLoader exceptions 3 and 4."""
     # pytest -vv --showlocals --log-level INFO -k "test_venvmap_loader_exceptions" tests
+    # pytest -s -vv --showlocals --log-level INFO "tests/test_cli_dependencies.py::test_venvmap_loader_exceptions[unlock no tool.venv section]"
     t_two = logging_strict()
     logger, loggers = t_two
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:
@@ -124,15 +146,21 @@ def test_venvmap_loader_exceptions(
         )
 
         # Couldn't find the pyproject.toml file (3)
-        result = runner.invoke(fcn, cmd)
+        result = runner.invoke(
+            fcn,
+            cast("Union[str, Sequence[str], None]", cmd),
+        )
         actual_exit_code = 3
 
         # prepare
         #    pyproject.toml
-        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir)
+        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir, None)
 
         # In pyproject.toml, expecting sections [[tool.wreck.venvs]]. Create them (4)
-        result = runner.invoke(fcn, cmd)
+        result = runner.invoke(
+            fcn,
+            cast("Union[str, Sequence[str], None]", cmd),
+        )
         actual_exit_code = result.exit_code
         assert actual_exit_code == expected_exit_code
 
@@ -140,7 +168,7 @@ def test_venvmap_loader_exceptions(
 testdata_lock_unlock_docs_venv = (
     (
         requirements_unlock,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".doc/.venv",
         (
             "requirements/pins.shared.in",
@@ -152,7 +180,7 @@ testdata_lock_unlock_docs_venv = (
     ),
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_req_files", "venvs_minimal.pyproject_toml"),
+        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
         ".tools",
         (
             "requirements/pins.shared.in",
@@ -162,7 +190,7 @@ testdata_lock_unlock_docs_venv = (
     ),
     pytest.param(
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".doc/.venv",
         (
             "requirements/prod.in",
@@ -176,7 +204,7 @@ testdata_lock_unlock_docs_venv = (
     ),
     pytest.param(
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".doc/.venv",
         (
             "requirements/prod.in",
@@ -199,22 +227,23 @@ ids_lock_unlock_docs_venv = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "fcn, path_pyproject_toml, venv_path, seq_in, expected_exit_code",
+    "fcn, relpath_pyproject_toml, venv_path, seq_in, expected_exit_code",
     testdata_lock_unlock_docs_venv,
     ids=ids_lock_unlock_docs_venv,
 )
 def test_lock_unlock_docs_venv(
-    fcn,
-    path_pyproject_toml,
-    venv_path,
-    tmp_path,
-    seq_in,
-    expected_exit_code,
-    prep_pyproject_toml,
-    prepare_folders_files,
-    path_project_base,
-    logging_strict,
-):
+    fcn: "click.Command",
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    seq_in: "Sequence[str]",
+    expected_exit_code: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    path_project_base: "Callable[[], Path]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test dependency lock and unlock."""
     # pytest -vv --showlocals --log-level INFO -k "test_lock_unlock_docs_venv" -v tests
     # pytest --showlocals tests/test_cli_dependencies.py::test_lock_unlock_docs_venv[lock\ for\ drain-swamp\ and\ docs]
@@ -222,6 +251,8 @@ def test_lock_unlock_docs_venv(
     # python [path to project base]src/wreck/cli_dependencies.py unlock --path=[tmp path folder]
     t_two = logging_strict()
     logger, loggers = t_two
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:
@@ -229,7 +260,7 @@ def test_lock_unlock_docs_venv(
 
         # prepare
         #    pyproject.toml
-        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir)
+        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir, None)
         cmd = (
             "--path",
             path_tmp_dir,
@@ -238,7 +269,10 @@ def test_lock_unlock_docs_venv(
         )
 
         # Missing venv folders --> NotADirectoryError (7)
-        result = runner.invoke(fcn, cmd)
+        result = runner.invoke(
+            fcn,
+            cast("Union[str, Sequence[str], None]", cmd),
+        )
         actual_exit_code = 7
 
         #    venv folder(s)
@@ -249,11 +283,14 @@ def test_lock_unlock_docs_venv(
             "docs",
         )
         for create_relpath in venv_relpaths:
-            abspath_venv = resolve_joinpath(path_tmp_dir, create_relpath)
+            abspath_venv = cast("Path", resolve_joinpath(path_tmp_dir, create_relpath))
             abspath_venv.mkdir(parents=True, exist_ok=True)
 
         # Missing ``.in`` files --> MissingRequirementsFoldersFiles (6)
-        result = runner.invoke(fcn, cmd)
+        result = runner.invoke(
+            fcn,
+            cast("Union[str, Sequence[str], None]", cmd),
+        )
         actual_exit_code = 6
 
         #    requirements folders (and empty files)
@@ -262,8 +299,8 @@ def test_lock_unlock_docs_venv(
         #    requirements .in (real files)
         path_cwd = path_project_base()
         for relpath_f in seq_in:
-            abspath_src = resolve_joinpath(path_cwd, relpath_f)
-            abspath_dest = resolve_joinpath(path_tmp_dir, relpath_f)
+            abspath_src = cast("Path", resolve_joinpath(path_cwd, relpath_f))
+            abspath_dest = cast("Path", resolve_joinpath(path_tmp_dir, relpath_f))
             shutil.copy2(abspath_src, abspath_dest)
 
         #    Needed by '.venv'
@@ -278,13 +315,18 @@ def test_lock_unlock_docs_venv(
         ]
         prepare_folders_files(seq_in_supplemental, path_tmp_dir)
         for relpath_f in seq_in_supplemental:
-            abspath_src = resolve_joinpath(path_cwd, relpath_f)
-            abspath_dest = resolve_joinpath(path_tmp_dir, relpath_f)
+            abspath_src = cast("Path", resolve_joinpath(path_cwd, relpath_f))
+            abspath_dest = cast("Path", resolve_joinpath(path_tmp_dir, relpath_f))
             shutil.copy2(abspath_src, abspath_dest)
 
         # Limit to one venv relpath, rather than run all
-        is_lock_compile = fcn.callback.__name__ == "requirements_fix_v2"
-        result = runner.invoke(fcn, cmd)
+        assert fcn.callback is not None
+        fcn_cb_name = fcn.callback.__name__
+        is_lock_compile = fcn_cb_name == "requirements_fix_v2"
+        result = runner.invoke(
+            fcn,
+            cast("Union[str, Sequence[str], None]", cmd),
+        )
         actual_exit_code = result.exit_code
         # Contains venv_relpath, lock file, err, exception
         actual_output = result.output  # noqa: F841
@@ -302,7 +344,10 @@ def test_lock_unlock_docs_venv(
                         f"{g_app_name}.cli_dependencies.is_timeout",
                         return_value=True,
                     ):
-                        result = runner.invoke(fcn, cmd)
+                        result = runner.invoke(
+                            fcn,
+                            cast("Union[str, Sequence[str], None]", cmd),
+                        )
                         actual_exit_code = result.exit_code
                         assert actual_exit_code == 10
             else:
@@ -313,13 +358,13 @@ def test_lock_unlock_docs_venv(
 testdata_lock_unlock_and_back_wo_prepare = (
     (
         requirements_unlock,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".venv/docs",
         3,  # FileNotFoundError
     ),
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".venv/docs",
         3,  # FileNotFoundError
     ),
@@ -332,23 +377,28 @@ ids_lock_unlock_and_back_wo_prepare = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "func, path_pyproject_toml, venv_path, expected_exit_code",
+    "func, relpath_pyproject_toml, venv_path, expected_exit_code",
     testdata_lock_unlock_and_back_wo_prepare,
     ids=ids_lock_unlock_and_back_wo_prepare,
 )
 def test_lock_unlock_and_back_wo_prepare(
-    func,
-    path_pyproject_toml,
-    venv_path,
-    expected_exit_code,
-    tmp_path,
-    prep_pyproject_toml,
-    logging_strict,
-):
+    func: "Callable[..., Any]",
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    expected_exit_code: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str]], Path]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test dependency lock and unlock without prepare."""
     # pytest --showlocals --log-level INFO -k "test_lock_unlock_and_back_wo_prepare" -v tests
     t_two = logging_strict()
     logger, loggers = t_two
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(  # noqa: F841
+        relpath_pyproject_toml,
+    )
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:
@@ -361,10 +411,15 @@ def test_lock_unlock_and_back_wo_prepare(
             "--venv-relpath",
             venv_path,
         )
-        result = runner.invoke(func, cmd)
+        result = runner.invoke(
+            cast("click.Command", func),
+            cast("Union[str, Sequence[str], None]", cmd),
+        )
 
         logger.info(result.output)
-        tb = result.exc_info[2]
+        exc_info = result.exc_info
+        assert exc_info is not None
+        tb = exc_info[2]
         # msg_info = f"traceback: {pprint(traceback.format_tb(tb))}"
         msg_info = f"traceback: {traceback.format_tb(tb)}"
         logger.info(msg_info)
@@ -376,7 +431,7 @@ def test_lock_unlock_and_back_wo_prepare(
 testdata_lock_unlock_compile_with_prepare = (
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".doc/.venv",
         True,
         False,
@@ -384,7 +439,7 @@ testdata_lock_unlock_compile_with_prepare = (
     ),
     (
         requirements_unlock,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".doc/.venv",
         True,
         False,
@@ -392,7 +447,7 @@ testdata_lock_unlock_compile_with_prepare = (
     ),
     pytest.param(
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".venv/docs",
         True,
         True,
@@ -400,7 +455,7 @@ testdata_lock_unlock_compile_with_prepare = (
     ),
     (
         requirements_unlock,
-        Path(__file__).parent.joinpath("_good_files", "complete.pyproject_toml"),
+        Path("_good_files").joinpath("complete.pyproject_toml"),
         ".venv/docs",
         True,
         True,
@@ -417,27 +472,30 @@ ids_lock_unlock_compile_with_prepare = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "func, path_pyproject_toml, venv_path, is_prep_pyproject_toml, is_prep_files, expected_exit_code",
+    "func, relpath_pyproject_toml, venv_path, is_prep_pyproject_toml, is_prep_files, expected_exit_code",
     testdata_lock_unlock_compile_with_prepare,
     ids=ids_lock_unlock_compile_with_prepare,
 )
 def test_lock_unlock_compile_with_prepare(
-    func,
-    path_pyproject_toml,
-    venv_path,
-    is_prep_pyproject_toml,
-    is_prep_files,
-    expected_exit_code,
-    tmp_path,
-    prep_pyproject_toml,
-    path_project_base,
-    prepare_folders_files,
-    logging_strict,
-):
+    func: "Callable[..., Any]",
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    is_prep_pyproject_toml: bool,
+    is_prep_files: bool,
+    expected_exit_code: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    path_project_base: "Callable[[], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test dependency lock and unlock with prepare."""
     # pytest -v --showlocals --log-level INFO -k "test_lock_unlock_compile_with_prepare" tests
     t_two = logging_strict()
     logger, loggers = t_two
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
 
     path_cwd = path_project_base()
 
@@ -460,7 +518,7 @@ def test_lock_unlock_compile_with_prepare(
         path_tmp_dir = Path(tmp_dir_path)
         # prepare -- pyproject.toml
         if is_prep_pyproject_toml:
-            prep_pyproject_toml(path_pyproject_toml, path_tmp_dir)
+            prep_pyproject_toml(path_pyproject_toml, path_tmp_dir, None)
 
         # prepare -- venv folder(s)
         venv_relpaths = (
@@ -468,15 +526,15 @@ def test_lock_unlock_compile_with_prepare(
             ".doc/.venv",
         )
         for create_relpath in venv_relpaths:
-            abspath_venv = resolve_joinpath(path_tmp_dir, create_relpath)
+            abspath_venv = cast("Path", resolve_joinpath(path_tmp_dir, create_relpath))
             abspath_venv.mkdir(parents=True, exist_ok=True)
 
         if is_prep_files:
             prepare_folders_files(seq_reqs_relpath, path_tmp_dir)
             for relpath_f in seq_reqs_relpath:
-                abspath_src = resolve_joinpath(path_cwd, relpath_f)
-                abspath_dest = resolve_joinpath(path_tmp_dir, relpath_f)
-                shutil.copy2(abspath_src, abspath_dest)
+                abspath_src = cast("Path", resolve_joinpath(path_cwd, relpath_f))
+                abspath_dest = cast("Path", resolve_joinpath(path_tmp_dir, relpath_f))
+                shutil.copy2(abspath_src.as_posix(), abspath_dest.as_posix())
 
         cmd = (
             "--path",
@@ -485,13 +543,18 @@ def test_lock_unlock_compile_with_prepare(
             venv_path,
         )
         # Call cli func blind; no BackendType.is_locked
-        result = runner.invoke(func, cmd)
+        result = runner.invoke(
+            cast("click.Command", func),
+            cast("Union[str, Sequence[str], None]", cmd),
+        )
 
         logger.info(f"exit_code: {result.exit_code}")
         logger.info(f"exception: {result.exception}")
         logger.info(f"output: {result.output}")
 
-        tb = result.exc_info[2]
+        exc_info = result.exc_info
+        assert exc_info is not None
+        tb = exc_info[2]
         # msg_info = f"traceback: {pprint(traceback.format_tb(tb))}"
         msg_info = f"traceback: {traceback.format_tb(tb)}"
         logger.info(msg_info)
@@ -503,7 +566,7 @@ def test_lock_unlock_compile_with_prepare(
 testdata_lock_compile_requires_pip_tools = (
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_req_files", "venvs_minimal.pyproject_toml"),
+        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
         ".tools",
         (
             "docs/pip-tools",
@@ -515,7 +578,7 @@ testdata_lock_compile_requires_pip_tools = (
     ),
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath("_req_files", "venvs_minimal.pyproject_toml"),
+        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
         ".awesome",
         (
             "docs/pip-tools",
@@ -534,25 +597,28 @@ ids_lock_compile_requires_pip_tools = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "fcn, path_pyproject_toml, venv_path, seqs_reqs, expected_exit_code",
+    "fcn, relpath_pyproject_toml, venv_path, seqs_reqs, expected_exit_code",
     testdata_lock_compile_requires_pip_tools,
     ids=ids_lock_compile_requires_pip_tools,
 )
 def test_lock_compile_requires_pip_tools(
-    fcn,
-    path_pyproject_toml,
-    venv_path,
-    seqs_reqs,
-    expected_exit_code,
-    tmp_path,
-    prep_pyproject_toml,
-    path_project_base,
-    logging_strict,
-):
+    fcn: "Callable[..., Any]",
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    seqs_reqs: "Sequence[str]",
+    expected_exit_code: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    path_project_base: "Callable[[], Path]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test lock_compile install pip-tools 5"""
     # pytest -vv --showlocals --log-level INFO -k "test_lock_compile_requires_pip_tools" tests
     t_two = logging_strict()
     logger, loggers = t_two
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
 
     path_cwd = path_project_base()
 
@@ -568,7 +634,7 @@ def test_lock_compile_requires_pip_tools(
 
         # prepare
         #    Copy to base dir
-        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir)
+        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir, None)
 
         # copy reqs
         for src_relpath in seqs_reqs:
@@ -591,16 +657,26 @@ def test_lock_compile_requires_pip_tools(
                 f"{g_app_name}.lock_compile.is_package_installed",
                 return_value=False,
             ):
-                result = runner.invoke(fcn, cmd)
+                result = runner.invoke(
+                    cast("click.Command", fcn),
+                    cast("Union[str, Sequence[str], None]", cmd),
+                )
                 logger.info(f"output: {result.output}")
                 assert result.exit_code == expected_exit_code
         else:
-            result = runner.invoke(fcn, cmd, catch_exceptions=True)
+            result = runner.invoke(
+                cast("click.Command", fcn),
+                cast("Union[str, Sequence[str], None]", cmd),
+                catch_exceptions=True,
+            )
+            assert result is not None
 
             logger.info(f"exception: {result.exception}")
             logger.info(f"output: {result.output}")
 
-            tb = result.exc_info[2]
+            exc_info = result.exc_info
+            assert exc_info is not None
+            tb = exc_info[2]
             # msg_info = f"traceback: {pprint(traceback.format_tb(tb))}"
             msg_info = f"traceback: {traceback.format_tb(tb)}"
             logger.info(msg_info)
@@ -608,13 +684,16 @@ def test_lock_compile_requires_pip_tools(
             assert result.exit_code == expected_exit_code
 
 
+if TYPE_CHECKING:
+    testdata_lock_compile_valueerror: Sequence[
+        tuple[Callable[..., Any], Path, Union[str, None], Sequence[str], list[str], int]
+    ]
+
+
 testdata_lock_compile_valueerror = (
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath(
-            "_bad_files",
-            "keys-wrong-data-type.pyproject_toml",
-        ),
+        Path("_bad_files").joinpath("keys-wrong-data-type.pyproject_toml"),
         ".venv",
         (
             "docs/pip-tools",
@@ -625,10 +704,7 @@ testdata_lock_compile_valueerror = (
     ),
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath(
-            "_bad_files",
-            "keys-wrong-data-type.pyproject_toml",
-        ),
+        Path("_bad_files").joinpath("keys-wrong-data-type.pyproject_toml"),
         ".venv",
         (
             "docs/pip-tools",
@@ -639,10 +715,7 @@ testdata_lock_compile_valueerror = (
     ),
     (
         requirements_unlock,
-        Path(__file__).parent.joinpath(
-            "_bad_files",
-            "keys-wrong-data-type.pyproject_toml",
-        ),
+        Path("_bad_files").joinpath("keys-wrong-data-type.pyproject_toml"),
         ".venv",
         (
             "docs/pip-tools",
@@ -653,10 +726,7 @@ testdata_lock_compile_valueerror = (
     ),
     (
         requirements_fix_v2,
-        Path(__file__).parent.joinpath(
-            "_bad_files",
-            "keys-wrong-data-type.pyproject_toml",
-        ),
+        Path("_bad_files").joinpath("keys-wrong-data-type.pyproject_toml"),
         None,
         (
             "docs/pip-tools",
@@ -676,25 +746,28 @@ ids_lock_compile_valueerror = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "fcn, path_pyproject_toml, venv_path, seqs_reqs, extend_args, expected_exit_code",
+    "fcn, relpath_pyproject_toml, venv_path, seqs_reqs, extend_args, expected_exit_code",
     testdata_lock_compile_valueerror,
     ids=ids_lock_compile_valueerror,
 )
 def test_lock_compile_valueerror(
-    fcn,
-    path_pyproject_toml,
-    venv_path,
-    seqs_reqs,
-    extend_args,
-    expected_exit_code,
-    tmp_path,
-    prep_pyproject_toml,
-    logging_strict,
-):
+    fcn: "Callable[..., Any]",
+    relpath_pyproject_toml: "Path",
+    venv_path: "Union[str, None]",
+    seqs_reqs: "Sequence[str]",
+    extend_args: list[str],
+    expected_exit_code: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test lock_compile ValueError 8"""
     # pytest -vv --showlocals --log-level INFO -k "test_lock_compile_valueerror" tests
     t_two = logging_strict()
     logger, loggers = t_two
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
 
     runner = CliRunner()
     with runner.isolated_filesystem(temp_dir=tmp_path) as tmp_dir_path:
@@ -702,7 +775,7 @@ def test_lock_compile_valueerror(
 
         # prepare
         #    Copy to base dir
-        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir)
+        prep_pyproject_toml(path_pyproject_toml, path_tmp_dir, None)
 
         #    Build cmd
         cmd = [
@@ -720,6 +793,10 @@ def test_lock_compile_valueerror(
         cmd.extend(extend_args)
 
         # act
-        result = runner.invoke(fcn, cmd, catch_exceptions=True)
+        result = runner.invoke(
+            cast("click.Command", fcn),
+            cast("Union[str, Sequence[str], None]", cmd),
+            catch_exceptions=True,
+        )
         # verify
         assert result.exit_code == expected_exit_code

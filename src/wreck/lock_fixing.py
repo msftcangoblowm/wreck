@@ -1,16 +1,6 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-.. py:data:: is_module_debug
-   :type: bool
-
-   Switch on/off module level debugging
-
-.. py:data:: _logger
-   :type: logging.Logger
-
-   Module level logger
-
 .. py:data:: __all__
    :type: tuple[str]
    :value: ("Fixing",)
@@ -66,7 +56,10 @@ if TYPE_CHECKING:
     from .lock_datum import DatumByPkg
     from .lock_discrepancy import PkgsWithIssues
 
+#: bool: Switch on/off module level debugging
 is_module_debug = True
+
+#: logging.Logger: Module level logger
 _logger = logging.getLogger(f"{g_app_name}.lock_fixing")
 
 __all__ = ("Fixing",)
@@ -122,9 +115,12 @@ class OutMessages:
         :type item: typing.Any
         :param last_suffix:
 
-           Out file type characterized by last suffix, not properties like .shared
+           Default
+           :py:attr:`OutLastSuffix.LOCK <wreck.datum.OutLastSuffix.LOCK>`.
+           If None, do nothing. Out file type characterized by last
+           suffix, not properties e.g. ``.shared``
 
-        :type last_suffix: wreck.datum.OutLastSuffix
+        :type last_suffix: wreck.datum.OutLastSuffix | None
         """
         is_type_match = (
             last_suffix is not None
@@ -132,7 +128,7 @@ class OutMessages:
             and last_suffix == self._last_suffix
         )
         is_item_ok = item is not None
-        if is_type_match and is_item_ok:
+        if is_type_match and is_item_ok:  # pragma: no branch
             if isinstance(item, UnResolvable):
                 # Only applies to .lock files.
                 self._unresolvables.append(item)
@@ -149,9 +145,6 @@ class OutMessages:
             else:  # pragma: no cover
                 # non-None Unsupported item
                 pass
-        else:
-            # Unsupported
-            pass
 
     def extend(self, items, last_suffix=OutLastSuffix.LOCK):
         """Append many items
@@ -168,13 +161,9 @@ class OutMessages:
             items is not None
             and isinstance(items, Sequence)
             and not isinstance(items, str)
-        ):
-            for item in items:
+        ):  # pragma: no branch
+            for item in items:  # pragma: no branch
                 self.append(item, last_suffix=last_suffix)
-            else:  # pragma: no cover
-                pass
-        else:  # pragma: no cover
-            pass
 
     @property
     def resolvable_shared(self):
@@ -254,18 +243,16 @@ def _get_qualifiers(d_subset):
             # Does this pin have qualifiers?
             quals = pin.qualifiers
             has_quals = len(quals) != 0
-            if pkg_name not in d_pkg_qualifiers.keys() and has_quals:
+            if (
+                pkg_name not in d_pkg_qualifiers.keys() and has_quals
+            ):  # pragma: no branch
                 str_pkg_qualifiers = "; ".join(quals)
                 str_pkg_qualifiers = f"; {str_pkg_qualifiers}"
                 d_pkg_qualifiers[pkg_name] = str_pkg_qualifiers
-            else:  # pragma: no cover
-                pass
 
         # empty str for a package without qualifiers
-        if pkg_name not in d_pkg_qualifiers.keys():
+        if pkg_name not in d_pkg_qualifiers.keys():  # pragma: no branch
             d_pkg_qualifiers[pkg_name] = ""
-        else:  # pragma: no cover
-            pass
 
     return d_pkg_qualifiers
 
@@ -422,7 +409,10 @@ def _load_once(
         #     nudge_pins must come from .in
         set_pindatum = d_subset_all_in[pkg_name]
         highest = locks_pkg_by_versions[pkg_name]["highest"]
+        # Version, not set[Version]
+        assert not isinstance(highest, set)
         others = locks_pkg_by_versions[pkg_name]["others"]
+        assert isinstance(others, set)
 
         # DRY. Needed when UnResolvable
         try:
@@ -547,9 +537,14 @@ def _fix_resolvables(
     :type is_dry_run: typing.Any | None
     :param suffixes:
 
-       Default ``(".lock",)``. Suffixes to process, in order
+       Default ``(".lock",)``. Suffixes to process, in order.
+       Expects supported suffix:
+       :py:attr:`~wreck.constants.SUFFIX_LOCKED` or
+       :py:attr:`~wreck.constants.SUFFIX_UNLOCKED`
 
-    :type suffixes: tuple[typing.Literal[wreck.constants.SUFFIX_LOCKED] | typing.Literal[wreck.constants.SUFFIX_UNLOCKED]]
+       Should be an :py:class:`enum.Enum` to more easily limit possibilities.
+
+    :type suffixes: tuple[str, ...]
     :returns:
 
        Wrote messages. For shared, tuple of suffix, resolvable, and Pin (of .lock file).
@@ -570,11 +565,9 @@ def _fix_resolvables(
 
     if suffixes is None or not (
         SUFFIX_LOCKED in suffixes or SUFFIX_UNLOCKED in suffixes
-    ):
+    ):  # pragma: no branch
         # Query all requirements . Do both, but first, ``.lock``
         suffixes = (SUFFIX_LOCKED,)
-    else:  # pragma: no cover
-        pass
 
     fixed_issues = []
     applies_to_shared = []
@@ -587,9 +580,7 @@ def _fix_resolvables(
             is_shared_type = is_shared(pindatum_lock.file_abspath.name)
             for resolvable in resolvables:
                 is_match = pkg_name == resolvable.pkg_name
-                if not is_match:  # pragma: no cover
-                    pass
-                else:
+                if is_match:  # pragma: no branch
                     for suffix in suffixes:
                         # In ``suffixes`` tuple, lock is first entry
                         is_lock = suffix == SUFFIX_LOCKED
@@ -605,7 +596,7 @@ def _fix_resolvables(
                             """``.shared.*`` files affect multiple venv.
                             Nudge pin takes into account one venv. Inform
                             the human"""
-                            if is_lock:
+                            if is_lock:  # pragma: no branch
                                 # One entry rather than two.
                                 # Implied affects both .unlock and .lock
                                 t_four = (
@@ -615,8 +606,6 @@ def _fix_resolvables(
                                     pindatum_lock,
                                 )
                                 applies_to_shared.append(t_four)
-                            else:  # pragma: no cover
-                                pass
                         else:
                             # remove any line dealing with this package
                             # append resolvable.nudge_unlock
@@ -630,12 +619,10 @@ def _fix_resolvables(
                                     f"{nudge}{resolvable.qualifiers}{os.linesep}"
                                 )
 
-                                if not is_dry_run:
+                                if not is_dry_run:  # pragma: no branch
                                     write_to_file_nudge_pin(
                                         path_f, pindatum_lock.pkg_name, nudge_pin_line
                                     )
-                                else:
-                                    pass
 
                                 # Report resolved dependency conflict
                                 msg_fixed = ResolvedMsg(
@@ -676,6 +663,7 @@ class Fixing:
     _loader: VenvMapLoader
     _out_lock_messages: OutMessages
     _out_unlock_messages: OutMessages
+    _resolvables: list[Resolvable]
 
     def __init__(self, loader, venv_relpath, out_lock_messages, out_unlock_messages):
         """Class constructor"""
@@ -684,13 +672,11 @@ class Fixing:
         # may raise MissingPackageBaseFolder
         check_loader(loader)
 
-        if not is_ok(venv_relpath):
+        if not is_ok(venv_relpath):  # pragma: no branch
             msg_warn = (
                 f"{meth_dotted_path} unsupported type for venv_relpath expects str"
             )
             raise TypeError(msg_warn)
-        else:  # pragma: no cover
-            pass
 
         try:
             VenvMap(loader)
@@ -700,11 +686,9 @@ class Fixing:
         self._loader = loader
         self._venv_relpath = venv_relpath
 
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"{meth_dotted_path} loader.project_base {loader.project_base}"
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
         self._out_lock_messages = out_lock_messages
         self._out_unlock_messages = out_unlock_messages
@@ -721,7 +705,10 @@ class Fixing:
             lst_issues = ins._check_top_level()
             for t_three in lst_issues:
                 item = ResolvedMsg(*t_three)
-                self._out_unlock_messages.append(item, last_suffix=OutLastSuffix.UNLOCK)
+                self._out_unlock_messages.append(
+                    item,
+                    last_suffix=OutLastSuffix.UNLOCK,
+                )
 
             ins._load_resolution_loop()
 
@@ -837,10 +824,9 @@ class Fixing:
             self._out_unlock_messages.extend(applies_to_shared)
 
     def get_issues(self):
-        """Identify resolvable and unresolvable issues.
-
-        :returns: lists of resolvable and unresolvable issues
-        :rtype: tuple[list[wreck.lock_discrepancy.Resolvable], list[wreck.lock_discrepancy.UnResolvable]]
+        """Identify resolvable and unresolvable issues. Saves
+        ``list[wreck.lock_discrepancy.Resolvable]`` and
+        ``list[wreck.lock_discrepancy.OutMessages]``.
         """
         ret = _load_once(self._ins, self._locks, self._venv_relpath)
         self._resolvables = ret[0]

@@ -18,16 +18,27 @@ import logging.config
 import os
 import sys
 import traceback
-from pathlib import Path
+from collections.abc import Iterable
+from pathlib import (
+    Path,
+    PurePath,
+)
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import click
-import strictyaml as s
+import strictyaml as s  # pyright: ignore[reportMissingTypeStubs]
 from logging_strict import (
     LoggingConfigCategory,
     LoggingState,
 )
 from logging_strict.logging_yaml_validate import validate_yaml_dirty
 from logging_strict.register_config import ExtractorLoggingConfig
+
+if TYPE_CHECKING:
+    from importlib.machinery import ModuleSpec
 
 # pep366 ...
 # https://stackoverflow.com/a/34155199
@@ -36,6 +47,8 @@ if __name__ == "__main__" and __spec__ is None:  # pragma: no cover
     # python src/wreck/cli_dependencies.py fix
     import importlib.util
 
+    path_prev = None
+    name = None
     path_d = Path(__file__).parent
     rev_mods = []
     while path_d.joinpath("__init__.py").exists():
@@ -54,16 +67,27 @@ if __name__ == "__main__" and __spec__ is None:  # pragma: no cover
     pass
 
     # import top package level
-    path_top = path_prev.joinpath("__init__.py")
-    spec_top = importlib.util.spec_from_file_location(name, path_top)
-    mod_top = importlib.util.module_from_spec(spec_top)
-    sys.modules[dotted_path] = mod_top
-    spec_top.loader.exec_module(mod_top)
+    if (
+        path_prev is not None
+        and issubclass(type(path_prev), PurePath)
+        and name is not None
+        and isinstance(name, str)
+    ):  # pragma: no branch
+        path_top = path_prev.joinpath("__init__.py")
+        optspec_top = importlib.util.spec_from_file_location(name, path_top)
+        if optspec_top is not None:  # pragma: no branch
+            spec_top = cast("ModuleSpec", optspec_top)
+            mod_top = importlib.util.module_from_spec(spec_top)
+            sys.modules[dotted_path] = mod_top
+            assert spec_top.loader is not None
+            spec_top.loader.exec_module(mod_top)
 
-    # __spec__ is None. Set __spec__ rather than :code:`__package__ = dotted_path`
-    dotted_path_this = f"{dotted_path}.{Path(__file__).stem}"
-    spec_this = importlib.util.spec_from_file_location(dotted_path_this, Path(__file__))
-    __spec__ = spec_this
+            # __spec__ is None. Set __spec__ rather than :code:`__package__ = dotted_path`
+            dotted_path_this = f"{dotted_path}.{Path(__file__).stem}"
+            spec_this = importlib.util.spec_from_file_location(
+                dotted_path_this, Path(__file__)
+            )
+            __spec__ = spec_this
 elif (
     __name__ == "__main__" and isinstance(__package__, str) and len(__package__) == 0
 ):  # pragma: no cover
@@ -204,54 +228,44 @@ def present_results(
 
     # lock messages
     is_show = lock_unresolvables_count != 0 and show_unresolvables
-    if is_show:  # pragma: no cover
+    if is_show:  # pragma: no branch  # pragma: no cover
         zzz_unresolvables = f"Unresolvables ({venv_relpath}){os.linesep}"
         for blob in lock_unresolvables_for_venv:
             zzz_unresolvables += f"{blob!r}{os.linesep}"
         fcn(zzz_unresolvables, err=True)
-    else:  # pragma: no cover
-        pass
 
     is_show = lock_applies_to_shared_count != 0 and show_resolvable_shared
-    if is_show:  # pragma: no cover
+    if is_show:  # pragma: no branch  # pragma: no cover
         zzz_resolvables_shared = (
             f".shared resolvable (manually {venv_relpath}):" f"{os.linesep}{os.linesep}"
         )
         for blob in lock_applies_to_shared_for_venv:
             zzz_resolvables_shared += f"{blob!r}{os.linesep}"
         fcn(zzz_resolvables_shared, err=True)
-    else:  # pragma: no cover
-        pass
 
     is_show = lock_resolved_msgs_count != 0 and show_fixed
-    if is_show:  # pragma: no cover
+    if is_show:  # pragma: no branch  # pragma: no cover
         zzz_fixed = f"Fixed ({venv_relpath}):{os.linesep}{os.linesep}"
         for blob in lock_msgs_for_venv:
             zzz_fixed += f"{blob!r}{os.linesep}"
         fcn(zzz_fixed, err=True)
-    else:  # pragma: no cover
-        pass
 
     # unlock messages
     is_show = unlock_applies_to_shared_count != 0 and show_resolvable_shared
-    if is_show:  # pragma: no cover
+    if is_show:  # pragma: no branch  # pragma: no cover
         zzz_resolvables_shared = (
             f".shared resolvable (manually {venv_relpath}):" f"{os.linesep}{os.linesep}"
         )
         for blob in unlock_applies_to_shared_for_venv:
             zzz_resolvables_shared += f"{blob!r}{os.linesep}"
         fcn(zzz_resolvables_shared, err=True)
-    else:  # pragma: no cover
-        pass
 
     is_show = unlock_resolved_msgs_count != 0 and show_fixed
-    if is_show:  # pragma: no cover
+    if is_show:  # pragma: no branch  # pragma: no cover
         zzz_fixed = f"Fixed ({venv_relpath}):{os.linesep}{os.linesep}"
         for blob in unlock_msgs_for_venv:
             zzz_fixed += f"{blob!r}{os.linesep}"
         fcn(zzz_fixed, err=True)
-    else:  # pragma: no cover
-        pass
 
 
 @click.group(
@@ -280,7 +294,7 @@ def main():
     help=help_path,
 )
 @click.option(
-    "-v",
+    "-e",
     "--venv-relpath",
     default=None,
     help=help_venv_path,
@@ -400,16 +414,13 @@ def requirements_fix_v2(
 
     # Running all venv with the same python interpreter is a bad idea
     # lock_compile allows, but Fixing.fix_requirements_lock and present_results does not
-    if venv_relpath is None:
+    if venv_relpath is None:  # pragma: no branch
         msg_warn = (
             "venv relpath not provided. Be conscious of venv and python "
             "interpreter version"
         )
         fcn(msg_warn, fg="red", err=True)
         sys.exit(12)
-    else:
-        # venv relpath provided ... continue
-        pass
 
     _genre = "mp"
     _flavor = "asz"
@@ -433,28 +444,31 @@ def requirements_fix_v2(
             logger_package_name=g_app_name,
         )
 
-        if elc.logging_config_yaml_str is not None:
+        # pyright complains could also be: ``dict[str, Any]``
+        mixed_yaml_str = elc.logging_config_yaml_str
+        if mixed_yaml_str is not None and isinstance(
+            mixed_yaml_str, str
+        ):  # pragma: no branch
+            yaml_str = cast(str, mixed_yaml_str)
             # may raise strictyaml.YAMLValidationError
-            yaml_config = validate_yaml_dirty(elc.logging_config_yaml_str)
-            d_config = yaml_config.data
-            # In tests, to skip applying logging config, patch this
-            logging.config.dictConfig(d_config)
-        else:  # pragma: no cover
-            pass
+            yaml_config = validate_yaml_dirty(yaml_str)
+            if yaml_config is not None and hasattr(yaml_config, "data"):
+                d_config = yaml_config.data
+                assert not isinstance(d_config, str) and not isinstance(d_config, list)
+                # In tests, to skip applying logging config, patch this
+                logging.config.dictConfig(d_config)
     except s.YAMLValidationError as exc:
         fcn(str(exc), fg="red", err=True)
         sys.exit(11)
 
     is_increase_logging_verbosity = verbose > 0
-    if is_increase_logging_verbosity:
+    if is_increase_logging_verbosity:  # pragma: no branch
         """Take logging level from package (not set for module).
         To reduce side effects surface area, alter logger for module, not package
         """
         # logger_mod_this = logging.getLogger(g_logger_dotted_path)
         log_level = max(logging.DEBUG, _logger.level - verbose * 10)
         _logger.setLevel(log_level)
-    else:
-        pass
 
     try:
         loader = VenvMapLoader(str_path)
@@ -474,11 +488,9 @@ def requirements_fix_v2(
         fcn(msg_exc, fg="red", err=True)
         sys.exit(4)
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = f"{dotted_path} loader.project_base {loader.project_base}"
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     # compile .lock files
     try:
@@ -515,9 +527,9 @@ def requirements_fix_v2(
     )
     assert is_tuple_two_items
     t_compiled, t_failures = t_status
-    assert isinstance(t_failures, tuple)
+    assert isinstance(t_failures, Iterable)
     assert isinstance(t_compiled, tuple)
-    if is_timeout(t_failures):
+    if is_timeout(t_failures):  # pyright: ignore[reportArgumentType]
         fcn("Timeout occurred. Check web connection", err=True)
         sys.exit(10)
     else:
@@ -587,7 +599,7 @@ def requirements_fix_v2(
     help=help_path,
 )
 @click.option(
-    "-v",
+    "-e",
     "--venv-relpath",
     default=None,
     help=help_venv_path,

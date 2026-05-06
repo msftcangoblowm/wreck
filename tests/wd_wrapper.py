@@ -9,11 +9,18 @@
 
 """
 
-from __future__ import annotations
-
 import itertools
-from pathlib import Path
-from typing import Any
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from typing import (
+        Any,
+        Union,
+    )
 
 
 class WorkDir:
@@ -41,12 +48,12 @@ class WorkDir:
         """
         return f"<WorkDir {self.cwd}>"
 
-    def __init__(self, cwd: Path) -> None:
+    def __init__(self, cwd: "Path") -> None:
         """WorkDir constructor."""
         self.cwd = cwd
         self.__counter = itertools.count()
 
-    def __call__(self, cmd: list[str] | str, **kw: object) -> str:
+    def __call__(self, cmd: "Union[list[str], str]", **kw: object) -> str:
         """Run a subprocess command.
 
         :param cmd:
@@ -65,9 +72,10 @@ class WorkDir:
             cmd = cmd.format(**kw)
         from setuptools_scm._run_cmd import run
 
-        return run(cmd, cwd=self.cwd).stdout
+        ret = cast(str, run(cmd, cwd=self.cwd).stdout)
+        return ret
 
-    def write(self, name: str, content: str | bytes) -> Path:
+    def write(self, name: str, content: "Union[str, bytes]") -> "Path":
         """Write file.
 
         :param name: relative path to file
@@ -84,7 +92,7 @@ class WorkDir:
             path.write_text(content, encoding="utf-8")
         return path
 
-    def _reason(self, given_reason: str | None) -> str:
+    def _reason(self, given_reason: "Union[str, None]") -> str:
         """If a git commit message is None, use a fallback message.
 
         :param given_reason: commit message
@@ -98,7 +106,10 @@ class WorkDir:
             return given_reason
 
     def add_and_commit(
-        self, reason: str | None = None, signed: bool = False, **kwargs: object
+        self,
+        reason: "Union[str, None]" = None,
+        signed: "Union[bool, None]" = False,
+        **kwargs: object,
     ) -> None:
         """Runs git add and git commit commands.
 
@@ -111,14 +122,18 @@ class WorkDir:
 
            Default False. True to sign the commit otherwise commit not signed.
 
-        :type signed: bool
+        :type signed: bool | None
         :param kwargs: Additional keyword options to pass onto commit
         :type kwargs: object
         """
         self(self.add_command)
         self.commit(reason=reason, signed=signed, **kwargs)
 
-    def commit(self, reason: str | None = None, signed: bool = False) -> None:
+    def commit(
+        self,
+        reason: "Union[str, None]" = None,
+        signed: "Union[bool, None]" = False,
+    ) -> None:
         """Wraps :code:`git commit` command.
 
         :param reason:
@@ -130,7 +145,7 @@ class WorkDir:
 
            Default False. True to sign the commit otherwise commit not signed.
 
-        :type signed: bool
+        :type signed: bool | None
         """
         reason = self._reason(reason)
         self(
@@ -138,7 +153,11 @@ class WorkDir:
             reason=reason,
         )
 
-    def commit_testfile(self, reason: str | None = None, signed: bool = False) -> None:
+    def commit_testfile(
+        self,
+        reason: "Union[str, None]" = None,
+        signed: "Union[bool, None]" = False,
+    ) -> None:
         """Create a file. For unittesting this class.
 
         :param reason:
@@ -150,14 +169,14 @@ class WorkDir:
 
            Default False. True to sign the commit otherwise commit not signed.
 
-        :type signed: bool
+        :type signed: bool | None
         """
         reason = self._reason(reason)
         self.write("test.txt", f"test {reason}")
         self(self.add_command)
         self.commit(reason=reason, signed=signed)
 
-    def get_version(self, **kw: Any) -> str:
+    def get_version(self, **kw: "Any") -> str:
         """Get current scm version.
 
         :param kw: keyword options to pass thru
@@ -165,9 +184,17 @@ class WorkDir:
         :returns: current scm version
         :rtype: str
         """
-        __tracebackhide__ = True
-        from setuptools_scm import get_version
+        if TYPE_CHECKING:
+            version: str
 
-        version = get_version(root=self.cwd, fallback_root=self.cwd, **kw)
-        print(self.cwd.name, version, sep=": ")
-        return version
+        __tracebackhide__ = True
+        try:
+            from setuptools_scm import get_version
+        except (ImportError, ModuleNotFoundError):
+            raise
+        else:
+            version = get_version(root=self.cwd, fallback_root=self.cwd, **kw)
+            print(self.cwd.name, version, sep=": ")
+            ret = version
+
+        return ret

@@ -39,7 +39,7 @@ ids_is_package_installed = (
     testdata_is_package_installed,
     ids=ids_is_package_installed,
 )
-def test_is_package_installed(app_name, is_installed):
+def test_is_package_installed(app_name: str, is_installed: bool) -> None:
     """Check if package is installed or not"""
     # pytest --showlocals --log-level INFO -k "test_is_package_installed" tests
     assert is_package_installed(app_name) is is_installed

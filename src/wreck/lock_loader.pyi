@@ -36,7 +36,7 @@ class LoaderImplementation(abc.ABC):
         venv_path: str | Path,
         suffix: str = ...,
         filter_by_pin: bool | None = True,
-    ) -> set[DATUM]: ...
+    ) -> set[PinDatum]: ...
 
 class LoaderPinDatum(LoaderImplementation):
     def __call__(
@@ -45,4 +45,4 @@ class LoaderPinDatum(LoaderImplementation):
         venv_path: str | Path,
         suffix: str = ...,
         filter_by_pin: bool | None = True,
-    ) -> set[DATUM]: ...
+    ) -> set[PinDatum]: ...

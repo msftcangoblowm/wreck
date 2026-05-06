@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   pytest -vv --showlocals tests/test_pep518_venvs.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -17,7 +23,10 @@ from pathlib import (
     Path,
     PurePath,
 )
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 
@@ -35,43 +44,57 @@ from wreck.pep518_venvs import (
     get_reqs,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import Union
+
+    from tests.typing_only import DOES_NOT_OR_DOES
+
 
 def test_venvmaploader(
-    tmp_path,
-    prep_pyproject_toml,
-    prepare_folders_files,
-):
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """Test VenvMapLoader."""
     # pytest --showlocals --log-level INFO -k "test_venvmaploader" tests
-    invalids = (
+    abspath_tests_dir = request.path.parent
+    invalids_0 = (
         (3, "unsupported type. Within context, file not found"),
         (tmp_path, "No pyproject.toml or .pyproject_toml found"),
     )
-    for t_invalid in invalids:
-        invalid, _ = t_invalid
+    for t_invalid_0 in invalids_0:
+        invalid_0, _ = t_invalid_0
         with pytest.raises(FileNotFoundError):
-            VenvMapLoader(invalid)
+            VenvMapLoader(
+                invalid_0,  # type: ignore[arg-type]
+            )
 
     # Finds an empty file --> LookupError
     path_dest_pyproject_toml = tmp_path / "pyproject.toml"
     path_dest_pyproject_toml.touch()
-    dest_pyproject_toml_path = str(path_dest_pyproject_toml)
+    dest_pyproject_toml_path = path_dest_pyproject_toml.as_posix()
     with pytest.raises(LookupError):
         VenvMapLoader(dest_pyproject_toml_path)
 
     # Fail during parsing
-    prep_these = (
+    prep_these_1 = (
         ".venv/crap.txt",
         ".doc/.venv/crap.txt",
     )
-    prepare_folders_files(prep_these, tmp_path)
+    prepare_folders_files(prep_these_1, tmp_path)
 
     # no reqs files --> missing
-    path_pyproject_toml = Path(__file__).parent.joinpath(
+    path_pyproject_toml = abspath_tests_dir.joinpath(
         "_req_files",
         "venvs.pyproject_toml",
     )
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
     data_before_parse = loader.l_data  # noqa: F841
     venv_reqs, lst_missing = loader.parse_data()
@@ -79,24 +102,25 @@ def test_venvmaploader(
     assert len(lst_missing) == len(venv_reqs)
 
     # Prepare some, not all
-    base_relpaths = (
+    base_relpaths_2 = (
         "requirements/pip-tools",
         "requirements/pip",
         "requirements/prod.shared",
         "requirements/kit",
     )
-    prep_these = []
+    prep_these_2 = []
     for suffix in (".in", ".unlock", ".lock"):
-        for base_relpath in base_relpaths:
-            prep_these.append(f"{base_relpath}{suffix}")
-    prepare_folders_files(prep_these, tmp_path)
+        for base_relpath in base_relpaths_2:
+            prep_these_2.append(f"{base_relpath}{suffix}")
+    prepare_folders_files(prep_these_2, tmp_path)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
     venv_reqs, lst_missing = loader.parse_data(check_suffixes=None)
     assert len(lst_missing) != 0
     assert len(lst_missing) != len(venv_reqs)
 
     venv_map = VenvMap(loader)
-    assert venv_map.missing != 0
+    venv_map_missing_count = len(venv_map.missing)
+    assert venv_map_missing_count != 0
     assert venv_map.project_base == tmp_path
     repr_venv_map = repr(venv_map)
     assert isinstance(repr_venv_map, str)
@@ -114,7 +138,7 @@ def test_venvmaploader(
     venv_map[0:1]
     venv_map[1]
     with pytest.raises(TypeError):
-        venv_map["1"]
+        venv_map["1"]  # type: ignore[index]
     venv_map[-1]
     with pytest.raises(IndexError):
         venv_map[20000]
@@ -124,13 +148,13 @@ def test_venvmaploader(
 
     # ensure_abspath unsupported type. Expects str or Path
     with pytest.raises(TypeError):
-        loader.ensure_abspath(5)
+        loader.ensure_abspath(5)  # type: ignore[arg-type]
 
     # ensure_abspath with abspath
     path_actual = loader.ensure_abspath(path_dest_pyproject_toml)
     assert path_actual == path_dest_pyproject_toml
 
-    base_relpaths = (
+    base_relpaths_3 = (
         "requirements/pip-tools",
         "requirements/pip",
         "requirements/prod.shared",
@@ -140,31 +164,31 @@ def test_venvmaploader(
         "requirements/manage",
         "requirements/dev",
     )
-    prep_these = []
+    prep_these_3 = []
     for suffix in (".in", ".unlock", ".lock"):
-        for base_relpath in base_relpaths:
-            prep_these.append(f"{base_relpath}{suffix}")
-    prepare_folders_files(prep_these, tmp_path)
+        for base_relpath in base_relpaths_3:
+            prep_these_3.append(f"{base_relpath}{suffix}")
+    prepare_folders_files(prep_these_3, tmp_path)
 
     venvreqs = venv_map.reqs(venv_relpath)
     assert isinstance(venvreqs, list)
-    assert len(venvreqs) == len(base_relpaths)
+    assert len(venvreqs) == len(base_relpaths_3)
 
-    path_pyproject_toml = Path(__file__).parent.joinpath(
+    path_pyproject_toml = abspath_tests_dir.joinpath(
         "_req_files",
         "venvs-not-folder.pyproject_toml",
     )
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
 
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
     with pytest.raises(NotADirectoryError):
         loader.parse_data()
 
-    path_pyproject_toml = Path(__file__).parent.joinpath(
+    path_pyproject_toml = abspath_tests_dir.joinpath(
         "_req_files",
         "venvs-reqs-not-sequence.pyproject_toml",
     )
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
     with pytest.raises(ValueError):
         loader.parse_data()
@@ -196,20 +220,21 @@ ids_venvreq = (
     ids=ids_venvreq,
 )
 def test_venvreq(
-    venv_relpath,
-    req_relpath,
-    t_folders_relpath,
-    expectation,
-    tmp_path,
-    prepare_folders_files,
-):
+    venv_relpath: str,
+    req_relpath: str,
+    t_folders_relpath: "tuple[str, ...]",
+    expectation: "DOES_NOT_OR_DOES",
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """Test VenvReq."""
     # pytest --showlocals --log-level INFO -k "test_venvreq" tests
     # prepare
     #    venv folder
     prepare_folders_files((venv_relpath,), tmp_path)
     venv_relpath_tmp = venv_relpath
-    if not resolve_joinpath(tmp_path, venv_relpath).exists():
+    abspath_venv = cast("Path", resolve_joinpath(tmp_path, venv_relpath))
+    if not abspath_venv.exists():
         venv_relpath_tmp += "/.python_version"
         prepare_folders_files((venv_relpath_tmp,), tmp_path)
 
@@ -238,10 +263,7 @@ def test_venvreq(
 
 testdata_venv_get_reqs = (
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".venv",
         (
             (
@@ -275,10 +297,7 @@ testdata_venv_get_reqs = (
         8,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".doc/.venv",
         (
             (
@@ -304,10 +323,7 @@ testdata_venv_get_reqs = (
         2,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_requirements_none",
-            "requires-none.pyproject_toml",
-        ),
+        Path("_requirements_none").joinpath("requires-none.pyproject_toml"),
         ".venv",
         (),
         (),
@@ -315,10 +331,7 @@ testdata_venv_get_reqs = (
         0,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_requirements_none",
-            "requires-none.pyproject_toml",
-        ),
+        Path("_requirements_none").joinpath("requires-none.pyproject_toml"),
         0.1234,
         (),
         (),
@@ -326,10 +339,7 @@ testdata_venv_get_reqs = (
         0,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".doc/.venv",
         (
             (
@@ -356,29 +366,32 @@ ids_venv_get_reqs = (
 
 @pytest.mark.parametrize(
     (
-        "path_pyproject_toml, venv_relpath, seq_reqs, base_relpaths, "
+        "relpath_pyproject_toml, venv_relpath, seq_reqs, base_relpaths, "
         "expectation, expected_req_file_count"
     ),
     testdata_venv_get_reqs,
     ids=ids_venv_get_reqs,
 )
 def test_venv_get_reqs(
-    path_pyproject_toml,
-    venv_relpath,
-    seq_reqs,
-    base_relpaths,
-    expectation,
-    expected_req_file_count,
-    tmp_path,
-    prep_pyproject_toml,
-    prepare_folders_files,
-):
+    relpath_pyproject_toml: "Path",
+    venv_relpath: str,
+    seq_reqs: "Sequence[tuple[Path, str]]",
+    base_relpaths: "Sequence[str]",
+    expectation: "DOES_NOT_OR_DOES",
+    expected_req_file_count: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """Test get_reqs"""
     # pytest --showlocals --log-level INFO -k "test_venv_get_reqs" tests
     # pytest --showlocals --log-level INFO tests/test_pep518_venvs.py::test_venv_get_reqs[tool.wreck.venvs\ section\ no\ requirements]
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
     # prepare
     #    pyproject.toml
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
 
     #    empty folders
     seq_folders = (
@@ -392,7 +405,11 @@ def test_venv_get_reqs(
 
     # loader invalid --> MissingPackageBaseFolder
     with pytest.raises(MissingPackageBaseFolder):
-        get_reqs(None, venv_path=venv_relpath, suffix_last=SUFFIX_IN)
+        get_reqs(
+            None,  # type: ignore[arg-type]
+            venv_path=venv_relpath,
+            suffix_last=SUFFIX_IN,
+        )
 
     #    requirements empty files and folders
     suffixes = (SUFFIX_IN,)
@@ -460,21 +477,68 @@ def test_venv_get_reqs(
                 expectation_exc = expectation.expected_exception  # noqa: F841
 
 
+testdata_check_venv_relpath = (
+    (
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
+        0,
+        Path("pyproject.toml"),
+    ),
+    (
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
+        1,
+        Path("pyproject.toml"),
+    ),
+    (
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
+        "pyproject.toml",
+        Path("pyproject.toml"),
+    ),
+    (
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
+        Path("pyproject.toml"),
+        Path("pyproject.toml"),
+    ),
+)
+ids_check_venv_relpath = (
+    "abspath Path",
+    "abspath str",
+    "relpath str",
+    "relpath Path",
+)
+
+
+@pytest.mark.parametrize(
+    "relpath_pyproject_toml, optpath_dest_config, expected",
+    testdata_check_venv_relpath,
+    ids=ids_check_venv_relpath,
+)
 def test_check_venv_relpath(
-    tmp_path,
-    prep_pyproject_toml,
-):
+    relpath_pyproject_toml: "Path",
+    optpath_dest_config: "Union[Path, str, int]",
+    expected: "Path",
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+) -> None:
     """Test check_venv_relpath"""
     # pytest -vv --showlocals --log-level INFO -k "test_check_venv_relpath" tests
+    if TYPE_CHECKING:
+        path_mixed: Union[Path, str]
 
-    path_config = Path(__file__).parent.joinpath(
-        "_req_files",
-        "venvs.pyproject_toml",
-    )
+    abspath_tests_dir = request.path.parent
+
+    relpath_pyproject_toml = Path("_req_files").joinpath("venvs.pyproject_toml")
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
 
     # prepare
     #    pyproject.toml or [something].pyproject_toml
-    path_dest_config = prep_pyproject_toml(path_config, tmp_path)
+    path_dest_config = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
+    if optpath_dest_config == 0:
+        path_mixed = path_dest_config
+    elif optpath_dest_config == 1:
+        path_mixed = path_dest_config.as_posix()
+    else:
+        path_mixed = cast("Union[Path, str]", optpath_dest_config)
 
     #    Careful path must be a str
     loader = VenvMapLoader(path_dest_config.as_posix())
@@ -483,16 +547,8 @@ def test_check_venv_relpath(
     #    Confirms pyproject.toml exists within tmp_path
     assert path_base_dir == tmp_path
 
-    test_these = (
-        (path_dest_config, Path("pyproject.toml"), "abspath Path"),
-        (path_dest_config.as_posix(), Path("pyproject.toml"), "abspath str"),
-        ("pyproject.toml", Path("pyproject.toml"), "relpath str"),
-        (Path("pyproject.toml"), Path("pyproject.toml"), "relpath Path"),
-    )
-    for path_mixed, expected, test_id in test_these:
-        # act
-        relpath_actual = check_venv_relpath(loader, path_mixed)
-        # verify
-        assert issubclass(type(relpath_actual), PurePath)
-        assert relpath_actual == expected
-        assert isinstance(test_id, str)
+    # act
+    relpath_actual = check_venv_relpath(loader, path_mixed)
+    # verify
+    assert issubclass(type(relpath_actual), PurePath)
+    assert relpath_actual == expected

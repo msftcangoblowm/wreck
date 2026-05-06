@@ -5,8 +5,7 @@
 # setuptools-scm toml reading code vendored
 
 # entrypoints
-click==8.1.7; python_version < "3.10"
-click>=8.2.0; python_version >= "3.10"
+click
 
 # .in --> .lock file
 pip-tools

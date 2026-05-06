@@ -108,7 +108,7 @@ package venv
 
    pyenv version
 
-3.9.16
+3.10.14
 
 .. code-block:: shell
 
@@ -161,7 +161,6 @@ The ``.tox/.python-version`` needs all the versions tox will have access to
    cd .tox
    touch .python-version
    cat <<-EOF > .python-version
-   3.9.16
    3.10.14
    3.11.9
    3.12.4

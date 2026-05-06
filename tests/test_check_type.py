@@ -3,6 +3,10 @@
 
 Unittest for module, check_type
 
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_check_type.py
+
 Unit test -- Module
 
 .. code-block:: shell
@@ -15,6 +19,7 @@ Unit test -- Module
 
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -24,6 +29,15 @@ from wreck.check_type import (
     is_relative_required,
 )
 from wreck.constants import SUFFIX_IN
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing import (
+        Any,
+        Union,
+    )
+
+    from tests.typing_only import DOES_NOT_OR_DOES
 
 testdata_is_ok = (
     (None, False),
@@ -46,12 +60,20 @@ ids_is_ok = (
     testdata_is_ok,
     ids=ids_is_ok,
 )
-def test_is_ok(mystr, expected):
+def test_is_ok(
+    mystr: "Union[str, float, None]",
+    expected: bool,
+) -> None:
     """Test is_ok check."""
     # pytest --showlocals --log-level INFO -k "test_is_ok" tests
     actual = is_ok(mystr)
     assert actual == expected
 
+
+if TYPE_CHECKING:
+    testdata_is_relative_required: Sequence[
+        tuple[Union[Path, str, None], Any, DOES_NOT_OR_DOES, bool]
+    ]
 
 testdata_is_relative_required = (
     (None, None, pytest.raises(TypeError), False),
@@ -97,11 +119,19 @@ ids_is_relative_required = (
     testdata_is_relative_required,
     ids=ids_is_relative_required,
 )
-def test_is_relative_required(relative_path, exts, expectation, expected):
+def test_is_relative_required(
+    relative_path: "Union[Path, str, None]",
+    exts: "Any",
+    expectation: "DOES_NOT_OR_DOES",
+    expected: bool,
+) -> None:
     """Test is_relative_required."""
     # pytest --showlocals --log-level INFO -k "test_is_relative_required" tests
     with expectation:
-        actual = is_relative_required(path_relative=relative_path, extensions=exts)
+        actual = is_relative_required(
+            path_relative=relative_path,  # type: ignore[arg-type]
+            extensions=exts,
+        )
     if isinstance(expectation, does_not_raise):
         assert actual == expected
 
@@ -129,7 +159,10 @@ ids_click_bool = (
     testdata_click_bool,
     ids=ids_click_bool,
 )
-def test_click_bool(val, expected):
+def test_click_bool(
+    val: "Union[str, None]",
+    expected: "Union[bool, None]",
+) -> None:
     """Test click.Bool check."""
     # pytest --showlocals --log-level INFO -k "test_click_bool" tests
     actual = click_bool(val=val)

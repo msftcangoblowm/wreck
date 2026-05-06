@@ -38,7 +38,6 @@ from pathlib import (
 )
 from typing import (
     TYPE_CHECKING,
-    Union,
     cast,
 )
 
@@ -46,7 +45,6 @@ from ._safe_path import (
     replace_suffixes,
     resolve_joinpath,
 )
-from .check_type import is_ok
 from .constants import (
     SUFFIX_IN,
     g_app_name,
@@ -75,6 +73,9 @@ else:  # pragma: no cover py-gte-310
 TOML_SECTION_VENVS = f"{g_app_name}.venvs"
 DICT_SEARCH_KEY = "venv_base_path"
 
+if TYPE_CHECKING:
+    from typing import Union
+
 
 def check_venv_relpath(loader, venv_path_mixed):
     """Expecting relpath. If abspath convert to relpath
@@ -93,24 +94,35 @@ def check_venv_relpath(loader, venv_path_mixed):
     :type venv_path_mixed: typing.Any
     :returns: relative Path to venv base folder
     :rtype: pathlib.Path
+    :raises:
+
+       - :py:exc:`TypeError` -- venv_path is either None or unsupported type
+
     """
-    is_abs_path = is_ok(venv_path_mixed) and Path(venv_path_mixed).is_absolute()
-    is_abspath = (
+    if (
         venv_path_mixed is not None
-        and issubclass(type(venv_path_mixed), PurePath)
-        and venv_path_mixed.is_absolute()
-    )
-    if is_abs_path:
-        # abspath str
-        abspath_val = Path(venv_path_mixed)
-        relpath_venv = Path(abspath_val.relative_to(loader.project_base).as_posix())
-    elif is_abspath:
-        # abspath Path
-        abspath_val = venv_path_mixed
-        relpath_venv = Path(abspath_val.relative_to(loader.project_base).as_posix())
-    else:  # pragma: no cover
-        # relpath str|Path -> Path
-        relpath_venv = Path(venv_path_mixed)
+        and isinstance(venv_path_mixed, str)
+        and bool(venv_path_mixed.strip())
+    ):
+        mixedpath_val = Path(venv_path_mixed)
+        if mixedpath_val.is_absolute():
+            relpath_venv = Path(
+                mixedpath_val.relative_to(loader.project_base).as_posix()
+            )
+        else:
+            relpath_venv = mixedpath_val
+    elif venv_path_mixed is not None and issubclass(type(venv_path_mixed), PurePath):
+        mixedpath_val = cast("Path", venv_path_mixed)
+        if mixedpath_val.is_absolute():
+            abspath_val = mixedpath_val
+            relpath_venv = Path(abspath_val.relative_to(loader.project_base).as_posix())
+        else:
+            relpath_venv = Path(mixedpath_val)
+    else:
+        msg_warn = (
+            f"venv_path is either None or unsupported type. Got {venv_path_mixed}"
+        )
+        raise TypeError(msg_warn)
 
     return relpath_venv
 
@@ -148,7 +160,7 @@ class VenvReq:
     project_base: Path
     venv_relpath: str
     req_relpath: str
-    req_folders: tuple[str]
+    req_folders: tuple[str, ...]
 
     def __repr__(self):
         """Create a realistic repr that shows absolute paths
@@ -231,7 +243,6 @@ class VenvReq:
                 resolve_joinpath(self.project_base, dir_relpath),
             )
             yield req_dir_abspath
-        yield from ()
 
     def reqs_all(self, suffix=SUFFIX_IN):
         """Yields abspath to requirements files. The suffix
@@ -245,8 +256,6 @@ class VenvReq:
         pattern = f"**/*{suffix}"
         for req_dir_abspath in self._req_folders_abspath():
             yield from req_dir_abspath.glob(pattern)
-
-        yield from ()
 
 
 @dataclass(**DC_SLOTS)
@@ -375,18 +384,14 @@ class VenvMapLoader:
         Supplements parse_data
 
         :returns: venvs' relative path
-        :rtype: tuple[pathlib.Path]
+        :rtype: list[pathlib.Path]
         """
         lst = []
         for d_venv in self.l_data:
-            if "venv_base_path" in d_venv.keys():
+            if "venv_base_path" in d_venv.keys():  # pragma: no branch
                 venv_relpath = d_venv.get("venv_base_path", None)
-                if venv_relpath is not None:
+                if venv_relpath is not None:  # pragma: no branch
                     lst.append(venv_relpath)
-                else:  # pragma: no cover
-                    pass
-            else:  # pragma: no cover
-                pass
 
         return tuple(lst)
 
@@ -417,16 +422,17 @@ class VenvMapLoader:
 
         """
         if TYPE_CHECKING:
+            check_suffixes_local: Sequence[str]
             venv_reqs: list[VenvReq]
             lst_missing: list[str]
             lst_missing_loc: list[str]
 
         # Sequence[str] | None
-        check_suffixes_local = fix_check_suffixes(check_suffixes)
-        if check_suffixes_local is None:
+        check_suffixes_loc = fix_check_suffixes(check_suffixes)
+        if check_suffixes_loc is None:
             check_suffixes_local = (".in", ".unlock", ".lock")
-        else:  # pragma: no cover
-            pass
+        else:
+            check_suffixes_local = check_suffixes_loc
 
         venv_reqs = []
         lst_missing = []
@@ -439,7 +445,7 @@ class VenvMapLoader:
                 parse_venv_relpath is not None
                 and isinstance(parse_venv_relpath, str)
                 and venv_relpath != parse_venv_relpath
-            ):
+            ):  # pragma: no branch
                 continue
 
             # deprecate in_folder
@@ -449,33 +455,34 @@ class VenvMapLoader:
             # Just want a list[whatever]
             reqs = []
             for k, v in d_venv.items():
-                if k == "reqs":
+                if k == "reqs":  # pragma: no branch
                     # Check type(v) is Sequence and not one str
                     is_unsupported_types = not isinstance(v, Sequence) or (
                         isinstance(v, Sequence) and isinstance(v, str)
                     )
-                    if is_unsupported_types:
+                    if is_unsupported_types:  # pragma: no branch
                         raise ValueError(msg_exc_field_type_ng)
-                    else:  # pragma: no cover
-                        pass
 
                     reqs.extend(v)
-                else:  # pragma: no cover
-                    pass
 
             # Check venv is a folder
-            abspath_venv = cast(
-                "Path",
-                resolve_joinpath(self.project_base, venv_relpath),
-            )
-            if not abspath_venv.is_dir():
+            is_abspath_venv_ng = False
+            if venv_relpath is not None and isinstance(
+                venv_relpath, str
+            ):  # pragma: no branch
+                optabspath_venv = resolve_joinpath(self.project_base, venv_relpath)
+                if optabspath_venv is None:
+                    is_abspath_venv_ng = True
+                else:
+                    abspath_venv = cast("Path", optabspath_venv)
+                    if not abspath_venv.is_dir():  # pragma: no branch
+                        is_abspath_venv_ng = True
+            if is_abspath_venv_ng:  # pragma: no branch
                 msg_exc = (
                     "All venv base folder(s) must exist. Missing folder "
-                    f"{abspath_venv!r}. Create it"
+                    f"{venv_relpath!r}. Create it"
                 )
                 raise NotADirectoryError(msg_exc)
-            else:  # pragma: no cover
-                pass
 
             # from reqs, find all folders' relative path
             # These folders constitute all folders that contain requirements files
@@ -491,31 +498,41 @@ class VenvMapLoader:
             # Check file existence. Excludes support files
 
             for req in reqs:
-                vr = VenvReq(self.project_base, venv_relpath, req, t_relpath_folders)
-
-                check_these = []
-                for check_suffix in check_suffixes_local:
-                    abspath_req = replace_suffixes_last(vr.req_abspath, check_suffix)
-                    check_these.append(abspath_req)
-
-                lst_not_found = [
-                    path_f for path_f in check_these if not path_f.is_file()
-                ]
-                is_not_founds = len(lst_not_found) != 0
-                if is_not_founds:
-                    msg_missing = (
-                        f"For venv: {venv_relpath!s}, missing requirements: "
-                        f"{lst_not_found!r}. "
-                        "One possibility is file name changed. "
-                        "Search for requirement relative path in "
-                        "pyproject.toml [[tool.venv]] sections or "
-                        "in requirements files"
+                if venv_relpath is not None and isinstance(
+                    venv_relpath, str
+                ):  # pragma: no branch
+                    vr = VenvReq(
+                        self.project_base,
+                        venv_relpath,
+                        req,
+                        t_relpath_folders,
                     )
-                    lst_missing_loc.append(msg_missing)
-                else:  # pragma: no cover
-                    pass
-                # Anyway store VenvReq. TOML loads func removes dups
-                venv_reqs.append(vr)
+
+                    check_these = []
+                    for check_suffix in check_suffixes_local:
+                        assert isinstance(check_suffix, str)
+                        abspath_req = replace_suffixes_last(
+                            vr.req_abspath, check_suffix
+                        )
+                        check_these.append(abspath_req)
+
+                    lst_not_found = [
+                        path_f for path_f in check_these if not path_f.is_file()
+                    ]
+                    is_not_founds = len(lst_not_found) != 0
+                    if is_not_founds:  # pragma: no branch
+                        msg_missing = (
+                            f"For venv: {venv_relpath!s}, missing requirements: "
+                            f"{lst_not_found!r}. "
+                            "One possibility is file name changed. "
+                            "Search for requirement relative path in "
+                            "pyproject.toml [[tool.venv]] sections or "
+                            "in requirements files"
+                        )
+                        lst_missing_loc.append(msg_missing)
+
+                    # Anyway store VenvReq. TOML loads func removes dups
+                    venv_reqs.append(vr)
 
             lst_missing.extend(lst_missing_loc)
 
@@ -537,24 +554,25 @@ class VenvMapLoader:
         """
         msg_exc_key_ng = f"venv {key!r} not a str got {type(key)}"
 
+        is_ng_str = key is None or not isinstance(key, str) or not bool(key.strip())
+        is_ng_path = key is None and not issubclass(type(key), PurePath)
+        """
         is_acceptable_type = key is not None and (
             (isinstance(key, str) and len(key.strip()) != 0)
             or issubclass(type(key), PurePath)
         )
-
-        if not is_acceptable_type:
+        """
+        if is_ng_path and is_ng_str:
             raise TypeError(msg_exc_key_ng)
-        else:  # pragma: no cover
-            pass
-
-        p = Path(key)
-        if not p.is_absolute():
-            key_abspath = cast(
-                "Path",
-                resolve_joinpath(self.project_base, key),
-            )
         else:
-            key_abspath = p
+            strpath_key = cast("Union[Path, str]", key)
+            p = Path(strpath_key)
+            if not p.is_absolute():
+                optkey_abspath = resolve_joinpath(self.project_base, p)
+                assert optkey_abspath is not None
+                key_abspath = cast("Path", optkey_abspath)
+            else:
+                key_abspath = p
 
         return key_abspath
 
@@ -817,10 +835,9 @@ class VenvMap(Iterator[VenvReq]):
             is_found = False
             for venv_req in self._venvs:
                 is_match = venv_req.venv_abspath == abspath_venv
-                if is_match:
+                if is_match:  # pragma: no branch
                     is_found = True
-                else:  # pragma: no cover
-                    pass
+
             ret = is_found
 
         return ret
@@ -844,15 +861,13 @@ class VenvMap(Iterator[VenvReq]):
             ret = [self._venvs[ii] for ii in range(*key.indices(pin_count))]
         elif isinstance(key, int):
             # negative indices --> add len(self) until positive
-            if key < 0:
+            if key < 0:  # pragma: no branch
                 while key < 0:
                     key += len(self)
 
-            if key >= len(self):
+            if key >= len(self):  # pragma: no branch
                 msg_exc = f"The index ({key!s}) is out of range."
                 raise IndexError(msg_exc)
-            else:  # pragma: no cover
-                pass
 
             ret = self._venvs[key]
         else:
@@ -891,11 +906,9 @@ class VenvMap(Iterator[VenvReq]):
         t_venv_relpaths = self._loader.venv_relpaths
         is_venv_specified = relpath_key.as_posix() in t_venv_relpaths
         #    :code:`key not in self` removed
-        if not is_venv_specified:
+        if not is_venv_specified:  # pragma: no branch
             #    venv not specified
             raise KeyError(msg_exc_lookup)
-        else:  # pragma: no cover
-            pass
 
         # no reqs, for this venv, is not a KeyError
         reqs = [
@@ -961,10 +974,9 @@ def get_reqs(loader, venv_path=None, suffix_last=SUFFIX_IN):
 
     # Sequence[str] | None
     check_suffixes = fix_check_suffixes(suffix_last)
-    if check_suffixes is None:
+    if check_suffixes is None:  # pragma: no branch
         check_suffixes = (SUFFIX_IN,)
-    else:  # pragma: no cover
-        pass
+
     venv_relpaths = loader.venv_relpaths
 
     # Ensure requirements files defined in [[tool.wreck.venvs]] reqs exists
@@ -976,10 +988,9 @@ def get_reqs(loader, venv_path=None, suffix_last=SUFFIX_IN):
         )
         msg_missing = "\n".join(venvs.missing)
         is_missing = len(venvs.missing) != 0
-        if is_missing:
+        if is_missing:  # pragma: no branch
             raise MissingRequirementsFoldersFiles(msg_missing)
-        else:  # pragma: no cover
-            pass
+
         assert len(venvs.missing) == 0, msg_missing
     except (NotADirectoryError, ValueError, AssertionError):
         raise

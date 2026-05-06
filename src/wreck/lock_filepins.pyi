@@ -26,10 +26,12 @@ def get_path_cwd(loader: VenvMapLoader) -> Path: ...
 @dataclasses.dataclass
 class FilePins(Collection[PinDatum], Hashable):
     file_abspath: Path
-    _pins: list[PinDatum]
-    _iter: Iterator[PinDatum]
-    constraints: set[str]
-    requirements: set[str]
+
+    _pins: list[PinDatum] = dataclasses.field(init=False, default_factory=list)  # noqa: Y015  # fmt: skip
+    _iter: Iterator[PinDatum] = dataclasses.field(init=False)  # noqa: Y015
+    constraints: set[str] = dataclasses.field(init=False, default_factory=set)  # noqa: Y015  # fmt: skip
+    requirements: set[str] = dataclasses.field(init=False, default_factory=set)  # noqa: Y015  # fmt: skip
+    pkgs_from_resolved: set[str] = dataclasses.field(init=False, default_factory=set)  # noqa: Y015  # fmt: skip
 
     def __post_init__(self) -> None: ...
     def __len__(self) -> int: ...

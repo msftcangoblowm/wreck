@@ -45,9 +45,9 @@ class ReadPyprojectBase(abc.ABC):
     ) -> PyProjectData: ...
 
 class ReadPyproject(ReadPyprojectBase):
-    def update(
+    def update(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
-        d_target: dict[str, Any],
+        mixed_target: TOML_RESULT | list[TOML_RESULT],
         d_other: dict[str, Any],
         key_name: str | None = None,
         key_value: str | None = None,
@@ -61,9 +61,3 @@ class ReadPyprojectStrict(ReadPyprojectBase):
         key_name: str | None = None,
         key_value: str | None = None,
     ) -> None: ...
-
-def read_pyproject(
-    path: Path = ...,
-    tool_name: Sequence[str] | str = ...,
-    require_section: bool = True,
-) -> PyProjectData: ...

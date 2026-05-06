@@ -179,16 +179,16 @@ Usage
 
 .. code:: shell
 
-   req fix --venv-relpath='.venv'
-   req fix --venv-relpath='.doc/.venv'
+   reqs fix --venv-relpath='.venv'
+   reqs fix --venv-relpath='.doc/.venv'
 
 Provide path to the ``pyproject.toml`` if different location from cwd.
 Either the absolute path to the base folder or the file.
 
 .. code:: shell
 
-   req fix --venv-relpath='.venv' --path=~/parent_folder/package_base_folder
-   req fix --venv-relpath='.venv' --path=~/parent_folder/package_base_folder/pyproject.toml
+   reqs fix --venv-relpath='.venv' --path=~/parent_folder/package_base_folder
+   reqs fix --venv-relpath='.venv' --path=~/parent_folder/package_base_folder/pyproject.toml
 
 ``--venv-relpath`` does not support absolute path
 

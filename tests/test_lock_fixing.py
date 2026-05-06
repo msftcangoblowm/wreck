@@ -12,8 +12,8 @@ Unit test -- Module
 """
 
 import shutil
-from collections.abc import Sequence  # noqa: F401
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
@@ -43,171 +43,92 @@ from wreck.lock_fixing import (  # noqa: F401
 from wreck.lock_util import replace_suffixes_last
 from wreck.pep518_venvs import VenvMapLoader
 
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import Union
+
 testdata_resolve_resolvable_conflicts = (
     (
-        Path(__file__).parent.joinpath(
-            "_unresolvable_conflict",
-            "constraints-unresolvable.pyproject_toml",
+        Path("_unresolvable_conflict").joinpath(
+            "constraints-unresolvable.pyproject_toml"
         ),
         ".venv",
         (),
         (
-            Path(__file__).parent.joinpath(
-                "_unresolvable_conflict",
-                "pip-lt.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_unresolvable_conflict",
-                "pip-lt.lock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_unresolvable_conflict",
-                "pip-ge.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_unresolvable_conflict",
-                "pip-ge.lock",
-            ),
+            Path("_unresolvable_conflict").joinpath("pip-lt.unlock"),
+            Path("_unresolvable_conflict").joinpath("pip-lt.lock"),
+            Path("_unresolvable_conflict").joinpath("pip-ge.unlock"),
+            Path("_unresolvable_conflict").joinpath("pip-ge.lock"),
         ),
         0,
         1,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_unsynced",
-            "unsynced.pyproject_toml",
-        ),
+        Path("_unsynced").joinpath("unsynced.pyproject_toml"),
         ".venv",
         (),
         (
-            Path(__file__).parent.joinpath(
-                "_unsynced",
-                "unsynced_0.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_unsynced",
-                "unsynced_0.lock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_unsynced",
-                "unsynced_1.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_unsynced",
-                "unsynced_1.lock",
-            ),
+            Path("_unsynced").joinpath("unsynced_0.unlock"),
+            Path("_unsynced").joinpath("unsynced_0.lock"),
+            Path("_unsynced").joinpath("unsynced_1.unlock"),
+            Path("_unsynced").joinpath("unsynced_1.lock"),
         ),
         1,
         0,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_transitive_conflict",
-            "transitive.pyproject_toml",
-        ),
+        Path("_transitive_conflict").joinpath("transitive.pyproject_toml"),
         ".venv",
         (),
         (
-            Path(__file__).parent.joinpath(
-                "_transitive_conflict",
-                "transitive_0.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_transitive_conflict",
-                "transitive_0.lock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_transitive_conflict",
-                "transitive_1.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_transitive_conflict",
-                "transitive_1.lock",
-            ),
+            Path("_transitive_conflict").joinpath("transitive_0.unlock"),
+            Path("_transitive_conflict").joinpath("transitive_0.lock"),
+            Path("_transitive_conflict").joinpath("transitive_1.unlock"),
+            Path("_transitive_conflict").joinpath("transitive_1.lock"),
         ),
         1,
         0,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_arbitrary_equality",
-            "invalid_operator.pyproject_toml",
-        ),
+        Path("_arbitrary_equality").joinpath("invalid_operator.pyproject_toml"),
         ".venv",
         (),
         (
-            Path(__file__).parent.joinpath(
-                "_arbitrary_equality",
-                "invalid_operator_0.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_arbitrary_equality",
-                "invalid_operator_0.lock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_arbitrary_equality",
-                "invalid_operator_1.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_arbitrary_equality",
-                "invalid_operator_1.lock",
-            ),
+            Path("_arbitrary_equality").joinpath("invalid_operator_0.unlock"),
+            Path("_arbitrary_equality").joinpath("invalid_operator_0.lock"),
+            Path("_arbitrary_equality").joinpath("invalid_operator_1.unlock"),
+            Path("_arbitrary_equality").joinpath("invalid_operator_1.lock"),
         ),
         0,
         1,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_too_many_specifiers",
-            "too_many_specifiers.pyproject_toml",
-        ),
+        Path("_too_many_specifiers").joinpath("too_many_specifiers.pyproject_toml"),
         ".venv",
         (),
         (
-            Path(__file__).parent.joinpath(
-                "_too_many_specifiers",
-                "too_many_specifiers_0.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_too_many_specifiers",
-                "too_many_specifiers_0.lock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_too_many_specifiers",
-                "too_many_specifiers_1.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_too_many_specifiers",
-                "too_many_specifiers_1.lock",
-            ),
+            Path("_too_many_specifiers").joinpath("too_many_specifiers_0.unlock"),
+            Path("_too_many_specifiers").joinpath("too_many_specifiers_0.lock"),
+            Path("_too_many_specifiers").joinpath("too_many_specifiers_1.unlock"),
+            Path("_too_many_specifiers").joinpath("too_many_specifiers_1.lock"),
         ),
         0,
         1,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_invalid_specifier",
-            "invalid_specifier.pyproject_toml",
-        ),
+        Path("_invalid_specifier").joinpath("invalid_specifier.pyproject_toml"),
         ".venv",
         (),
         (
-            Path(__file__).parent.joinpath(
-                "_invalid_specifier",
-                "invalid_specifier_0.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_invalid_specifier",
-                "invalid_specifier_0.lock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_invalid_specifier",
-                "invalid_specifier_1.unlock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_invalid_specifier",
-                "invalid_specifier_1.lock",
-            ),
+            Path("_invalid_specifier").joinpath("invalid_specifier_0.unlock"),
+            Path("_invalid_specifier").joinpath("invalid_specifier_0.lock"),
+            Path("_invalid_specifier").joinpath("invalid_specifier_1.unlock"),
+            Path("_invalid_specifier").joinpath("invalid_specifier_1.lock"),
         ),
         1,
         0,
@@ -226,7 +147,7 @@ ids_resolve_resolvable_conflicts = (
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
-        "path_pyproject_toml, venv_path, base_relpaths, "
+        "relpath_pyproject_toml, venv_path, base_relpaths, "
         "to_requirements_dir, expected_resolvable_count, "
         "expected_unresolvable_count"
     ),
@@ -234,27 +155,30 @@ ids_resolve_resolvable_conflicts = (
     ids=ids_resolve_resolvable_conflicts,
 )
 def test_locks_before_fix(
-    path_pyproject_toml,
-    venv_path,
-    base_relpaths,
-    to_requirements_dir,
-    expected_resolvable_count,
-    expected_unresolvable_count,
-    tmp_path,
-    prepare_folders_files,
-    prep_pyproject_toml,
-    logging_strict,
-):
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    base_relpaths: tuple[str, ...],
+    to_requirements_dir: "Sequence[Path]",
+    expected_resolvable_count: int,
+    expected_unresolvable_count: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Fix .locks only."""
     # pytest -vv --showlocals --log-level INFO -k "test_locks_before_fix" tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_fixing.py::test_locks_before_fix[unsynced\ lock\ files\ bring\ into\ sync]
     # pytest -vv --showlocals --log-level INFO tests/test_lock_fixing.py::test_locks_before_fix[invalid\ specifier\ found]
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
     t_two = logging_strict()
     logger, loggers = t_two
 
     # prepare
     #    pyproject.toml
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
 
     #    has-a feature normally provided by factory Fixing.fix_requirements_lock
@@ -267,7 +191,7 @@ def test_locks_before_fix(
 
     # prepare
     #    venv_path folder. To avoid NotADirectoryError
-    prep_these = (".venv/.python-version",)
+    prep_these = [".venv/.python-version"]
     prepare_folders_files(prep_these, tmp_path)
 
     # Verify -- expecting Path or str
@@ -277,14 +201,19 @@ def test_locks_before_fix(
     )
     for invalid in invalids:
         with pytest.raises(TypeError):
-            Fixing(loader, invalid, lock_msgs, unlock_msgs)
+            Fixing(
+                loader,
+                invalid,  # type: ignore[arg-type]
+                lock_msgs,
+                unlock_msgs,
+            )
 
     # Verify -- missing transitive/support files and folders
     with pytest.raises(MissingRequirementsFoldersFiles):
         Fixing(loader, venv_path, lock_msgs, unlock_msgs)
 
     # prepare -- requirements folder
-    prep_these = ("requirements/junk.deleteme",)
+    prep_these = ["requirements/junk.deleteme"]
     prepare_folders_files(prep_these, tmp_path)
 
     #   Copy empties
@@ -295,19 +224,19 @@ def test_locks_before_fix(
         prepare_folders_files(prep_these, tmp_path)
 
     #    Copy real .unlock --> .in files
-    for abspath_src in to_requirements_dir:
+    for relpath_src in to_requirements_dir:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         if abspath_src.suffix == ".unlock":
-            src_abspath = str(abspath_src)
             abspath_dest = tmp_path / "requirements" / abspath_src.name
             abspath_dest_in = replace_suffixes_last(abspath_dest, SUFFIX_IN)
-            shutil.copy(src_abspath, abspath_dest_in)
+            shutil.copy(abspath_src.as_posix(), abspath_dest_in.as_posix())
 
     #    Copy real .lock files
-    for abspath_src in to_requirements_dir:
+    for relpath_src in to_requirements_dir:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         if abspath_src.suffix == ".lock":
-            src_abspath = str(abspath_src)
             abspath_dest = tmp_path / "requirements" / abspath_src.name
-            shutil.copy(src_abspath, abspath_dest)
+            shutil.copy(abspath_src.as_posix(), abspath_dest.as_posix())
 
     # Act
     fixing = Fixing(loader, venv_path, lock_msgs, unlock_msgs)
@@ -353,14 +282,14 @@ def test_locks_before_fix(
         fixing._locks,
         fixing._venv_relpath,
         is_dry_run=True,
-        suffixes=None,
+        suffixes=None,  # type: ignore[arg-type]
     )
 
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
-        "path_pyproject_toml, venv_path, base_relpaths, "
+        "relpath_pyproject_toml, venv_path, base_relpaths, "
         "to_requirements_dir, expected_resolvable_count, "
         "expected_unresolvable_count"
     ),
@@ -368,25 +297,32 @@ def test_locks_before_fix(
     ids=ids_resolve_resolvable_conflicts,
 )
 def test_fix_requirements_lock(
-    path_pyproject_toml,
-    venv_path,
-    base_relpaths,
-    to_requirements_dir,
-    expected_resolvable_count,
-    expected_unresolvable_count,
-    tmp_path,
-    prepare_folders_files,
-    prep_pyproject_toml,
-    logging_strict,
-):
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    base_relpaths: tuple[str, ...],
+    to_requirements_dir: "Sequence[Path]",
+    expected_resolvable_count: int,
+    expected_unresolvable_count: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test fix_requirements_lock"""
     # pytest -vv --showlocals --log-level INFO -k "test_fix_requirements_lock" tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
     t_two = logging_strict()
     logger, loggers = t_two
 
     # prepare
     #    pyproject.toml
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(
+        path_pyproject_toml,
+        tmp_path,
+        None,
+    )
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
 
     # Verify -- missing venv base folder --> NotADirectoryError
@@ -394,7 +330,7 @@ def test_fix_requirements_lock(
         Fixing.fix_requirements_lock(loader, venv_path, is_dry_run=1.234)
 
     # prepare -- venv_path folder
-    prep_these = (".venv/.python-version",)
+    prep_these = [".venv/.python-version"]
     prepare_folders_files(prep_these, tmp_path)
 
     # Verify -- arg venv_path unsupported type --> TypeError
@@ -404,7 +340,11 @@ def test_fix_requirements_lock(
     )
     for invalid in invalids:
         with pytest.raises(TypeError):
-            Fixing.fix_requirements_lock(loader, invalid, is_dry_run=None)
+            Fixing.fix_requirements_lock(
+                loader,
+                invalid,  # type: ignore[arg-type]
+                is_dry_run=None,
+            )
 
     # Verify -- missing transitive/support files and folders
     with pytest.raises(MissingRequirementsFoldersFiles):
@@ -412,7 +352,7 @@ def test_fix_requirements_lock(
 
     # prepare
     #    transitive/support file folders
-    prep_these = ("requirements/junk.deleteme",)
+    prep_these = ["requirements/junk.deleteme"]
     prepare_folders_files(prep_these, tmp_path)
 
     #   Copy empties
@@ -423,19 +363,19 @@ def test_fix_requirements_lock(
         prepare_folders_files(prep_these, tmp_path)
 
     #    Copy real .unlock --> .in files
-    for abspath_src in to_requirements_dir:
+    for relpath_src in to_requirements_dir:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         if abspath_src.suffix == ".unlock":
-            src_abspath = str(abspath_src)
             abspath_dest = tmp_path / "requirements" / abspath_src.name
             abspath_dest_in = replace_suffixes_last(abspath_dest, SUFFIX_IN)
-            shutil.copy(src_abspath, abspath_dest_in)
+            shutil.copy(abspath_src.as_posix(), abspath_dest_in)
 
     #    Copy real .lock files
-    for abspath_src in to_requirements_dir:
+    for relpath_src in to_requirements_dir:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         if abspath_src.suffix == ".lock":
-            src_abspath = str(abspath_src)
             abspath_dest = tmp_path / "requirements" / abspath_src.name
-            shutil.copy(src_abspath, abspath_dest)
+            shutil.copy(abspath_src.as_posix(), abspath_dest.as_posix())
 
     # act
     fixing = Fixing.fix_requirements_lock(loader, venv_path)
@@ -518,11 +458,18 @@ ids_outmessages = (
     testdata_outmessages,
     ids=ids_outmessages,
 )
-def test_outmessages(last_suffix, append_a_last_suffix, item):
+def test_outmessages(
+    last_suffix: "OutLastSuffix",
+    append_a_last_suffix: "Union[OutLastSuffix, None]",
+    item: "Union[float, None, ResolvedMsg, UnResolvable, tuple[str, Resolvable, PinDatum]]",
+) -> None:
     """Exercise OutMessages"""
     # pytest -vv --showlocals --log-level INFO -k "test_outmessages" tests
     out_msgs = OutMessages(last_suffix)
-    out_msgs.append(item, last_suffix=append_a_last_suffix)
+    out_msgs.append(
+        item,
+        last_suffix=append_a_last_suffix,
+    )
     assert isinstance(out_msgs.resolvable_shared, list)
     assert isinstance(out_msgs.unresolvables, list)
     assert isinstance(out_msgs.fixed_issues, list)
@@ -530,28 +477,13 @@ def test_outmessages(last_suffix, append_a_last_suffix, item):
 
 testdata_check_in_includes_lock = (
     (
-        Path(__file__).parent.joinpath(
-            "_warn_include_lock",
-            "prod_and_dev.pyproject_toml",
-        ),
+        Path("_warn_include_lock").joinpath("prod_and_dev.pyproject_toml"),
         ".venv",
         (
-            Path(__file__).parent.joinpath(
-                "_warn_include_lock",
-                "dev.in",
-            ),
-            Path(__file__).parent.joinpath(
-                "_warn_include_lock",
-                "prod.in",
-            ),
-            Path(__file__).parent.joinpath(
-                "_warn_include_lock",
-                "dev.lock",
-            ),
-            Path(__file__).parent.joinpath(
-                "_warn_include_lock",
-                "prod.lock",
-            ),
+            Path("_warn_include_lock").joinpath("dev.in"),
+            Path("_warn_include_lock").joinpath("prod.in"),
+            Path("_warn_include_lock").joinpath("dev.lock"),
+            Path("_warn_include_lock").joinpath("prod.lock"),
         ),
         1,
     ),
@@ -560,24 +492,27 @@ ids_check_in_includes_lock = ("An .in file includes constraint to .lock file",)
 
 
 @pytest.mark.parametrize(
-    "path_pyproject_toml, venv_path, to_requirements_dir, msgs_count_expected",
+    "relpath_pyproject_toml, venv_path, to_requirements_dir, msgs_count_expected",
     testdata_check_in_includes_lock,
     ids=ids_check_in_includes_lock,
 )
 def test_check_in_includes_lock(
-    path_pyproject_toml,
-    venv_path,
-    to_requirements_dir,
-    msgs_count_expected,
-    tmp_path,
-    prep_pyproject_toml,
-    prepare_folders_files,
-):
+    relpath_pyproject_toml: "Path",
+    venv_path: str,
+    to_requirements_dir: "Sequence[Path]",
+    msgs_count_expected: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """Check and warn if .in files includes .lock constraints or requirements"""
     # pytest -vv --showlocals --log-level INFO -k "test_check_in_includes_lock" tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
     # prepare
     #    pyproject.toml
-    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path)
+    path_dest_pyproject_toml = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
     loader = VenvMapLoader(path_dest_pyproject_toml.as_posix())
 
     #    has-a feature normally provided by factory Fixing.fix_requirements_lock
@@ -594,10 +529,10 @@ def test_check_in_includes_lock(
     prepare_folders_files(prep_these, tmp_path)
 
     #    Copy real .in and .lock files
-    for abspath_src in to_requirements_dir:
-        src_abspath = str(abspath_src)
+    for relpath_src in to_requirements_dir:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         abspath_dest = tmp_path / "requirements" / abspath_src.name
-        shutil.copy(src_abspath, abspath_dest)
+        shutil.copy(abspath_src.as_posix(), abspath_dest.as_posix())
 
     # Act
     fixing = Fixing(loader, venv_path, lock_msgs, unlock_msgs)

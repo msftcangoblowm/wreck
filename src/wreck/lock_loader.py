@@ -42,7 +42,6 @@ from .constants import (
 )
 from .exceptions import MissingRequirementsFoldersFiles
 from .lock_datum import (
-    DATUM,
     PinDatum,
     is_pin,
 )
@@ -220,7 +219,7 @@ class LoaderImplementation(abc.ABC):
         venv_path,
         suffix=SUFFIX_UNLOCKED,
         filter_by_pin=True,
-    ) -> set[DATUM]:
+    ) -> set[PinDatum]:
         """Implementation is a Callable. For the given task, choose
         the corresponding implementation
 
@@ -269,7 +268,7 @@ class LoaderPinDatum(LoaderImplementation):
         venv_path,
         suffix=SUFFIX_UNLOCKED,
         filter_by_pin=True,
-    ) -> set[DATUM]:
+    ) -> set[PinDatum]:
         """Returns a PinDatum. For signature See the abc"""
         set_ret = _from_loader_pindatum(
             loader,

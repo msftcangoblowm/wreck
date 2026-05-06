@@ -1,7 +1,7 @@
 """Entrypoint for skeleton project, complete-awesome-perfect."""
 
 
-def main():
+def main() -> None:
     """Package entrypoint."""
     pass
 

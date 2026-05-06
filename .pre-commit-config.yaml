@@ -63,7 +63,7 @@ repos:
   - id: isort
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.15.0
+  rev: v1.20.2
   hooks:
   - id: mypy
     pass_filenames: false
@@ -75,3 +75,16 @@ repos:
   - id: interrogate
     args: [-v, --fail-under=100, --omit-covered-files]
     pass_filenames: false    # needed if excluding files with pyproject.toml
+
+# https://github.com/RobertCraigie/pyright-python contains tracker
+# pyright-python dependency: nodejs-wheel
+# https://github.com/ducdetronquito/pyright-alright
+- repo: https://github.com/RobertCraigie/pyright-python
+  rev: v1.1.407
+  hooks:
+  - id: pyright
+    name: Run pyright
+    entry: bash -c 'exec env PYRIGHT_PYTHON_CACHE_DIR=/tmp/.cache/pyright PYRIGHT_PYTHON_FORCE_VERSION=latest pyright'
+    language: python
+    types: [file, python]
+    additional_dependencies: [click, strictyaml, logging-strict, packaging, pip-requirements-parser]

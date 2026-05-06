@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-ENDINGS: tuple[str, str, str, str, str, str]
+ENDINGS: tuple[str, str, str]
 __all__ = (
     "ENDINGS",
     "abspath_relative_to_package_base_folder",

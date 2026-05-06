@@ -153,26 +153,23 @@ class Ins(Collection[FilePins]):
 
         """Relative path acts as a dict key. An absolute path is not a key.
         Selecting by always nonexistent key returns empty Sequence, abspath_reqs"""
-        dotted_path = f"{g_app_name}.lock_collections.Ins.__init__"
-        is_abs_path = is_ok(venv_path) and Path(venv_path).is_absolute()
-        is_abspath = (
-            venv_path is not None
-            and issubclass(type(venv_path), PurePath)
-            and venv_path.is_absolute()
-        )
-
-        # dataclass will prevent loader from being invalid type
-        if is_module_debug:  # pragma: no cover
-            msg_info = f"{dotted_path} cwd {self.path_cwd}"
-            _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
-
-        if is_abs_path or is_abspath:
-            venv_path = Path(venv_path).relative_to(self.path_cwd).as_posix()
-        else:  # pragma: no cover
-            pass
-        self._venv_relpath = venv_path
+        if venv_path is not None and (
+            (isinstance(venv_path, str) and bool(venv_path.strip()))
+            or (
+                issubclass(type(venv_path), PurePath)
+                and hasattr(venv_path, "is_absolute")
+            )
+        ):
+            mixed_venv = Path(venv_path)
+            if mixed_venv.is_absolute():
+                relpath_venv = mixed_venv.relative_to(self.path_cwd).as_posix()
+            else:
+                relpath_venv = mixed_venv.as_posix()
+            self._venv_relpath = relpath_venv
+        else:
+            # unsupported type. Doesn't dataclass field have a validator?
+            msg_warn = f"venv_path has unsupported type or value. Got {venv_path!r}"
+            raise TypeError(msg_warn)
 
     @property
     def path_cwd(self):
@@ -193,10 +190,8 @@ class Ins(Collection[FilePins]):
         :type suffix_last: str | None
         """
         dotted_path = f"{g_app_name}.lock_collections.Ins._load_filepins"
-        if suffix_last is None or suffix_last not in ENDINGS:
+        if suffix_last is None or suffix_last not in ENDINGS:  # pragma: no branch
             suffix_last = SUFFIX_IN
-        else:  # pragma: no cover
-            pass
 
         """NotADirectoryError, ValueError, KeyError,
         MissingRequirementsFoldersFiles, MissingPackageBaseFolder"""
@@ -211,18 +206,14 @@ class Ins(Collection[FilePins]):
         self._iter = iter(self._file_pins)
 
         is_suffix_dot_in = suffix_last == SUFFIX_IN
-        if is_suffix_dot_in:
+        if is_suffix_dot_in:  # pragma: no branch
             # move fpins --> _files
             for fpin in fpins:
                 self._files.add(fpin)
 
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = f"{dotted_path} _files (before) {self._files}"
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
-        else:  # pragma: no cover
-            pass
 
     def _check_top_level(self):
         """Before constraints and requirements are resolved, check if
@@ -245,14 +236,12 @@ class Ins(Collection[FilePins]):
                     except (ValueError, TypeError):
                         continue
                     is_lock = PurePath(val_relpath).suffix == SUFFIX_LOCKED
-                    if is_suffix_good and is_lock:
+                    if is_suffix_good and is_lock:  # pragma: no branch
                         msg_warn = (
                             f"{lst_name} {val_relpath} too restrictive. Instead use .in"
                         )
                         t_msg = (self._venv_relpath, abspath_f, msg_warn)
                         lst_issues.append(t_msg)
-                    else:  # pragma: no cover
-                        pass
 
         return lst_issues
 
@@ -268,32 +257,24 @@ class Ins(Collection[FilePins]):
 
         """
         dotted_path = f"{g_app_name}.lock_collections.Ins._load_resolution_loop"
-        if suffix_last is None or suffix_last not in ENDINGS:
+        if suffix_last is None or suffix_last not in ENDINGS:  # pragma: no branch
             suffix_last = SUFFIX_IN
-        else:  # pragma: no cover
-            pass
 
         is_suffix_dot_in = suffix_last == SUFFIX_IN
-        if is_suffix_dot_in:
+        if is_suffix_dot_in:  # pragma: no branch
             # resolution loop
             try:
                 self.resolution_loop()
             except MissingRequirementsFoldersFiles:
                 raise
 
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = f"{dotted_path} _files (after) {self._files}"
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
 
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = f"{dotted_path} _zeroes (after) {self._zeroes}"
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
-        else:  # pragma: no cover
-            pass
 
     def load(self, suffix_last=SUFFIX_IN):
         """Load ``.in`` files
@@ -355,19 +336,21 @@ class Ins(Collection[FilePins]):
         :returns: True if a FilePins and FilePins in Ins otherwise False
         :rtype: bool
         """
-        is_ng = item is None or not isinstance(item, FilePins)
-        if is_ng:
+        if item is None or not isinstance(item, FilePins):
             ret = False
         else:
-            is_found = False
-            for file_pins in self._file_pins:
-                # FilePins has no __eq__
-                is_same_abspath = file_pins.file_abspath == item.file_abspath
-                if is_same_abspath:
-                    is_found = True
-                else:  # pragma: no cover
-                    pass
-            ret = is_found
+            # FilePins has no __eq__
+            ret = any(
+                [
+                    (
+                        file_pins is not None
+                        and hasattr(file_pins, "file_abspath")
+                        and hasattr(item, "file_abspath")
+                        and file_pins.file_abspath == item.file_abspath
+                    )
+                    for file_pins in self._file_pins
+                ]
+            )
 
         return ret
 
@@ -441,10 +424,8 @@ class Ins(Collection[FilePins]):
         else:  # pragma: no cover
             fpin = None
 
-        if fpin is not None:
+        if fpin is not None:  # pragma: no branch
             self._files.add(fpin)
-        else:  # pragma: no cover
-            pass
 
     @property
     def files_len(self):
@@ -474,11 +455,8 @@ class Ins(Collection[FilePins]):
         :param val: Supposed to be an :py:class:`~wreck.lock_filepins.FilePins`
         :type val: typing.Any
         """
-        is_infile = val is not None and isinstance(val, FilePins)
-        if is_infile:
+        if val is not None and isinstance(val, FilePins):  # pragma: no branch
             self._zeroes.add(val)
-        else:  # pragma: no cover
-            pass
 
     @property
     def zeroes_len(self):
@@ -499,28 +477,22 @@ class Ins(Collection[FilePins]):
         # add to self.zeroes
         del_these = []
         for in_ in self.files:
-            if in_.depth == 0:
+            if in_.depth == 0:  # pragma: no branch
                 # set.add an InFile
                 self.zeroes = in_
                 del_these.append(in_)
-            else:  # pragma: no cover
-                pass
 
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"{dotted_path} self.zeroes (after): {self._zeroes}"
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
         # remove from self._files
         for in_ in del_these:
             self._files.discard(in_)
 
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"{dotted_path} self.files (after): {self._files}"
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
     def resolve_zeroes(self):
         """A requirements (``.in``) file may contain constraints (-c),
@@ -594,22 +566,19 @@ class Ins(Collection[FilePins]):
                     is_in_zeroes = self.in_zeroes(abspath_constraint)
                     is_in_files = self.in_files(abspath_constraint)
                     is_new = not is_in_zeroes and not is_in_files
-                    if is_new:
+                    if is_new:  # pragma: no branch
                         # To add to self._files
                         add_these.append(abspath_constraint)
-                    else:  # pragma: no cover
-                        pass
 
         # Add new (constraint|requirement to self.files)
         for abspath_constraint in add_these:
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = (
                     f"{dotted_path} abspath_constraint --> self.files "
                     f"setter: {abspath_constraint}"
                 )
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
+
             self.files = abspath_constraint
 
         # Any constraints zeroes?
@@ -637,16 +606,14 @@ class Ins(Collection[FilePins]):
                     is_in_zeroes = self.in_zeroes(abspath_constraint)
                     is_in_files = self.in_files(abspath_constraint)
 
-                    if is_module_debug:  # pragma: no cover
+                    if is_module_debug:  # pragma: no branch  # pragma: no cover
                         msg_info = (
                             f"{dotted_path} {singular!s} {abspath_constraint!r} "
                             f"in zeroes {is_in_zeroes} in files {is_in_files}"
                         )
                         _logger.info(msg_info)
-                    else:  # pragma: no cover
-                        pass
 
-                    if is_in_zeroes:
+                    if is_in_zeroes:  # pragma: no branch
                         """Contains constraint|requirement file resolved pins. Without
                         which cannot write a .unlock file
                         Raises ValueError if constraint_relpath is neither str nor Path
@@ -654,41 +621,42 @@ class Ins(Collection[FilePins]):
                         item = self.get_by_abspath(
                             abspath_constraint, set_name=InFileType.ZEROES
                         )
+                        if (
+                            item is not None
+                            and hasattr(item, "_pins")
+                            and hasattr(item, "pkgs_from_resolved")
+                        ):  # pragma: no branch
 
-                        constraint_relpath_fixed = abspath_constraint.relative_to(
-                            self.path_cwd,
-                        )
-
-                        if is_module_debug:  # pragma: no cover
-                            msg_info = (
-                                f"{dotted_path} in_ (before) {in_!r} cwd {self.path_cwd} "
-                                f"{singular}_relpath_fixed {constraint_relpath_fixed} "
-                                f"{singular}_relpath {constraint_relpath} "
+                            constraint_relpath_fixed = abspath_constraint.relative_to(
+                                self.path_cwd,
                             )
-                            _logger.info(msg_info)
-                        else:  # pragma: no cover
-                            pass
 
-                        # Provide the unfixed constraint|requirement relative path
-                        in_.resolve(
-                            constraint_relpath,
-                            plural=plural,
-                            singular=singular,
-                        )
+                            if is_module_debug:  # pragma: no branch  # pragma: no cover
+                                msg_info = (
+                                    f"{dotted_path} in_ (before) {in_!r} cwd {self.path_cwd} "
+                                    f"{singular}_relpath_fixed {constraint_relpath_fixed} "
+                                    f"{singular}_relpath {constraint_relpath} "
+                                )
+                                _logger.info(msg_info)
 
-                        """From constraint|requirement, packages are added into
-                        parent"""
-                        from_child = item._pins
-                        from_child_ancestors = item.pkgs_from_resolved
-                        in_.packages_save_to_parent(from_child, from_child_ancestors)
+                            # Provide the unfixed constraint|requirement relative path
+                            in_.resolve(
+                                constraint_relpath,
+                                plural=plural,
+                                singular=singular,
+                            )
 
-                        if is_module_debug:  # pragma: no cover
-                            msg_info = f"{dotted_path} in_ (after) {in_!r}"
-                            _logger.info(msg_info)
-                        else:  # pragma: no cover
-                            pass
-                    else:  # pragma: no cover
-                        pass
+                            # From constraint|requirement, packages are
+                            # added into parent
+                            from_child = item._pins
+                            from_child_ancestors = item.pkgs_from_resolved
+                            in_.packages_save_to_parent(
+                                from_child, from_child_ancestors
+                            )
+
+                            if is_module_debug:  # pragma: no branch  # pragma: no cover
+                                msg_info = f"{dotted_path} in_ (after) {in_!r}"
+                                _logger.info(msg_info)
 
         # For an InFile, are all it's constraints resolved?
         self.move_zeroes()
@@ -733,12 +701,9 @@ class Ins(Collection[FilePins]):
         ret = None
         set_ = getattr(self, str_set_name, set())
         for in_ in set_:
-            if getattr(in_, file_name) == abspath_g:
+            if getattr(in_, file_name) == abspath_g:  # pragma: no branch
                 ret = in_
                 break
-            else:  # pragma: no cover
-                # not a match
-                pass
         else:
             # set empty
             ret = None
@@ -764,7 +729,7 @@ class Ins(Collection[FilePins]):
         current_count_zeroes = initial_count_zeroes
         previous_count_zeroes = initial_count_zeroes
         while current_count_files != 0:
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = (
                     f"{dotted_path} (before resolve_zeroes) resolution current "
                     f"state. previous_count files {previous_count_files} "
@@ -775,8 +740,6 @@ class Ins(Collection[FilePins]):
                     f"zeroes {self._zeroes}"
                 )
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
 
             self.resolve_zeroes()
 
@@ -787,7 +750,7 @@ class Ins(Collection[FilePins]):
             is_result_same_files = previous_count_files == current_count_files
             is_result_same_zeroes = previous_count_zeroes == current_count_zeroes
 
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = (
                     f"{dotted_path} (after resolve_zeroes) "
                     "resolution current state. current count files "
@@ -797,12 +760,10 @@ class Ins(Collection[FilePins]):
                     f"zeroes {self._zeroes}"
                 )
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
 
             # raise exception if not making any progress
             is_result_same = is_result_same_files and is_result_same_zeroes
-            if not is_resolved and is_result_same:
+            if not is_resolved and is_result_same:  # pragma: no branch
                 remaining_files = [in_.file_abspath for in_ in self.files]
                 missing_constraints = [in_.constraints for in_ in self.files]
                 missing_requirements = [in_.requirements for in_ in self.files]
@@ -815,8 +776,6 @@ class Ins(Collection[FilePins]):
                 )
                 _logger.warning(msg_warn)
                 raise MissingRequirementsFoldersFiles(msg_warn)
-            else:  # pragma: no cover
-                pass
 
             previous_count_files = current_count_files
             previous_count_zeroes = current_count_zeroes
@@ -833,11 +792,9 @@ class Ins(Collection[FilePins]):
 
         """
         dotted_path = f"{g_app_name}.lock_collections.Ins.write"
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"{dotted_path} zeroes count: {self.zeroes_len}"
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
         # check tool.wreck.create_pins_unlock
         opt_key = "create_pins_unlock"
@@ -851,14 +808,14 @@ class Ins(Collection[FilePins]):
                 and isinstance(self.loader.section_parent[opt_key], bool)
                 and self.loader.section_parent[opt_key] is False
                 and abspath_zero.name.startswith("pins")
-            ):
+            ):  # pragma: no branch
                 # create_pins_unlock = False and a pin file. Do not write; skip
                 continue
 
             is_shared_pin = abspath_zero.name.startswith("pins") and is_shared(
                 abspath_zero.name
             )
-            if not is_shared_pin:
+            if not is_shared_pin:  # pragma: no branch
                 abspath_unlocked = replace_suffixes_last(
                     abspath_zero,
                     SUFFIX_UNLOCKED,
@@ -878,42 +835,28 @@ class Ins(Collection[FilePins]):
                 lst_reqs_alphabetical = sorted(set(lst_reqs_unsorted))
                 contents = sep.join(lst_reqs_alphabetical)
                 is_has_contents = len(contents.strip()) != 0
-                if is_has_contents:
+                if is_has_contents:  # pragma: no branch
                     contents = f"{contents}{sep}"
 
-                    if is_module_debug:  # pragma: no cover
+                    if is_module_debug:  # pragma: no branch  # pragma: no cover
                         msg_info = (
                             f"{dotted_path} abspath_unlocked: {abspath_unlocked}"
                             f"{sep}{contents}"
                         )
                         _logger.info(msg_info)
-                    else:  # pragma: no cover
-                        pass
 
                     is_file = abspath_unlocked.exists() and abspath_unlocked.is_file()
-                    if not is_file:
+                    if not is_file:  # pragma: no branch
                         abspath_unlocked.touch(mode=0o644, exist_ok=True)
-                    else:  # pragma: no cover
-                        pass
 
                     is_file = abspath_unlocked.exists() and abspath_unlocked.is_file()
-                    if is_module_debug:  # pragma: no cover
+                    if is_module_debug:  # pragma: no branch  # pragma: no cover
                         msg_info = f"{dotted_path} is_file: {is_file}"
                         _logger.info(msg_info)
-                    else:  # pragma: no cover
-                        pass
 
-                    if is_file:
+                    if is_file:  # pragma: no branch
                         abspath_unlocked.write_text(contents)
                         yield abspath_unlocked
-                    else:  # pragma: no cover
-                        pass
-                else:  # pragma: no cover
-                    pass
-            else:  # pragma: no cover
-                pass
-
-        yield from ()
 
 
 def unlock_compile(loader, venv_relpath):
@@ -926,6 +869,7 @@ def unlock_compile(loader, venv_relpath):
     :returns: Generator of abs path to .unlock files
     :rtype: collections.abc.Generator[pathlib.Path, None, None]
     """
+    lst_called = []
     if is_ok(venv_relpath):
         ins = Ins(loader, venv_relpath)
         ins.load()
@@ -933,8 +877,6 @@ def unlock_compile(loader, venv_relpath):
         lst_called = list(gen)
         for abspath in lst_called:
             assert abspath.exists() and abspath.is_file()
-
-        yield from lst_called
     else:
         msg_warn = (
             "One venv at a time, creating .unlock files with same python "
@@ -950,6 +892,5 @@ def unlock_compile(loader, venv_relpath):
             for abspath in lst_called:
                 assert abspath.exists() and abspath.is_file()
 
+    if bool(lst_called):  # pragma: no branch
         yield from lst_called
-
-    yield from ()

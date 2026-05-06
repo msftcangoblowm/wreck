@@ -6,6 +6,7 @@ from collections.abc import (
 from dataclasses import (
     InitVar,
     dataclass,
+    field,
 )
 from pathlib import Path
 from typing import (
@@ -27,7 +28,7 @@ class VenvReq:
     project_base: Path
     venv_relpath: str
     req_relpath: str
-    req_folders: tuple[str]
+    req_folders: tuple[str, ...]
 
     @property
     def venv_abspath(self) -> Path: ...
@@ -41,10 +42,10 @@ class VenvReq:
 @dataclass(**DC_SLOTS)
 class VenvMapLoader:
     pyproject_toml_base_path: InitVar[str]
-    project_base: Path = ...
-    pyproject_toml: Path = ...
-    l_data: Sequence[TOML_RESULT] = ...
-    section_parent: TOML_RESULT = ...
+    project_base: Path = field(init=False)  # noqa: Y015
+    pyproject_toml: Path = field(init=False)  # noqa: Y015
+    l_data: Sequence[TOML_RESULT] = field(init=False, default_factory=list)  # noqa: Y015  # fmt: skip
+    section_parent: TOML_RESULT = field(init=False, default_factory=dict)  # noqa: Y015
 
     def __post_init__(
         self,
@@ -57,9 +58,11 @@ class VenvMapLoader:
     def parse_data(
         self,
         parse_venv_relpath: str | None = None,
-        check_suffixes: tuple[str, ...] = ...,
+        check_suffixes: tuple[str, ...] | None = ...,
     ) -> tuple[list[VenvReq], list[str]]: ...
     def ensure_abspath(self, key: str | Path) -> Path: ...
+    @property
+    def venv_relpaths(self) -> list[Path]: ...
 
 class VenvMap(Iterator[VenvReq]):
     _loader: VenvMapLoader
@@ -90,7 +93,7 @@ class VenvMap(Iterator[VenvReq]):
 def check_loader(loader: Any) -> None: ...
 def get_reqs(
     loader: VenvMapLoader,
-    venv_path: str | None = None,
-    suffix_last: str = ...,
+    venv_path: Path | str | None = None,
+    suffix_last: str | None = ...,
 ) -> tuple[Path]: ...
 def fix_check_suffixes(check_suffixes: Any) -> Sequence[str] | None: ...

@@ -11,7 +11,10 @@ from pathlib import (
     Path,
     PurePath,
 )
-from typing import Any
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 
@@ -20,13 +23,31 @@ from wreck._safe_path import resolve_path
 
 from .wd_wrapper import WorkDir
 
+if TYPE_CHECKING:
+    from collections.abc import (
+        Callable,
+        Generator,
+        MutableSet,
+    )
+    from typing import (
+        Any,
+        Union,
+    )
+
+    from _pytest import nodes
+    from _pytest.reports import TestReport
+    from _pytest.runner import CallInfo
+    from pluggy import Result
+
+    nodes.Item.test_report = None  # type: ignore[attr-defined]
+
 pytest_plugins = [
     "logging_strict",
     "has_logging_occurred",
 ]
 
 
-def pytest_addoption(parser: pytest.Parser):
+def pytest_addoption(parser: "pytest.Parser") -> None:
     """Add cli options"""
     # parser.addoption("--nonloc", action="store_true", help="Include nonlocal tests")
     pass
@@ -59,7 +80,7 @@ class FileRegression:
         """FileRegression constructor."""
         self.file_regression = file_regression
 
-    def check(self, data: str, **kwargs: dict[str, Any]) -> str:
+    def check(self, data: str, **kwargs: "dict[str, Any]") -> str:
         """Check previous run against current run file.
 
         :param data: file contents
@@ -98,7 +119,10 @@ def file_regression(file_regression: "FileRegression") -> FileRegression:
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
+def pytest_runtest_makereport(
+    item: "nodes.Item",
+    call: "CallInfo[nodes.Item]",
+) -> "Generator[None, None, TestReport]":
     """
     attach each test's TestReport to the test Item so fixtures can
     decide how to finalize based on the test result.
@@ -111,18 +135,30 @@ def pytest_runtest_makereport(item, call):
        https://stackoverflow.com/a/70598731
 
     """
-    test_report = (yield).get_result()
-    if test_report.when == "call":
-        item.test_report = test_report
+    if TYPE_CHECKING:
+        outcome: Result[Any]
+
+    outcome = yield  # type: ignore[assignment,misc]
+    report = cast("TestReport", outcome.get_result())
+
+    if report.when == "call":  # pragma: no branch
+        setattr(item, "test_report", report)  # type: ignore[attr-defined]
+
+    return report
 
 
 @pytest.fixture()
-def prepare_folders_files(request):
+def prepare_folders_files(
+    request: "pytest.FixtureRequest",
+) -> "Generator[Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]], None, None]":
     """Prepare folders and files within folder."""
 
     set_folders = set()
 
-    def _method(seq_rel_paths, tmp_path):
+    def _method(
+        seq_rel_paths: "Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]]",
+        tmp_path: "Path",
+    ) -> "set[Path]":
         """Creates folders and empty files
 
         :param seq_rel_paths: Relative file paths. Creates folders as well
@@ -172,13 +208,19 @@ def prepare_folders_files(request):
 
 
 @pytest.fixture()
-def prep_pyproject_toml(request):
+def prep_pyproject_toml(
+    request: "pytest.FixtureRequest",
+) -> "Generator[Callable[[Path, Path, Union[Path, str, None]], Path], None, None]":
     """cli doesn't offer a ``parent_dir`` option to bypass ``--path``.
     Instead copy and rename the test ``pyproject.toml`` to the ``tmp_path``
     """
     lst_delete_me = []
 
-    def _method(p_toml_file, path_dest_dir, rename="pyproject.toml"):
+    def _method(
+        p_toml_file: "Path",
+        path_dest_dir: "Path",
+        rename: "Union[Path, str, None]" = "pyproject.toml",
+    ) -> "Path":
         """Copy and rename file. Does not necessarily have to be ``pyproject.toml``
 
         :param p_toml_file:
@@ -188,20 +230,31 @@ def prep_pyproject_toml(request):
         :type p_toml_file: pathlib.Path
         :param path_dest_dir: destination tmp_path
         :type path_dest_dir: pathlib.Path
+        :type rename: pathlib.Path | str | None
         :returns: Path to the copied and renamed file within it's new home, temp folder
         :rtype: pathlib.Path
         """
-        if p_toml_file is not None and issubclass(type(p_toml_file), PurePath):
-            # copy
-            path_dest = path_dest_dir.joinpath(p_toml_file.name)
-            shutil.copy(p_toml_file, path_dest_dir)
-            # rename
-            path_f = path_dest.parent.joinpath(rename)
-            shutil.move(path_dest, path_f)
-            ret = path_f
-            lst_delete_me.append(path_f)
+        if TYPE_CHECKING:
+            str_rename: Union[str, Path]
+
+        is_path = p_toml_file is not None and issubclass(type(p_toml_file), PurePath)
+        msg_warn = (
+            "In pytest fixture prep_pyproject_toml Expecting Path got "
+            f"{type(p_toml_file)}"
+        )
+        assert is_path, msg_warn
+        if rename is None or not issubclass(type(rename), PurePath):
+            str_rename = "pyproject.toml"
         else:
-            ret = None
+            str_rename = rename
+        # copy
+        path_dest = path_dest_dir.joinpath(p_toml_file.name)
+        shutil.copy(p_toml_file, path_dest_dir)
+        # rename
+        path_f = path_dest.parent.joinpath(str_rename)
+        shutil.move(path_dest, path_f)
+        ret = path_f
+        lst_delete_me.append(path_f)
 
         return ret
 
@@ -220,10 +273,10 @@ def prep_pyproject_toml(request):
 
 
 @pytest.fixture
-def path_project_base():
+def path_project_base() -> "Callable[[], Path]":
     """Fixture to get project base folder"""
 
-    def _method():
+    def _method() -> "Path":
         """Get project base folder."""
         if "__pycache__" in __file__:
             # cached
@@ -239,7 +292,7 @@ def path_project_base():
 
 
 @pytest.fixture()
-def wd(tmp_path: Path) -> WorkDir:
+def wd(tmp_path: "Path") -> "WorkDir":
     """Create a workdir within tmp_path.
 
     In another fixture, add a package base folder.
@@ -263,10 +316,10 @@ def wd(tmp_path: Path) -> WorkDir:
 
 
 @pytest.fixture
-def verify_tag_version():
+def verify_tag_version() -> "Callable[[Path, str], bool]":
     """Fixture to verify version file contents."""
 
-    def _method(cwd, sem_ver_str):
+    def _method(cwd: "Path", sem_ver_str: str) -> bool:
         """Verify version file contains a given semantic version str.
 
         :param cwd: package base folder
@@ -276,10 +329,9 @@ def verify_tag_version():
         :returns: True if versions match otherwise False
         :rtype: bool
         """
-        cmd = [
-            resolve_path("drain-swamp"),
-            "tag",
-        ]
+        abspath_ds = resolve_path("drain-swamp")
+        assert abspath_ds is not None
+        cmd = [abspath_ds, "tag"]
         t_ret = run_cmd(cmd, cwd=cwd)
         out, err, exit_code, exc = t_ret
         is_eq = out == sem_ver_str

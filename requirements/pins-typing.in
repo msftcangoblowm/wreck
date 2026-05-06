@@ -1,2 +1,7 @@
-# include by -r, not -c
+# without mypy or pyright, minimum dev requirements
+pytest>=7.1
+# registry implementation
+pytest-logging-strict>=0.2.3
+pytest-regressions
+
 types-setuptools>=78.1.0.20250329

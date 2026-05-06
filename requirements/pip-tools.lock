@@ -1,11 +1,10 @@
-click==8.1.7; python_version < "3.10"
-click==8.2.0; python_version >= "3.10"
+click==8.3.3
     # via pip-tools
 importlib-metadata==8.7.0
     # via build
 packaging==25.0
     # via build
-pip-tools==7.4.1
+pip-tools==7.5.3
     # via -r requirements/pip-tools.in
 pyproject-hooks==1.2.0
     # via

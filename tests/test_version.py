@@ -12,6 +12,7 @@ Unit test -- Module
 """
 
 from contextlib import nullcontext as does_not_raise
+from typing import TYPE_CHECKING
 
 import pytest
 from packaging.version import Version
@@ -25,18 +26,43 @@ except (ModuleNotFoundError, ImportError):
     reason = "No module _version. Create it"
     pytest.xfail(reason)
 
+if TYPE_CHECKING:
+    from typing import Union
 
-def test_version_file():
+    from tests.typing_only import DOES_NOT_OR_DOES
+
+testdata_version_file = (
+    (
+        __version__,
+        version_tuple,
+        does_not_raise(),
+        __version__,
+    ),
+)
+ids_version_file = ("check valid semantic version str",)
+
+
+@pytest.mark.parametrize(
+    "version_package_str, version_package_tuple, expectation, expected_version",
+    testdata_version_file,
+    ids=ids_version_file,
+)
+def test_version_file(
+    version_package_str: str,
+    version_package_tuple: "tuple[int, int, int, Union[str, None]]",
+    expectation: "DOES_NOT_OR_DOES",
+    expected_version: str,
+) -> None:
     """Why is this file not skipped"""
-    # pytest --showlocals --log-level INFO -k "test_version_file" tests
-    assert isinstance(__version__, str)
-    assert isinstance(version_tuple, tuple)
+    # pytest -s -vv --showlocals -k "test_version_file" tests
+    assert isinstance(version_package_str, str)
+    assert isinstance(version_package_tuple, tuple)
 
     # act
     """confirm the version str in wreck._version is valid and Doesn't
     raise an exception"""
-    expectation = does_not_raise()
     with expectation:
-        ver = Version(__version__)
+        ver_actual = Version(version_package_str)
     if isinstance(expectation, does_not_raise):
-        assert str(ver) == __version__
+        ver_actual_str = str(ver_actual)
+        assert ver_actual_str == expected_version

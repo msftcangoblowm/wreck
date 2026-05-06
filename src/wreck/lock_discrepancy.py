@@ -168,14 +168,11 @@ def has_discrepancies_version(d_by_pkg: DatumByPkg):
                 else:  # pragma: no cover
                     pass
 
-        if has_changed:
+        if has_changed:  # pragma: no branch
             d_out[pkg_name] = {
                 "highest": cast("Version", highest),
                 "others": cast("set[Version]", set_others),
             }
-        else:  # pragma: no cover
-            # continue
-            pass
 
     return d_out
 
@@ -205,10 +202,8 @@ def get_ss_set(set_pindatum):
 
     # An empty SpecifierSet is worthless and annoying cuz throws off count
     ss_empty = SpecifierSet("")
-    if ss_empty in set_ss:
+    if ss_empty in set_ss:  # pragma: no branch
         set_ss.discard(ss_empty)
-    else:  # pragma: no cover
-        pass
 
     return set_ss
 
@@ -229,7 +224,7 @@ def _get_specifiers(set_pindatum):
 
 
 def _parse_specifiers(specifiers):
-    """Extract specifers, operator and version ignore ``!=`` specifiers.
+    """Extract specifiers, operator and version ignore ``!=`` specifiers.
 
     :param specifiers:
 
@@ -237,7 +232,7 @@ def _parse_specifiers(specifiers):
 
     :type specifiers: list[str]
     :returns: original specifiers list replace str with a tuple of it's parts
-    :rtype: str | None
+    :rtype: list[tuple[str, str]]
 
     .. seealso::
 
@@ -255,20 +250,21 @@ def _parse_specifiers(specifiers):
     for spec in specifiers:
         m = re.match(pattern, spec)
         if m is None:  # pragma: no cover
-            if is_module_debug:
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = f"{dotted_path} failed to parse pkg from spec: {spec!r}"
                 _logger.info(msg_info)
-            else:
-                pass
+
             continue
         else:
             groups = m.groups(default=None)  # noqa: F841
             oper = groups[1]
-            oper = oper.strip()
-            ver = groups[2]
-            ver = ver.strip()
-            t_parsed = (oper, ver)
-            lst.append(t_parsed)
+            if oper is not None:  # pragma: no branch
+                oper = oper.strip()
+                ver = groups[2]
+                if ver is not None:  # pragma: no branch
+                    ver = ver.strip()
+                    t_parsed = (oper, ver)
+                    lst.append(t_parsed)
 
     return lst
 
@@ -338,41 +334,34 @@ def filter_acceptable(
 
     # Discard unacceptable versions (from .lock)
     set_highest = set()
-    if highest is not None:
+    if highest is not None:  # pragma: no branch
         set_highest.add(highest)
     set_all = others.union(set_highest)
     set_acceptable = set()
     for ver in set_all:
-        if acceptable_version(set_ss, ver):
+        if acceptable_version(set_ss, ver):  # pragma: no branch
             set_acceptable.add(ver)
-        else:  # pragma: no cover
-            pass
 
     # By pkg_name, from ``.in`` files
     lsts_specifiers = _get_specifiers(set_pindatum)
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = f"{dotted_path} lsts_specifiers (before) {lsts_specifiers!r} "
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     # Remove empty list(s)
     empty_idx = []
     for idx, lst_specifiers in enumerate(lsts_specifiers):
-        if len(lst_specifiers) == 0:
+        if len(lst_specifiers) == 0:  # pragma: no branch
             empty_idx.append(idx)
-        else:  # pragma: no cover
-            pass
+
     #    reversed so higher idx removed first
     for idx in reversed(empty_idx):
         del lsts_specifiers[idx]
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = f"{dotted_path} lsts_specifiers (after) {lsts_specifiers!r}"
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     # remove from set_acceptable any '!='
     # '==' exclude all other versions
@@ -380,20 +369,18 @@ def filter_acceptable(
     is_eq_affinity_value = None
     for idx, lst_specifiers in enumerate(lsts_specifiers):
         specifiers = _parse_specifiers(lst_specifiers)
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"{dotted_path} specifiers {specifiers!r}"
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
+
         for t_spec in specifiers:
             oper, ver = t_spec
             ver_version = Version(ver)
             if oper == "!=":
-                if is_module_debug:  # pragma: no cover
+                if is_module_debug:  # pragma: no branch  # pragma: no cover
                     msg_info = f"{dotted_path} {oper!s} {ver_version!r}"
                     _logger.info(msg_info)
-                else:  # pragma: no cover
-                    pass
+
                 set_acceptable.discard(ver_version)
             elif oper == "==":
                 # Discard all except ver
@@ -402,22 +389,22 @@ def filter_acceptable(
                 is_eq_affinity_value = unlock_ver
                 set_remove_these = set()
                 for ver_acceptable in set_acceptable:
-                    if is_module_debug:  # pragma: no cover
+                    if is_module_debug:  # pragma: no branch  # pragma: no cover
                         msg_info = (
                             f"{dotted_path} ver_acceptable {ver_acceptable!r} "
                             f"ver_version {ver_version!r}"
                         )
                         _logger.info(msg_info)
-                    else:  # pragma: no cover
-                        pass
+
                     # Won't be in set_acceptable
-                    if ver_acceptable != ver_version:  # pragma: no cover
+                    if (
+                        ver_acceptable != ver_version
+                    ):  # pragma: no branch  # pragma: no cover
                         set_remove_these.add(ver_acceptable)
-                    else:  # pragma: no cover
-                        pass
+
                 # Remove all elements of set B from this set A
                 set_acceptable.difference_update(set_remove_these)
-                if is_module_debug:  # pragma: no cover
+                if is_module_debug:  # pragma: no branch  # pragma: no cover
                     msg_info = (
                         f"{dotted_path} {oper!s} {ver_version!r} "
                         f"is_eq_affinity {is_eq_affinity} "
@@ -425,16 +412,12 @@ def filter_acceptable(
                         f"set_acceptable {set_acceptable!r}"
                     )
                     _logger.info(msg_info)
-                else:  # pragma: no cover
-                    pass
             else:  # pragma: no cover
                 pass
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = f"{dotted_path} set_acceptable {set_acceptable!r}"
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     t_ret = set_acceptable, lsts_specifiers, is_eq_affinity_value
 
@@ -567,15 +550,14 @@ def get_the_fixes(
         for idx, lst_specifiers in enumerate(lsts_specifiers):
             if len(lst_specifiers) == 1:
                 specifiers = _parse_specifiers(lst_specifiers)
-                if is_module_debug:  # pragma: no cover
+                if is_module_debug:  # pragma: no branch  # pragma: no cover
                     msg_info = (
                         f"{dotted_path} {idx!s} {specifiers!r} {lst_specifiers!r}"
                     )
                     _logger.info(msg_info)
-                else:  # pragma: no cover
-                    pass
+
                 has_specifiers = len(specifiers) != 0
-                if has_specifiers:
+                if has_specifiers:  # pragma: no branch
                     t_spec = specifiers[0]
                     oper, ver = t_spec
 
@@ -595,8 +577,6 @@ def get_the_fixes(
                         unlock_operator = oper
                         unlock_ver = ver
                         continue
-                else:  # pragma: no cover
-                    pass
             elif len(lst_specifiers) == 2:
                 specifiers = _parse_specifiers(lst_specifiers)
                 t_spec_0 = specifiers[0]
@@ -606,7 +586,7 @@ def get_the_fixes(
 
                 # compatible release operator ``~=``
                 two_opers = (oper_0, oper_1)
-                if "~=" in two_opers:
+                if "~=" in two_opers:  # pragma: no branch
                     # Combine (union) all version identifiers
                     # nudge_pin_lock = nudge_pin_lock_v1(unlock_ver)
                     # nudge_pin_unlock = f"{oper_0}{ver_0!s}, {oper_1}{ver_1!s}"
@@ -615,8 +595,6 @@ def get_the_fixes(
                         lsts_specifiers,
                     )
                     return t_ret_v2
-                else:  # pragma: no cover
-                    pass
 
                 is_excluded_0 = Version(ver_0) not in set_acceptable
                 is_excluded_1 = Version(ver_1) not in set_acceptable
@@ -656,7 +634,7 @@ def get_the_fixes(
                 )
                 raise PinMoreThanTwoSpecifiers(msg_warn)
 
-        if unlock_ver is None:
+        if unlock_ver is None:  # pragma: no branch
             # Take highest from amongst the acceptable versions
             lst_sorted = sorted(list(set_acceptable))
             found = lst_sorted[-1]
@@ -665,29 +643,25 @@ def get_the_fixes(
             nudge_pin_lock = nudge_pin_lock_v1(found)
             t_ret_v2 = (nudge_pin_lock, nudge_pin_lock, True)
             return t_ret_v2
-        else:  # pragma: no cover
-            pass
 
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = (
                 f"{dotted_path} (before operator func chooser) "
                 f"unlock operator {unlock_operator} "
                 f"unlock_ver {unlock_ver} highest {highest}"
             )
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
         specifier_len = _specifier_length(unlock_operator)
         is_arbitrary_equality = specifier_len == 3 and unlock_operator == "==="
+        func = None
+        idx_from_list = None
         if is_arbitrary_equality:
             # ArbitraryEqualityNotImplemented --> UnResolvable
             msg_info = f"{dotted_path} operator not implemented {unlock_operator}"
             raise ArbitraryEqualityNotImplemented(msg_info)
         elif specifier_len == 2 and unlock_operator == "==":
             # unlock_ver is Non-None
-            func = None
-            idx_from_list = None
             found = unlock_ver
         elif (specifier_len == 2 and unlock_operator in "<=") or (
             specifier_len == 1 and unlock_operator in "<"
@@ -712,7 +686,7 @@ def get_the_fixes(
             # Invalid operators already filtered out by call to get_ss_set
             pass
 
-        if func is not None:
+        if func is not None and idx_from_list is not None:
             lst = [
                 ver_test
                 for ver_test in set_acceptable
@@ -720,16 +694,18 @@ def get_the_fixes(
             ]
             if len(lst) != 0:
                 lst_sorted = sorted(lst)
-                found = lst_sorted[idx_from_list]
-                nudge_pin_unlock = nudge_pin_unlock_v1(unlock_operator, found)
-                nudge_pin_lock = nudge_pin_lock_v1(found)
+                found_1 = lst_sorted[idx_from_list]
+                nudge_pin_unlock = nudge_pin_unlock_v1(unlock_operator, found_1)
+                nudge_pin_lock = nudge_pin_lock_v1(found_1)
                 t_ret_v2 = (nudge_pin_lock, nudge_pin_unlock, True)
             else:
                 # Unresolvable
                 t_ret_v2 = (None, None, False)
         else:
             # ==
-            nudge_pin_lock = nudge_pin_lock_v1(found)
+            nudge_pin_lock = nudge_pin_lock_v1(
+                found,  # pyright: ignore[reportPossiblyUnboundVariable]
+            )
             t_ret_v2 = (nudge_pin_lock, nudge_pin_lock, True)
 
     return t_ret_v2
@@ -929,21 +905,17 @@ def extract_full_package_name(line, pkg_name_desired):
     smallest_token = None
     for token in t_tokens:
         is_in = token in line
-        if is_in:
+        if is_in:  # pragma: no branch
             idx_current = line.index(token)
             if smallest_idx is None:
                 smallest_token = token
                 smallest_idx = idx_current
             else:
-                if idx_current < smallest_idx:
+                if idx_current < smallest_idx:  # pragma: no branch
                     smallest_token = token
                     smallest_idx = idx_current
-                else:  # pragma: no cover
-                    pass
-        else:  # pragma: no cover
-            pass
 
-    if smallest_idx is not None:
+    if smallest_idx is not None and smallest_token is not None:
         # up to 1st known token
         pkg = line[:smallest_idx]
         pkg = pkg.strip()
@@ -1041,10 +1013,8 @@ def write_to_file_nudge_pin(path_f, pkg_name, nudge_pin_line):
     """
     with io.StringIO() as g:
         # Do not assume the .unlock file already exists
-        if not path_f.exists():
+        if not path_f.exists():  # pragma: no branch
             path_f.touch()
-        else:  # pragma: no cover
-            pass
 
         with open(path_f, mode="r", encoding="utf-8") as f:
             is_found = False
@@ -1073,11 +1043,10 @@ def write_to_file_nudge_pin(path_f, pkg_name, nudge_pin_line):
                     g.writelines([nudge_pin_line])
 
         # covers cases: for-else the file is empty, no such package line found
-        if not is_found:
+        if not is_found:  # pragma: no branch
             # not replaced, append line
             g.writelines([nudge_pin_line])
-        else:  # pragma: no cover
-            pass
+
         contents = g.getvalue()
 
     # overwrites entire file

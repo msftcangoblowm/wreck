@@ -3,8 +3,7 @@ requires = [
     "setuptools>=80.7.1",
     "wheel",
     "build",
-    "click==8.1.7; python_version < '3.10'",
-    "click==8.2.0; python_version >= '3.10'",
+    "click",
     "setuptools-scm>=8.3.1",
 ]
 build-backend = "setuptools.build_meta"
@@ -28,18 +27,18 @@ license-files = [
 description = "Manage and fix requirements files for Python package authors"
 keywords = ["pip", "pip-tools", "requirements", "constraints"]
 readme = "README.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Environment :: Console",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Software Development :: Build Tools",
@@ -47,6 +46,10 @@ classifiers = [
 ]
 # Contact by mastodon please
 authors = [
+    {name = "Dave Faulkmore", email = "faulkmore@protonmail.com"},
+]
+
+maintainers = [
     {name = "Dave Faulkmore", email = "faulkmore@protonmail.com"},
 ]
 
@@ -128,8 +131,8 @@ generate_hashes = false  # From setuptools 69.0.2, parsing dependencies with has
 version_file = 'src/wreck/_version.py'
 
 [tool.mypy]
-mypy_path = "src"
-exclude = ['tests', 'docs']
+files = ["src"]
+exclude = ["docs"]
 strict = true
 namespace_packages = true
 check_untyped_defs = true
@@ -147,6 +150,20 @@ module = [
     "setuptools.extern.packaging.version.*",
 ]
 ignore_missing_imports = true
+
+[tool.pyright]
+typeCheckingMode = "standard"
+include = ["src/wreck"]
+exclude = [
+    "**/__pycache__",
+]
+executionEnvironments = [
+    {root = "src"},
+    {root = "tests", extraPaths=["tests", "src/wreck"]}
+]
+reportMissingImports = "error"
+reportMissingTypeStubs = "warning"
+enableExperimentalFeatures = true
 
 [tool.coverage.run]
 source_pkgs = ["wreck"] # **REQUIRED** to be set correctly. Your package name

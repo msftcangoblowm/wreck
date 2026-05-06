@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -s -vv --showlocals tests/test_lock_filepins.py
+
+With Coverage
 
 .. code-block:: shell
 
@@ -18,7 +24,10 @@ from pathlib import (
     Path,
     PurePath,
 )
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 
@@ -40,6 +49,16 @@ from wreck.lock_filepins import (
 )
 from wreck.lock_util import replace_suffixes_last
 from wreck.pep518_venvs import VenvMapLoader
+
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        MutableSet,
+    )
+    from typing import Union
+
+    from tests.typing_only import DOES_NOT_OR_DOES
 
 testdata_get_path_cwd_exception = (
     (
@@ -63,9 +82,9 @@ ids_get_path_cwd_exception = (
     ids=ids_get_path_cwd_exception,
 )
 def test_get_path_cwd_exception(
-    loader,
-    expectation,
-):
+    loader: "VenvMapLoader",
+    expectation: "DOES_NOT_OR_DOES",
+) -> None:
     """Real loader not supplied. Test of bad input."""
     # pytest -vv --showlocals --log-level INFO -k "test_get_path_cwd_exception" tests
     with expectation:
@@ -73,8 +92,8 @@ def test_get_path_cwd_exception(
 
 
 def test_get_path_cwd_normal(
-    path_project_base,
-):
+    path_project_base: "Callable[[], Path]",
+) -> None:
     """Demonstrate wreck package pyproject.toml is not cwd."""
     # pytest -vv --showlocals --log-level INFO -k "test_get_path_cwd_normal" tests
     path_cwd_actual = path_project_base()
@@ -103,10 +122,7 @@ def test_get_path_cwd_normal(
 
 testdata_pindatum_realistic = (
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".venv",
         (
             "requirements/pip-tools",
@@ -120,10 +136,7 @@ testdata_pindatum_realistic = (
         ),
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".venv",
         (
             "requirements/pip-tools",
@@ -145,27 +158,30 @@ ids_pindatum_realistic = (
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
-    "path_config, venv_path, bases_relpath",
+    "relpath_config, venv_path, bases_relpath",
     testdata_pindatum_realistic,
     ids=ids_pindatum_realistic,
 )
 def test_pindatum_realistic(
-    path_config,
-    venv_path,
-    bases_relpath,
-    tmp_path,
-    prep_pyproject_toml,
-    prepare_folders_files,
-    logging_strict,
-):
+    relpath_config: "Path",
+    venv_path: str,
+    bases_relpath: "Sequence[str]",
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """test FilePins."""
     # pytest -vv --showlocals --log-level INFO -k "test_pindatum_realistic" tests
+    abspath_tests_dir = request.path.parent
+    abspath_config = abspath_tests_dir.joinpath(relpath_config)
     t_two = logging_strict()
     logger, loggers = t_two
 
     # prepare
     #    pyproject.toml or [something].pyproject_toml
-    path_dest_config = prep_pyproject_toml(path_config, tmp_path)
+    path_dest_config = prep_pyproject_toml(abspath_config, tmp_path, None)
     #    Careful path must be a str
     loader = VenvMapLoader(path_dest_config.as_posix())
 
@@ -229,7 +245,10 @@ def test_pindatum_realistic(
     )
     pins = fpins._pins
     #    Save a requirement
-    fpins.packages_save_to_parent((), ("requirement/pin.shared.in",))
+    set_pins_str = set()
+    set_pins_str.add("requirement/pin.shared.in")
+    lst_pindatum: "list[PinDatum]" = []
+    fpins.packages_save_to_parent(lst_pindatum, set_pins_str)
 
     pins.append(pindatum_pip)
     fpins._pins = pins
@@ -254,7 +273,8 @@ def test_pindatum_realistic(
     assert fpins.__eq__(right)
     assert fpins == right
     #    str abspath
-    assert fpins == str(right)
+    compare_right_str = str(right)
+    assert fpins == compare_right_str
     #    None
     assert fpins is not None
     #    unsupported type
@@ -268,7 +288,10 @@ def test_pindatum_realistic(
     )
     for invalid in invalids:
         with pytest.raises(TypeError):
-            operator.lt(fpins, invalid)
+            operator.lt(
+                fpins,
+                invalid,  # type: ignore[arg-type]
+            )
 
     #    FilePins.__contains__
     assert pindatum_pip in fpins
@@ -280,7 +303,7 @@ def test_pindatum_realistic(
 
     #    FilePins.relpath
     with pytest.raises(MissingPackageBaseFolder):
-        fpins.relpath(None)
+        fpins.relpath(None)  # type: ignore[arg-type]
     fpins.relpath(loader).as_posix() == "requirements/pins.shared.in"
 
     # FilePins.by_pkg
@@ -322,11 +345,11 @@ def test_pindatum_realistic(
     # prepare
     #    requirements empty files and folders
     suffixes = (SUFFIX_IN, SUFFIX_UNLOCKED, SUFFIX_LOCKED)
-    seq_rel_paths = []
+    seq_rel_paths_1 = []
     for suffix in suffixes:
         for base_path in bases_relpath:
-            seq_rel_paths.append(f"{base_path}{suffix}")
-    prepare_folders_files(seq_rel_paths, tmp_path)
+            seq_rel_paths_1.append(f"{base_path}{suffix}")
+    prepare_folders_files(seq_rel_paths_1, tmp_path)
 
     # act
     #    same type (FilePins)
@@ -359,9 +382,9 @@ ids_filepins_resolve = ("Resolve",)
     ids=ids_filepins_resolve,
 )
 def test_filepins_resolve(
-    abspath_f,
-    constraint_relpath,
-):
+    abspath_f: "Path",
+    constraint_relpath: str,
+) -> None:
     """Read a FilePins. Resolve, from a set, discards a constraint."""
     # pytest -vv --showlocals --log-level INFO -k "test_filepins_resolve" tests
     fpins_0 = FilePins(abspath_f)

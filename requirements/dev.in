@@ -15,10 +15,5 @@ flake8-pyi
 flake8-pyproject
 # registry implementation
 logging-strict>=1.6.1
-mypy
 coverage
 twine
-pytest>=7.1
-# registry implementation
-pytest-logging-strict>=0.2.3
-pytest-regressions

@@ -59,13 +59,12 @@ jobs:
         - '3.13'
           # - "3.14-full"
           # https://github.com/actions/setup-python#available-versions-of-pypy
-        - pypy-3.9-nightly
         - pypy-3.10-nightly
       fail-fast: false
 
     steps:
     - name: Check out the repo
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v6.0.2
 
     - name: Get latest tag
       id: vars
@@ -79,7 +78,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install ${{ matrix.python-version }} with setup-python
-      uses: actions/setup-python@v5.6.0
+      uses: actions/setup-python@v6.2.0
       if: startsWith(matrix.python-version, 'pypy-')
       with:
         python-version: ${{ matrix.python-version }}
@@ -93,7 +92,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install build wheel setuptools-scm 'click==8.1.7; python_version < "3.10"' 'click==8.2.0; python_version >= "3.10"' -r requirements/tox${{ env.LOCK_SUFFIX }}  -r requirements/prod${{ env.LOCK_SUFFIX }}  -r requirements/kit${{ env.LOCK_SUFFIX }}
+        python -m pip install build wheel setuptools-scm click -r requirements/tox${{ env.LOCK_SUFFIX }}  -r requirements/prod${{ env.LOCK_SUFFIX }}  -r requirements/kit${{ env.LOCK_SUFFIX }}
 
     - name: build
       env:

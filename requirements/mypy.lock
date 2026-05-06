@@ -1,17 +1,67 @@
+appdirs==1.4.4
+    # via logging-strict
+attrs==24.2.0
+    # via logging-strict
+exceptiongroup==1.2.2
+    # via pytest
+importlib-metadata==8.7.0
+    # via logging-strict
+importlib-resources==7.1.0
+    # via logging-strict
+iniconfig==2.0.0
+    # via pytest
+librt==0.9.0
+    # via mypy
+logging-strict==1.6.1
+    # via pytest-logging-strict
 mypy==1.15.0
     # via -r requirements/mypy.in
 mypy-extensions==1.0.0
     # via mypy
+packaging==25.0
+    # via pytest
+pathspec==0.12.1
+    # via mypy
+pluggy==1.6.0
+    # via pytest
+pygments==2.19.1
+    # via pytest
+pytest==8.3.4
+    # via
+    #   -r requirements/pins-typing.in
+    #   pytest-datadir
+    #   pytest-logging-strict
+    #   pytest-regressions
+pytest-datadir==1.5.0
+    # via pytest-regressions
+pytest-logging-strict==0.2.3
+    # via -r requirements/pins-typing.in
+pytest-regressions==2.5.0
+    # via -r requirements/pins-typing.in
+python-dateutil==2.9.0.post0
+    # via
+    #   logging-strict
+    #   strictyaml
+pyyaml==6.0.2
+    # via pytest-regressions
+six==1.17.0
+    # via python-dateutil
+strictyaml==1.7.3
+    # via
+    #   logging-strict
+    #   pytest-logging-strict
 tomli==2.2.1 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   mypy
 types-setuptools==78.1.0.20250329
     # via -r requirements/pins-typing.in
-typing-extensions==4.12.2 ; python_version < "3.11"
+typing-extensions==4.15.0 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
+    #   exceptiongroup
+    #   logging-strict
     #   mypy
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
+    #   pytest-logging-strict
+zipp==3.21.0
+    # via importlib-metadata

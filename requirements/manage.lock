@@ -8,8 +8,7 @@ cfgv==3.4.0
     # via pre-commit
 chardet==5.2.0
     # via tox
-click==8.1.7; python_version < "3.10"
-click==8.2.0; python_version >= "3.10"
+click==8.3.3
     # via
     #   -r requirements/prod.in
     #   pip-tools
@@ -40,7 +39,7 @@ packaging==25.0
     #   tox
 pip-requirements-parser==32.0.1
     # via -r requirements/prod.in
-pip-tools==7.4.1
+pip-tools==7.5.3
     # via -r requirements/prod.in
 platformdirs==4.3.6
     # via
@@ -82,7 +81,7 @@ tox==4.23.2
     #   tox-gh-actions
 tox-gh-actions==3.2.0
     # via -r requirements/tox.in
-typing-extensions==4.12.2 ; python_version < "3.11"
+typing-extensions==4.15.0 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   logging-strict

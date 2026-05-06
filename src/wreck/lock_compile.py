@@ -68,7 +68,7 @@ __all__ = (
 )
 
 
-def prepare_pairs(t_ins: tuple[Path]):
+def prepare_pairs(t_ins):
     """Prepare (``.in`` ``.lock`` pairs) of only the direct requirements,
     not the support files.
 
@@ -80,7 +80,6 @@ def prepare_pairs(t_ins: tuple[Path]):
     for abspath_in in t_ins:
         abspath_locked = replace_suffixes_last(abspath_in, SUFFIX_LOCKED)
         yield str(abspath_in), str(abspath_locked)
-    yield from ()
 
 
 def _postprocess_abspath_to_relpath(path_out, path_parent):
@@ -150,9 +149,9 @@ def _compile_one(
     dotted_path = f"{g_app_name}.lock_compile._compile_one"
 
     if timeout is None or not isinstance(timeout, int):
-        timeout = 15
-    else:  # pragma: no cover
-        pass
+        int_timeout = 15
+    else:
+        int_timeout = timeout
 
     """pip-compile runs with Python interpreter A.
     pip runs against Python interpreter B.
@@ -195,28 +194,28 @@ def _compile_one(
         "backtracking",
         "--pip-args='--isolated'",
         "--no-emit-options",
-        f"--pip-args='--timeout={timeout!s}'",
+        f"--pip-args='--timeout={int_timeout!s}'",
         f"{line_python}",
         "-o",
         lock_abspath,
         in_abspath,
     )
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = f"{dotted_path} ({venv_relpath}) cmd: {cmd}"
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     abspath_lock = Path(lock_abspath)
     if not abspath_lock.exists() or not abspath_lock.is_file():
         # new file will be created
         is_do_compare = False
+        fp_name = None
     else:  # pragma: no cover
         # Copy existing .lock to a temp file. Str path :code:`fp.name`
         is_do_compare = True
         with tempfile.NamedTemporaryFile(delete=False) as fp:
             shutil.copy2(lock_abspath, fp.name)
+            fp_name = fp.name
 
     t_ret = run_cmd(cmd, cwd=path_cwd)
     _, err, exit_code, exc = t_ret
@@ -232,15 +231,19 @@ def _compile_one(
 
         Search for ``Failed to establish a new connection`` to detect timeouts
         """
-        err = err.lstrip()
-        if exit_code == 1 and "Failed to establish a new connection" in err:
-            err = f"timeout ({timeout!s}s)"
-            err_details = err
+        if err is None:
+            str_err = ""
         else:
-            err_details = f"{err}{os.linesep}{exc}"
+            str_err = err.lstrip()
+
+        if exit_code == 1 and "Failed to establish a new connection" in str_err:
+            str_err = f"timeout ({int_timeout!s}s)"
+            err_details = str_err
+        else:
+            err_details = f"{str_err}{os.linesep}{exc}"
             msg_warn = (
                 f"{dotted_path} ({venv_relpath}) {cmd!r} exit code "
-                f"{exit_code} {err} {exc}"
+                f"{exit_code} {str_err} {exc}"
             )
             _logger.warning(msg_warn)
     else:  # pragma: no cover
@@ -257,16 +260,14 @@ def _compile_one(
                 msg_warn = f"{dotted_path} {venv_relpath} (new) {path_out!s}"
                 _logger.warning(msg_warn)
             else:
-                is_same = filecmp.cmp(fp.name, lock_abspath)
-                if not is_same:
+                assert fp_name is not None
+                is_same = filecmp.cmp(fp_name, lock_abspath)
+                if not is_same:  # pragma: no branch
                     msg_warn = (
                         f"{dotted_path} {venv_relpath} "
                         f"(overwrite previous fix or file changed) {path_out!s}"
                     )
                     _logger.warning(msg_warn)
-                else:
-                    # reduce noise by not printing a message
-                    pass
 
         # abspath --> relpath
         _postprocess_abspath_to_relpath(path_out, path_cwd)
@@ -276,21 +277,18 @@ def _compile_one(
         """File not created. ``.in`` file contained errors that needs
         to be fixed. Log info adds context. Gives explanation about consequences
         """
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = (
                 f"{dotted_path} ({venv_relpath}) {in_abspath} malformed. "
                 f"pip-compile did not create: {path_out!s}."
             )
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
+
         ret = None, err_details
 
     # Remove tempfile
-    if is_do_compare:
-        os.unlink(fp.name)
-    else:  # pragma: no cover
-        pass
+    if is_do_compare and fp_name is not None:  # pragma: no branch
+        os.unlink(fp_name)
 
     return ret
 
@@ -363,18 +361,16 @@ def lock_compile(loader, venv_relpath, timeout=15):
     assert is_installed is True and path_ep is not None
     ep_path = str(path_ep)
 
-    is_no_timeout = timeout is None or not isinstance(timeout, int)
-    if is_no_timeout:
-        timeout = 15
-    else:  # pragma: no cover
-        pass
+    if timeout is None or not isinstance(timeout, int):  # pragma: no branch
+        int_timeout = 15
+    else:
+        int_timeout = timeout
 
     # TODO: during testing, this is tmp_path, not package base folder
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = f"{dotted_path} path_cwd (loader.project_base) {loader.project_base}"
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
+
     path_cwd = loader.project_base
 
     compiled = []
@@ -404,11 +400,9 @@ def lock_compile(loader, venv_relpath, timeout=15):
         gen_pairs = prepare_pairs(t_abspath_in)
         pairs = list(gen_pairs)
 
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"{dotted_path} pairs {pairs!r}"
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
         assert isinstance(ep_path, str)
         assert issubclass(type(path_cwd), PurePath)
@@ -418,14 +412,12 @@ def lock_compile(loader, venv_relpath, timeout=15):
             assert isinstance(in_abspath, str)
             assert isinstance(lock_abspath, str)
 
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = (
                     f"{dotted_path} (before _compile_one) cwd {path_cwd} "
                     f"binary {ep_path} {in_abspath} {lock_abspath}"
                 )
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
 
             # If empty, create an empty .lock and skip pip-compile
             is_empty = _empty_in_empty_out(in_abspath, lock_abspath)
@@ -438,7 +430,7 @@ def lock_compile(loader, venv_relpath, timeout=15):
                     ep_path,
                     path_cwd,
                     venv_relpath_tmp,
-                    timeout=timeout,
+                    timeout=int_timeout,
                 )
                 # if timeout cannot add to compiled. If no timeout, maybe failures empty
                 if optabspath_lock is None:  # pragma: no cover
@@ -475,7 +467,7 @@ def is_timeout(failures):
     if the cause of the failure was timeout(s)
 
     :param failures: Sequence of verbose error message and traceback
-    :type failures: tuple[tuple[str, pathlib.Path, str]]
+    :type failures: collections.abc.Iterable[tuple[str, pathlib.Path, str]]
     :returns: True if web (actually SSL) connection timeout occurred
     :rtype: bool
     """
@@ -483,9 +475,9 @@ def is_timeout(failures):
     for t_three in failures:
         msg = t_three[2]
         # is_timeout = re.search("timeout.+s", msg)
-        if "timeout" in msg:
+        if (
+            msg is not None and isinstance(msg, str) and "timeout" in msg
+        ):  # pragma: no branch
             ret = True
-        else:  # pragma: no cover
-            pass
 
     return ret

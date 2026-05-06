@@ -3,7 +3,13 @@
 
 pyproject.toml read table sections
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   pytest -vv --showlocals tests/test_pep518_read.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -40,7 +46,7 @@ else:  # pragma: no cover
 class Pep518Sections(unittest.TestCase):
     """Pep518 read tests."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Setup cwd and tests folder variables."""
         if "__pycache__" in __file__:
             # cached
@@ -50,7 +56,7 @@ class Pep518Sections(unittest.TestCase):
             self.path_tests = Path(__file__).parent
         self.cwd = self.path_tests.parent
 
-    def test_is_ok(self):
+    def test_is_ok(self) -> None:
         """Is not None and a non-empty string.
 
         Vendered from package/module, logging-strict.util.check_type
@@ -70,7 +76,7 @@ class Pep518Sections(unittest.TestCase):
             out_actual = _is_ok(valid)
             self.assertTrue(out_actual)
 
-    def test_find_project_root(self):
+    def test_find_project_root(self) -> None:
         """Check possibilities: .git, .hg, pyproject.toml, or file system root."""
         # "pyproject.toml"
         with (
@@ -105,7 +111,7 @@ class Pep518Sections(unittest.TestCase):
             tempfile.TemporaryDirectory() as f_d,
             patch("pathlib.Path.cwd", return_value=Path(f_d)),
         ):
-            tests = (
+            tests_1 = (
                 ((f_d,), "file system root"),
                 ((None,), "file system root"),  # means should use cwd
                 (None, "file system root"),  # forgot; should be a Sequence
@@ -119,16 +125,16 @@ class Pep518Sections(unittest.TestCase):
                     "file system root",
                 ),  # filter out non-str
             )
-            for t_valid_dirs in tests:
-                self.assertIsInstance(t_valid_dirs, Sequence)
-                srcs, reason_expected = t_valid_dirs
-                if srcs is not None:
-                    self.assertIsInstance(srcs, Sequence)
+            for t_valid_dirs_1 in tests_1:
+                self.assertIsInstance(t_valid_dirs_1, Sequence)
+                srcs_1, reason_expected = t_valid_dirs_1
+                if srcs_1 is not None:
+                    self.assertIsInstance(srcs_1, Sequence)
                 else:
-                    self.assertIsNone(srcs)
+                    self.assertIsNone(srcs_1)
                 self.assertIsInstance(reason_expected, str)
 
-                path_project_folder, reason = find_project_root(srcs)
+                path_project_folder, reason = find_project_root(srcs_1)
                 self.assertTrue(issubclass(type(path_project_folder), PurePath))
                 self.assertIsInstance(reason, str)
                 self.assertEqual(reason, reason_expected)
@@ -167,8 +173,8 @@ class Pep518Sections(unittest.TestCase):
 
             # act
             srcs = ("-",)
-            stdin_filename = str(path_f)
-            path_project_folder, reason = find_project_root(srcs, stdin_filename)
+            stdin_filename_2 = str(path_f)
+            path_project_folder, reason = find_project_root(srcs, stdin_filename_2)
 
             # verify
             self.assertTrue(issubclass(type(path_project_folder), PurePath))
@@ -176,11 +182,11 @@ class Pep518Sections(unittest.TestCase):
             self.assertEqual(reason, ".git directory")
 
         # Has .git, .hg folders
-        tests = (
+        tests_3 = (
             (".git", ".git directory"),
             (".hg", ".hg directory"),
         )
-        for t_valid_dirs in tests:
+        for t_valid_dirs in tests_3:
             self.assertIsInstance(t_valid_dirs, tuple)
             valid_dir, reason_expected = t_valid_dirs
             with (
@@ -217,7 +223,6 @@ class Pep518Sections(unittest.TestCase):
                 self.assertEqual(reason, reason_expected)
 
             # PermissionError, **not** testing a filesystem base folder
-            stdin_filename = None
             srcs = ("/root",)
             with patch(
                 f"{g_app_name}.pep518_read.Path.cwd",
@@ -227,10 +232,15 @@ class Pep518Sections(unittest.TestCase):
                     # supposed to be a inaccessible folder
                     find_project_root(srcs)
 
-    def test_find_pyproject_toml(self):
+    def test_find_pyproject_toml(self) -> None:
         """Test find_pyproject_toml."""
         # 1st arg expects a Sequence
-        assert find_pyproject_toml(None, None) is None
+        actual_0 = find_pyproject_toml(
+            None,  # type: ignore[arg-type]
+            None,
+        )
+        expected_0 = None
+        assert actual_0 is expected_0
 
         # pyproject.toml does not yet exist
         with (

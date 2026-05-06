@@ -24,7 +24,7 @@ from pathlib import (
     PurePath,
 )
 from typing import (
-    Any,
+    TYPE_CHECKING,
     cast,
 )
 
@@ -32,7 +32,6 @@ from ._safe_path import (
     replace_suffixes,
     resolve_joinpath,
 )
-from .check_type import is_ok
 from .constants import g_app_name
 
 ENDINGS = (".in", ".unlock", ".lock")
@@ -48,7 +47,7 @@ is_module_debug = False
 _logger = logging.getLogger(f"{g_app_name}.lock_util")
 
 
-def is_shared(file_name: str) -> bool:
+def is_shared(file_name):
     """Determine if file name indicates requirements shared by more than one venv
 
     :param file_name: File name w/ or w/o (.in, .lock, or .unlock) ending
@@ -60,19 +59,16 @@ def is_shared(file_name: str) -> bool:
         - :py:exc:`ValueError` -- None, not str, or just whitespace or empty string
 
     """
-    is_ng = (
+    if (
         file_name is None
         or not isinstance(file_name, str)
         or len(file_name.strip()) == 0
-    )
-    if is_ng:
+    ):  # pragma: no branch
         msg_warn = (
             "file name cannot be None or unsupported type or contain "
             f"only whitespace. Got {type(file_name)}"
         )
         raise ValueError(msg_warn)
-    else:  # pragma: no cover
-        pass
 
     is_no_suffixes = len(Path(file_name).suffixes) == 0
     if is_no_suffixes:
@@ -90,9 +86,9 @@ def is_shared(file_name: str) -> bool:
 
 
 def replace_suffixes_last(
-    abspath_f: Any,
-    suffix_last: str,
-) -> Path:
+    abspath_f,
+    suffix_last,
+):
     """Replace the last suffix of an absolute Path. Preserves ``.shared`` suffix
 
     :param abspath_f: Absolute path. Should be a Path, not PurePath
@@ -108,47 +104,38 @@ def replace_suffixes_last(
         - :py:exc:`ValueError` -- Not an absolute Path
 
     """
-    is_purepath = (
-        abspath_f is not None
-        and not isinstance(abspath_f, Path)
-        and issubclass(type(abspath_f), PurePath)
-    )
-    is_not_path = abspath_f is not None and not isinstance(abspath_f, Path)
-    if is_purepath:
+    if abspath_f is None or not issubclass(type(abspath_f), PurePath):
+        # None, not PurePath, or not Path
         msg_exc = (
-            f"Unsupported type ({type(abspath_f)}). A PurePath cannot "
-            "perform path operations. Provide a Path."
+            f"Unsupported type expecting PurePath or Path, got ({type(abspath_f)})."
         )
         raise TypeError(msg_exc)
-    elif is_not_path:
-        msg_exc = f"Unsupported type ({type(abspath_f)}). Expecting an absolute Path"
-        raise TypeError(msg_exc)
-    elif (
-        abspath_f is not None
-        and isinstance(abspath_f, Path)
-        and not abspath_f.is_absolute()
-    ):
-        msg_exc = "Expecting an absolute Path"
-        raise ValueError(msg_exc)
-    else:  # pragma: no cover
-        pass
-
-    # Contains a ``.shared`` suffix
-    is_shared_suffix = is_shared(abspath_f.name)
-    if is_shared_suffix:
-        str_shared = ".shared"
     else:
-        str_shared = ""
+        if not isinstance(abspath_f, Path) and issubclass(type(abspath_f), PurePath):
+            # A PurePath
+            msg_exc = (
+                f"Unsupported type ({type(abspath_f)}). A PurePath cannot "
+                "perform path operations. Provide a Path."
+            )
+            raise TypeError(msg_exc)
+        else:
+            # Path
+            if not abspath_f.is_absolute():
+                msg_exc = f"Expecting absolute Path got relative path, {abspath_f!r}"
+                raise ValueError(msg_exc)
+            else:
+                # Contains a ``.shared`` suffix
+                str_shared = ".shared" if is_shared(abspath_f.name) else ""
 
-    path_out = cast(
-        "Path",
-        replace_suffixes(abspath_f, f"{str_shared}{suffix_last}"),
-    )
+                path_out = cast(
+                    "Path",
+                    replace_suffixes(abspath_f, f"{str_shared}{suffix_last}"),
+                )
 
     return path_out
 
 
-def is_suffixes_ok(path_either: Any) -> Path:
+def is_suffixes_ok(path_either):
     """Check has a suffix and last suffix either .in, .lock, .unlock
 
     :param path_either: Path either relative or absolute
@@ -167,11 +154,17 @@ def is_suffixes_ok(path_either: Any) -> Path:
        - :py:exc:`TypeError` -- Unsupported type. Expecting Path or pathlike str
 
     """
-    is_path = path_either is not None and issubclass(type(path_either), PurePath)
-    if is_ok(path_either):
+    if TYPE_CHECKING:
+        path_f: Path
+
+    if (
+        path_either is not None
+        and isinstance(path_either, str)
+        and bool(path_either.strip())
+    ):
         path_f = Path(path_either)
-    elif is_path:
-        path_f = path_either
+    elif path_either is not None and issubclass(type(path_either), PurePath):
+        path_f = cast("Path", path_either)
     else:  # pragma: no cover
         msg_warn = (
             f"Unsupported type. Expecting Path got or pathlike str {type(path_either)}"
@@ -184,13 +177,14 @@ def is_suffixes_ok(path_either: Any) -> Path:
     relpath_suffixes = path_f.suffixes
     suffixes_count = len(relpath_suffixes)
     is_no_suffixes = suffixes_count == 0
+    msgs = []
     if is_no_suffixes:
         # no suffixes
         msg_warn = (
             f"Path {path_f!r} expected to have one or more suffix "
             "e.g. .shared.in, .in, .unlock, .lock, ..."
         )
-        ret = False
+        msgs.append(msg_warn)
     else:
         if suffixes_count == 1 and is_shared(relpath_name):
             # shared, but lacks .in, .unlock, or .lock
@@ -198,22 +192,21 @@ def is_suffixes_ok(path_either: Any) -> Path:
                 f"Path {path_f!r} suffix is .shared, but lacks last "
                 f"suffix. Either: {ENDINGS}"
             )
-            ret = False
+            msgs.append(msg_warn)
         elif relpath_suffix_last not in ENDINGS:
             # not an expected last suffix
             msg_warn = (
                 f"Path {path_f!r} suffix can optionally "
                 f"include .shared, and should have either of these: {ENDINGS}"
             )
-            ret = False
+            msgs.append(msg_warn)
         else:
             # Acceptable relpath
-            ret = True
+            pass
 
-    if not ret:
+    if bool(msgs):  # pragma: no branch
+        msg_warn = msgs[0]
         raise ValueError(msg_warn)
-    else:  # pragma: no cover
-        pass
 
     return path_f
 
@@ -233,26 +226,27 @@ def check_relpath(cwd, path_to_check):
 
     """
     # contains only Path
-    is_path = path_to_check is not None and issubclass(type(path_to_check), PurePath)
-    if not is_path:
+    if (
+        path_to_check is None
+        or not issubclass(type(path_to_check), PurePath)
+        or not hasattr(path_to_check, "is_file")
+        or not hasattr(path_to_check, "is_absolute")
+        or not hasattr(path_to_check, "relative_to")
+    ):  # pragma: no branch
         msg_exc = f"in_files Sequence contains unsupported type, {type(path_to_check)}"
         raise TypeError(msg_exc)
-    else:  # pragma: no cover
-        pass
 
     # FileNotFoundError
     if path_to_check.is_absolute():
         abspath_to_check = path_to_check
         is_abs_path = path_to_check.is_file()
     else:
-        abspath_to_check = resolve_joinpath(cwd, path_to_check)
+        abspath_to_check = cast("Path", resolve_joinpath(cwd, path_to_check))
         is_abs_path = abspath_to_check.is_file()
 
-    if not is_abs_path:
+    if not is_abs_path:  # pragma: no branch
         msg_exc = "Requirement (.in) file does not exist"
         raise FileNotFoundError(msg_exc)
-    else:  # pragma: no cover
-        pass
 
     # relative to self.cwd
     try:
@@ -330,7 +324,7 @@ def abspath_relative_to_package_base_folder(
     # To visualize different between the FilePins and constraints paths
     relative_parent_count = len(relative_relpath_dir.parents)
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = (
             f"{dotted_path} cwd {abspath_cwd} "
             f"constraint_relpath {constraint_relpath} "
@@ -338,8 +332,6 @@ def abspath_relative_to_package_base_folder(
             f"relative_parent_count {relative_parent_count}"
         )
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     # abspath_cwd + relative_relpath_dir + constraint_relpath
     # If relative_parent_count == 0 then relative_relpath_dir = Path(".")
@@ -352,14 +344,12 @@ def abspath_relative_to_package_base_folder(
         resolve_joinpath(abspath_constraint, constraint_relpath),
     )
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = (
             f"{dotted_path} abspath_constraint (before resolve) "
             f"{abspath_constraint}"
         )
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     try:
         abspath_constraint = abspath_constraint.resolve(strict=True)
@@ -367,12 +357,10 @@ def abspath_relative_to_package_base_folder(
         msg_warn = str(exc)
         raise FileNotFoundError(msg_warn) from exc
 
-    if is_module_debug:  # pragma: no cover
+    if is_module_debug:  # pragma: no branch  # pragma: no cover
         msg_info = (
             f"{dotted_path} abspath_constraint (after resolve) {abspath_constraint}"
         )
         _logger.info(msg_info)
-    else:  # pragma: no cover
-        pass
 
     return abspath_constraint

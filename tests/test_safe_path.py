@@ -6,7 +6,7 @@ Module _safe_path deals with platform related path issues
 Unit test -- Module
 
 .. code-block:: shell
-test_get_venv_python_abspath
+
    python -m coverage run --source='wreck._safe_path' -m pytest \
    --showlocals tests/test_safe_path.py && coverage report \
    --data-file=.coverage --include="**/_safe_path.py"
@@ -18,6 +18,10 @@ from contextlib import nullcontext as does_not_raise
 from pathlib import (
     Path,
     PurePath,
+)
+from typing import (
+    TYPE_CHECKING,
+    cast,
 )
 
 import pytest
@@ -33,8 +37,15 @@ from wreck._safe_path import (
 )
 from wreck.pep518_venvs import VenvMapLoader
 
+if TYPE_CHECKING:
+    from collections.abc import (
+        Callable,
+        Iterable,
+    )
+    from typing import Union
 
-def test_platform_checks():
+
+def test_platform_checks() -> None:
     """Not caring about the result, run is_[platform] checks."""
     # pytest --showlocals --log-level INFO -k "test_platform_checks" tests
     fcns = (
@@ -43,11 +54,11 @@ def test_platform_checks():
         is_win,
     )
     for fcn in fcns:
-        bool_result = fcn()
-        assert isinstance(bool_result, bool)
+        is_actual = fcn()
+        assert isinstance(is_actual, bool)
 
 
-def test_resolve_joinpath(tmp_path):
+def test_resolve_joinpath(tmp_path: "Path") -> None:
     """Platform aware joinpath."""
     # pytest --showlocals --log-level INFO -k "test_resolve_joinpath" tests
     parts = ("src", "empty_file.txt")
@@ -96,7 +107,7 @@ ids_resolve_path = (
     testdata_resolve_path,
     ids=ids_resolve_path,
 )
-def test_resolve_path(f_path, expected):
+def test_resolve_path(f_path: str, expected: "Union[str, None]") -> None:
     """Test resolve_path.
 
     Do not know the exact absolute path. So just check contains the
@@ -104,14 +115,18 @@ def test_resolve_path(f_path, expected):
     """
     # pytest --showlocals --log-level INFO -k "test_resolve_path" tests
     actual = resolve_path(f_path)
-    if expected is None:
+    if actual is None or expected is None:
         assert expected == actual
     else:
         assert expected in actual
 
 
 testdata_replace_suffixes = (
-    ("ted.txt", [".tar", ".gz"], "ted.tar.gz"),
+    (
+        "ted.txt",
+        [".tar", ".gz"],
+        "ted.tar.gz",
+    ),
     (
         "ted.txt",
         None,
@@ -135,7 +150,12 @@ ids_replace_suffixes = (
     testdata_replace_suffixes,
     ids=ids_replace_suffixes,
 )
-def test_replace_suffixes(suffixes, expected_name, tmp_path, relpath):
+def test_replace_suffixes(
+    relpath: str,
+    suffixes: "Union[Sequence[str], str, None]",
+    expected_name: str,
+    tmp_path: "Path",
+) -> None:
     """Confirm can replace suffixes on an absolute path."""
     # pytest --showlocals --log-level INFO -k "test_replace_suffixes" tests
     is_nonstr_sequence = (
@@ -144,9 +164,9 @@ def test_replace_suffixes(suffixes, expected_name, tmp_path, relpath):
         and not isinstance(suffixes, str)
     )
     if is_nonstr_sequence:
-        str_suffixes = "".join(suffixes)
+        str_suffixes = "".join(cast("Iterable[str]", suffixes))
     else:
-        str_suffixes = suffixes
+        str_suffixes = cast(str, suffixes)
 
     abspath_0 = tmp_path / relpath
     abspath_1 = replace_suffixes(abspath_0, str_suffixes)
@@ -156,9 +176,9 @@ def test_replace_suffixes(suffixes, expected_name, tmp_path, relpath):
 
 
 def test_get_venv_python_abspath(
-    tmp_path,
-    path_project_base,
-):
+    tmp_path: "Path",
+    path_project_base: "Callable[[], Path]",
+) -> None:
     """Confirm drain-swamp venv relpaths are real venv, not just folders."""
     # pytest --showlocals --log-level INFO -k "test_get_venv_python_abspath" tests
     path_cwd = path_project_base()
@@ -175,11 +195,17 @@ def test_get_venv_python_abspath(
             """Get the python executable path from the cwd base path
             and venv relative path.
             """
+            assert isinstance(venv_relpath, str)
+
             fcn = get_venv_python_abspath
-            args = (path_cwd, venv_relpath)
-            kwargs = {}
+            # args = (path_cwd, venv_relpath)
+            kwargs = cast("dict[str, str]", {})
             try:
-                abspath_venv_python_executable = fcn(*args, **kwargs)
+                abspath_venv_python_executable = fcn(
+                    path_cwd,
+                    venv_relpath,
+                    **kwargs,
+                )
             except NotADirectoryError:
                 # pytest-venv can be given a path to a pyenv python shim
                 # pip-compile --pip-args='--python=[pyenv_python_shim_abspath]' ...
@@ -203,11 +229,17 @@ def test_get_venv_python_abspath(
                     assert is_file is True
 
         # Force a NotADirectoryError
-        venv_relpath = resolve_joinpath(
-            path_cwd, "a-crack-addiction-would-be-healthier"
+        relpath_venv_1 = cast(
+            "Path",
+            resolve_joinpath(path_cwd, "a-crack-addiction-would-be-healthier"),
         )
+        venv_relpath_1 = relpath_venv_1.as_posix()
+
         with pytest.raises(NotADirectoryError):
-            get_venv_python_abspath(path_cwd, venv_relpath)
+            get_venv_python_abspath(path_cwd, venv_relpath_1)
 
         with pytest.raises(TypeError):
-            get_venv_python_abspath(None, venv_relpath)
+            get_venv_python_abspath(
+                None,  # type: ignore[arg-type]
+                venv_relpath_1,
+            )

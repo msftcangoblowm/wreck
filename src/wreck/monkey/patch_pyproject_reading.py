@@ -22,10 +22,6 @@ missing, raises :py:exc:`LookupError`.
 
 - combines contents of sections
 
-.. seealso::
-
-   setuptools-scm :ref:`setuptools-scm-code-config`
-
 .. py:data:: __all__
    :type: tuple[str, str]
    :value: ("ReadPyproject", "ReadPyprojectStrict")
@@ -208,11 +204,9 @@ class ReadPyprojectBase(abc.ABC):
             # None if require_section else {}
             defn = {}
 
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"In {mod_path}, toml contents {defn}"
             log.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
         # Combine sections
         # Was preventing extending setuptools_scm
@@ -220,15 +214,15 @@ class ReadPyprojectBase(abc.ABC):
         d_section_parent: TOML_RESULT = {}
         lst_section: Sequence[TOML_RESULT] = []
         is_section_dict = False
-        is_section_list = False
         # multiple tool -- do not get section_parent
         is_single_tool = len(seq_tool) == 1
         # remove tool_name that is: not a str, or empty string or just whitespace
         seq_tool_clean = [tool_name for tool_name in seq_tool if is_ok(tool_name)]
+        msgs = []
         for tool_name in seq_tool_clean:
+            name_keys = tool_name.split(".")
+            section = {}
             try:
-                name_keys = tool_name.split(".")
-                section = {}
                 for idx, key in enumerate(name_keys):
                     is_section_first = idx == 0
 
@@ -247,77 +241,63 @@ class ReadPyprojectBase(abc.ABC):
                             pass
                         #    get section
                         section = section.get(key, {})
-
             except (KeyError, LookupError) as e:
                 error = f"{path} does not contain a tool.{tool_name} section"
                 msg_warn = f"toml section missing {error!r}"
                 # log.warning(msg_warn, exc_info=True)
                 raise LookupError(msg_warn) from e
-            else:
-                # subclass must implement method, ``update``
+            # subclass must implement method, ``update``
 
-                if is_module_debug:  # pragma: no cover
-                    msg_info = f"In {mod_path}, section {type(section)}"
-                    log.info(msg_info)
-                else:  # pragma: no cover
-                    pass
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
+                msg_info = f"In {mod_path}, section {type(section)}"
+                log.info(msg_info)
 
-                is_key_name_ok = (
-                    key_name is not None
-                    and isinstance(key_name, str)
-                    and len(key_name.strip()) != 0
-                )
-
-                if isinstance(section, Mapping) and not is_expect_list:
-                    self.update(d_section, section)
-                    is_section_dict = True
-                elif isinstance(section, Sequence):
-                    is_section_list = True
-                    if not is_key_name_ok:
-                        # No key provided. Update will not occur
-                        pass
-                    else:
-                        # Key provided. Update key/value pair
-                        for d_item in section:
-                            if is_module_debug:  # pragma: no cover
-                                msg_info = (
-                                    f"In {mod_path}, call update(before) {d_item}"
-                                )
-                                log.info(msg_info)
-                            else:  # pragma: no cover
-                                pass
-
-                            self.update(
-                                lst_section,
-                                d_item,
-                                key_name=key_name,
-                                key_value=d_item[key_name],
-                            )
-
-                            if is_module_debug:  # pragma: no cover
-                                msg_info = (
-                                    f"In {mod_path}, call update(after) {lst_section}"
-                                )
-                                log.info(msg_info)
-                            else:  # pragma: no cover
-                                pass
-
-                        if is_module_debug:  # pragma: no cover
-                            msg_info = f"In {mod_path}, finally {lst_section}"
-                            log.info(msg_info)
-                        else:  # pragma: no cover
-                            pass
-                else:  # pragma: no cover
-                    pass
-
-        if not is_section_dict and not is_section_list:
-            msg_warn = (
-                f"In {path!s} tool.{tool_name} section expected either "
-                f"a list or a dict. Got {section!r}"
+            is_key_name_ok = (
+                key_name is not None
+                and isinstance(key_name, str)
+                and len(key_name.strip()) != 0
             )
-            raise LookupError(msg_warn)
-        else:  # pragma: no cover
-            pass
+
+            if isinstance(section, Mapping) and not is_expect_list:
+                self.update(d_section, section)
+                is_section_dict = True
+            elif isinstance(section, Sequence):
+                if not is_key_name_ok:
+                    # No key provided. Update will not occur
+                    pass
+                else:
+                    # Key provided. Update key/value pair
+                    for d_item in section:
+                        if is_module_debug:  # pragma: no branch  # pragma: no cover
+                            msg_info = f"In {mod_path}, call update(before) {d_item}"
+                            log.info(msg_info)
+
+                        self.update(
+                            lst_section,
+                            d_item,
+                            key_name=key_name,
+                            key_value=d_item[key_name],
+                        )
+
+                        if is_module_debug:  # pragma: no branch  # pragma: no cover
+                            msg_info = (
+                                f"In {mod_path}, call update(after) {lst_section}"
+                            )
+                            log.info(msg_info)
+
+                    if is_module_debug:  # pragma: no branch  # pragma: no cover
+                        msg_info = f"In {mod_path}, finally {lst_section}"
+                        log.info(msg_info)
+            else:  # pragma: no cover
+                msg_warn = (
+                    f"In {path!s} tool.{tool_name} section expected either "
+                    f"a list or a dict. Got {section!r}"
+                )
+                msgs.append(msg_warn)
+
+        if bool(msgs):  # pragma: no branch
+            str_msgs = "\n".join(msgs)
+            raise LookupError(str_msgs)
 
         project = defn.get("project", {})
 
@@ -337,7 +317,7 @@ class ReadPyprojectBase(abc.ABC):
 class ReadPyproject(ReadPyprojectBase):
     """Do not confine data fields. Accept whatever the section(s) contains."""
 
-    def update(
+    def update(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         mixed_target,
         d_other,
@@ -350,7 +330,7 @@ class ReadPyproject(ReadPyprojectBase):
         For list[dict] also supply a key / value pair. So know which dict to update.
 
         :param mixed_target: parent dict
-        :type mixed_target: dict[str, typing.Any] | collections.abc.Sequence[dict[str, typing.Any]]
+        :type mixed_target: dict[str, typing.Any] | list[dict[str, typing.Any]]
         :param d_other: dict. Update parent
         :type d_other: dict[str, typing.Any]
         :param key_name:
@@ -367,45 +347,25 @@ class ReadPyproject(ReadPyprojectBase):
 
         :type key_value: str | None
         """
-        mod_path = "wreck.monkey.patch_pyproject_reading.ReadPyproject.update"
-        if isinstance(mixed_target, Mapping):
+        if isinstance(mixed_target, dict) and isinstance(d_other, Mapping):
             mixed_target.update(d_other)
-        else:
-            # Parent is a list[dict[str, typing.Any]].
-            #    Update dict
-            if is_module_debug:  # pragma: no cover
-                msg_info = f"In {mod_path}, key / value: {key_name} / {key_value}"
-                log.info(msg_info)
-            else:  # pragma: no cover
-                pass
-
+        elif isinstance(mixed_target, list) and isinstance(d_other, Mapping):
             # Check for match. If no match append.
-            is_found = False
-            for idx, d_item in enumerate(mixed_target):
-                is_match = d_item.get(key_name, "") == key_value
-                if is_match:
-                    if is_module_debug:  # pragma: no cover
-                        msg_info = f"In {mod_path}, match found: idx {idx} {d_item}"
-                        log.info(msg_info)
-                    else:  # pragma: no cover
-                        pass
-
-                    is_found = True
-                    d_item.update(d_other)
-                    mixed_target[idx] = d_item
-                else:  # pragma: no cover
-                    pass
+            is_found = any(
+                [d_item.get(key_name, "") == key_value for d_item in mixed_target]
+            )
 
             if not is_found:
+                # new section
                 mixed_target.append(d_other)
-            else:  # pragma: no cover
-                pass
-
-            if is_module_debug:  # pragma: no cover
-                msg_info = f"In {mod_path}, after update: {mixed_target}"
-                log.info(msg_info)
-            else:  # pragma: no cover
-                pass
+            else:
+                # update section
+                #    Known match exists
+                for idx, d_item in enumerate(mixed_target):
+                    is_match = d_item.get(key_name, "") == key_value
+                    if is_match:  # pragma: no branch
+                        d_item.update(d_other)
+                        mixed_target[idx] = d_item
 
 
 class ReadPyprojectStrict(ReadPyprojectBase):

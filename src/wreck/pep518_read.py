@@ -70,8 +70,7 @@ def _is_ok(test):
 
     """
     ret = False
-    is_str = test is not None and isinstance(test, str)
-    if is_str:
+    if test is not None and isinstance(test, str):
         # Edge case: contains only whitespace
         str_stripped = test.strip()
         ret = len(str_stripped) != 0
@@ -190,10 +189,10 @@ def find_project_root(srcs, stdin_filename=None):
         else:  # pragma: no cover
             pass
 
-    if is_none(srcs) or is_sequence_empty(srcs):  # pragma: no cover
+    if is_none(srcs) or is_sequence_empty(
+        srcs
+    ):  # pragma: no branch  # pragma: no cover
         srcs = [str(Path.cwd().resolve())]
-    else:  # pragma: no cover
-        pass
 
     path_srcs = [Path(Path.cwd(), src).resolve() for src in srcs]
 
@@ -209,25 +208,24 @@ def find_project_root(srcs, stdin_filename=None):
     )
 
     for directory in (common_base, *common_base.parents):
-        if (directory / ".git").exists():
+        if (directory / ".git").exists():  # pragma: no branch
             return directory, ".git directory"
-        else:  # pragma: no cover
-            pass
 
-        if (directory / ".hg").is_dir():
+        if (directory / ".hg").is_dir():  # pragma: no branch
             return directory, ".hg directory"
-        else:  # pragma: no cover
-            pass
 
-        if (directory / "pyproject.toml").is_file():
+        if (directory / "pyproject.toml").is_file():  # pragma: no branch
             return directory, "pyproject.toml"
-        else:  # pragma: no cover
-            pass
 
-    return directory, "file system root"
+    t_ret = (
+        directory,  # pyright: ignore[reportPossiblyUnboundVariable]
+        "file system root",
+    )
+
+    return t_ret
 
 
-def find_pyproject_toml(path_search_start, stdin_filename):
+def find_pyproject_toml(path_search_start, stdin_filename=None):
     """Find the absolute filepath to a ``pyproject.toml`` if it exists.
 
     :param path_search_start:
@@ -240,16 +238,13 @@ def find_pyproject_toml(path_search_start, stdin_filename):
     :returns: Absolute path to project ``pyproject.toml`` otherwise None
     :rtype: str | None
     """
-    is_ng = path_search_start is None or not isinstance(path_search_start, Sequence)
-
-    if is_ng:
-        ret = None
-    else:  # pragma: no cover
+    ret = None
+    if path_search_start is not None and isinstance(
+        path_search_start, Sequence
+    ):  # pragma: no branch
         # Check if the 1st path is a project.toml or test file
         item_0 = path_search_start[0]
-        if not isinstance(item_0, str):
-            ret = None
-        else:
+        if isinstance(item_0, str):  # pragma: no branch
             path_idx0 = Path(item_0)
             path_idx0_suffix = path_idx0.suffix
             path_idx0_file_name = path_idx0.name
@@ -263,7 +258,7 @@ def find_pyproject_toml(path_search_start, stdin_filename):
             else:  # pragma: no cover
                 is_found = False
 
-            if is_found is False:
+            if is_found is False:  # pragma: no branch
                 """2nd item, reason, is string describing the method by which the project
                 root was discovered"""
                 try:
@@ -279,7 +274,5 @@ def find_pyproject_toml(path_search_start, stdin_filename):
                         ret = str(path_pyproject_toml)
                     else:
                         ret = None
-            else:  # pragma: no cover
-                pass
 
     return ret

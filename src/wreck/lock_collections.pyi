@@ -17,17 +17,20 @@ if sys.version_info >= (3, 11):  # pragma: no cover py-ge-311-else
 else:  # pragma: no cover py-ge-311
     from typing_extensions import Self
 
-__all__ = ("Ins",)
+__all__ = (
+    "Ins",
+    "unlock_compile",
+)
 
 @dataclasses.dataclass
 class Ins(Collection[FilePins]):
     loader: VenvMapLoader
     venv_path: dataclasses.InitVar[str]
-    _venv_relpath: str
-    _file_pins: list[FilePins]
-    _iter: Iterator[FilePins]
-    _files: set[FilePins]
-    _zeroes: set[FilePins]
+    _venv_relpath: str = dataclasses.field(init=False)  # noqa: Y015
+    _file_pins: list[FilePins] = dataclasses.field(init=False, default_factory=list)  # noqa: Y015  # fmt: skip
+    _iter: Iterator[FilePins] = dataclasses.field(init=False)  # noqa: Y015
+    _files: set[FilePins] = dataclasses.field(init=False, default_factory=set)  # noqa: Y015  # fmt: skip
+    _zeroes: set[FilePins] = dataclasses.field(init=False, default_factory=set)  # noqa: Y015  # fmt: skip
 
     def __contains__(self, item: Any) -> bool: ...
     def __iter__(self) -> Self: ...
@@ -43,6 +46,9 @@ class Ins(Collection[FilePins]):
     def files(self, val: Any) -> None: ...
     @property
     def files_len(self) -> int: ...
+    def _load_resolution_loop(self, suffix_last: str | None = ...) -> None: ...
+    def _load_filepins(self, suffix_last: str | None = ...) -> None: ...
+    def _check_top_level(self) -> list[tuple[str, Path, str]]: ...
     def get_by_abspath(
         self,
         abspath_f: Path,
@@ -56,7 +62,7 @@ class Ins(Collection[FilePins]):
     def path_cwd(self) -> Path: ...
     def resolution_loop(self) -> None: ...
     def resolve_zeroes(self) -> None: ...
-    def write(self) -> None: ...
+    def write(self) -> Generator[Path, None, None]: ...
     @property
     def zeroes(self) -> Generator[FilePins, None, None]: ...
     @zeroes.setter

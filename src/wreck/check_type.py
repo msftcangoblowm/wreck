@@ -65,8 +65,7 @@ def is_ok(test):
 
     """
     ret = False
-    is_str = test is not None and isinstance(test, str)
-    if is_str:
+    if test is not None and isinstance(test, str):
         # Edge case: contains only whitespace
         str_stripped = test.strip()
         ret = len(str_stripped) != 0

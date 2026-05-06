@@ -28,7 +28,7 @@ from pathlib import (
 )
 from typing import cast
 
-from pip_requirements_parser import (
+from pip_requirements_parser import (  # pyright: ignore[reportMissingTypeStubs]
     InstallationError,
     RequirementsFile,
 )
@@ -121,16 +121,15 @@ class FilePins(Collection[PinDatum], Hashable):
 
         try:
             abspath_file = is_suffixes_ok(self.file_abspath)
-            rf = RequirementsFile.from_file(abspath_file)
+            rf = RequirementsFile.from_file(abspath_file.as_posix())
         except InstallationError as exc:
-            if is_module_debug:  # pragma: no cover
+            if is_module_debug:  # pragma: no branch  # pragma: no cover
                 # msg_info = f"file_abspath(before): {self.file_abspath}"
                 # _logger.info(msg_info)
-                msg_info = f"file_abspath(after): {abspath_file}"
+                msg_info = f"file_abspath(after): {self.file_abspath!r}"
                 _logger.info(msg_info)
-            else:  # pragma: no cover
-                pass
-            msg_exc = f"Requirements file not found {abspath_file!r}. Create it"
+
+            msg_exc = f"Requirements file not found {self.file_abspath!r}. Create it"
             raise MissingRequirementsFoldersFiles(msg_exc) from exc
         except ValueError:
             raise
@@ -161,7 +160,7 @@ class FilePins(Collection[PinDatum], Hashable):
             else:  # pragma: no cover
                 line: str = ""
 
-            if len(line.strip()) != 0:
+            if len(line.strip()) != 0:  # pragma: no branch
                 qualifiers = _parse_qualifiers(line)
 
                 # Create Pin
@@ -170,13 +169,8 @@ class FilePins(Collection[PinDatum], Hashable):
                 )
 
                 # Filter out if an exact match
-                if pin not in lst_tmp:
+                if pin not in lst_tmp:  # pragma: no branch
                     lst_tmp.append(pin)
-                else:  # pragma: no cover
-                    pass
-            else:  # pragma: no cover
-                # Dup
-                pass
 
         # List items must implement: __hash__, __eq__, and __lt__
         self._pins = sorted(lst_tmp)
@@ -202,25 +196,17 @@ class FilePins(Collection[PinDatum], Hashable):
             # constraints|requirements, line, line_number
             is_constraint = "constraints" in d_opt.keys()
             is_requirements = "requirements" in d_opt.keys()
-            if is_constraint:
+            if is_constraint:  # pragma: no branch
                 # strip_inline_comments
                 constraints_relpath = cast("list[str]", d_opt["constraints"])
-                for constraint_relpath in constraints_relpath:
+                for constraint_relpath in constraints_relpath:  # pragma: no branch
                     set_constraints.add(constraint_relpath)
-                else:  # pragma: no cover
-                    pass
-            else:  # pragma: no cover
-                pass
 
-            if is_requirements:
+            if is_requirements:  # pragma: no branch
                 # strip_inline_comments
                 requirements_relpath = cast("list[str]", d_opt["requirements"])
-                for requirement_relpath in requirements_relpath:
+                for requirement_relpath in requirements_relpath:  # pragma: no branch
                     set_requirements.add(requirement_relpath)
-                else:  # pragma: no cover
-                    pass
-            else:  # pragma: no cover
-                pass
 
         # constraints and requirements are relpath. Existence not checked
         # lock_infile.InFile checked only the constraints and not the requirements
@@ -275,18 +261,11 @@ class FilePins(Collection[PinDatum], Hashable):
         :returns: True if a pin and pin in pins otherwise False
         :rtype: bool
         """
-        is_ng = item is None or not isinstance(item, PinDatum)
-        if is_ng:
+        if item is None or not isinstance(item, PinDatum):
             ret = False
         else:
-            is_found = False
-            for pin in self._pins:
-                # Pin is a dataclass. Automagically has __eq__
-                if pin == item:
-                    is_found = True
-                else:  # pragma: no cover
-                    pass
-            ret = is_found
+            # Pin is a dataclass. Automagically has __eq__
+            ret = any([pin == item for pin in self._pins])
 
         return ret
 
@@ -316,31 +295,25 @@ class FilePins(Collection[PinDatum], Hashable):
 
         :rtype: bool
         """
-        is_type_same = right is not None and isinstance(right, FilePins)
-        is_str = is_ok(right)
-        is_abspath = (
-            right is not None
-            and issubclass(type(right), PurePath)
-            and right.is_absolute()
-        )
-        if is_abspath:
-            abspath_right = right
-        elif is_str:
-            abspath_right = Path(right)
-        else:  # pragma: no cover
-            pass
+        ret = False
+        mixed_right = None
+        if right is not None:  # pragma: no branch
+            if isinstance(right, FilePins):
+                is_eq = self.__hash__() == right.__hash__()
+                ret = is_eq
+            elif isinstance(right, str) and bool(right.strip()):
+                mixed_right = Path(right)
+            elif issubclass(type(right), PurePath) and hasattr(right, "is_absolute"):
+                mixed_right = cast("Path", right)
+            else:
+                ret = False
 
-        if is_type_same:
-            is_eq = self.__hash__() == right.__hash__()
-            ret = is_eq
-        elif is_str or is_abspath:
-            # abspath
+        if mixed_right is not None and mixed_right.is_absolute():  # pragma: no branch
+            abspath_right = cast("Path", mixed_right)
             left_hash = hash(self)
             right_hash = hash((abspath_right,))
             is_eq = left_hash == right_hash
             ret = is_eq
-        else:
-            ret = False
 
         return ret
 
@@ -360,12 +333,9 @@ class FilePins(Collection[PinDatum], Hashable):
            - :py:exc:`TypeError` -- right operand is unsupported type
 
         """
-        is_ng = right is None or not isinstance(right, FilePins)
-        if is_ng:
+        if right is None or not isinstance(right, FilePins):  # pragma: no branch
             msg_warn = f"Expecting an FilePins got unsupported type {type(right)}"
             raise TypeError(msg_warn)
-        else:  # pragma: no cover
-            pass
 
         is_lt = str(self.file_abspath) < str(right.file_abspath)
 
@@ -407,14 +377,12 @@ class FilePins(Collection[PinDatum], Hashable):
 
         set_plural = getattr(self, plural)
 
-        if is_module_debug:  # pragma: no cover
+        if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = (
                 f"{dotted_path} remove {singular!s} {constraint} "
                 f"""from {set_plural!r}"""
             )
             _logger.info(msg_info)
-        else:  # pragma: no cover
-            pass
 
         """Both constraint and requirement, as provided by
         pip_requirements_parser.RequirementsFile, is a relative path,
@@ -502,9 +470,5 @@ class FilePins(Collection[PinDatum], Hashable):
         """
         for pin in self._pins:
             is_notable = is_pin(pin.specifiers) or has_qualifiers(pin.qualifiers)
-            if is_notable:
+            if is_notable:  # pragma: no branch
                 yield pin
-            else:  # pragma: no cover
-                pass
-
-        yield from ()

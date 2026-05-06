@@ -15,6 +15,7 @@ Unit test -- Module
 
 import os
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -25,9 +26,23 @@ from wreck._safe_path import (
 )
 from wreck.constants import g_app_name
 
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from pathlib import Path
+    from typing import Union
+
 
 @pytest.mark.logging_package_name(g_app_name)
-def test_run_cmd(tmp_path, prepare_folders_files, logging_strict):
+def test_run_cmd(
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test run_cmd."""
     # pytest --showlocals --log-level INFO -k "test_run_cmd" tests
     t_two = logging_strict()
@@ -44,17 +59,24 @@ def test_run_cmd(tmp_path, prepare_folders_files, logging_strict):
     )
     for invalid in invalids:
         with pytest.raises(TypeError):
-            run_cmd(invalid)
+            run_cmd(
+                invalid,  # type: ignore[arg-type]
+            )
 
         # executable path is incorrect. env --> None. cwd --> None
-        cmd = ("bin/true",)
-        t_ret = run_cmd(cmd, env=invalid, cwd=invalid)
+        cmd_0 = ("bin/true",)
+        t_ret = run_cmd(
+            cmd_0,
+            env=invalid,  # type: ignore[arg-type]
+            cwd=invalid,  # type: ignore[arg-type]
+        )
         out, err, exit_code, str_exc = t_ret
         if is_win():
             expected_msg = """The system cannot find the file specified"""
         else:
             expected_msg = """No such file or directory"""
-        assert str_exc.startswith(expected_msg)
+        if str_exc is not None:
+            assert str_exc.startswith(expected_msg)
 
     # Something printed to stderr
     # prepare
@@ -65,27 +87,31 @@ def test_run_cmd(tmp_path, prepare_folders_files, logging_strict):
     # act
     #    pygmentize installed from requirements/manage.in or requirements/dev.in
     #    pygmentize prints a list of lexers. So harmless
-    cmd = (resolve_path("pygmentize"), "-L")
-    t_ret = run_cmd(cmd, cwd=cwd)
-    out, err, exit_code, str_exc = t_ret
+    pygmentize_optabspath = resolve_path("pygmentize")
+    if pygmentize_optabspath is not None:
+        cmd_1 = [pygmentize_optabspath, "-L"]
+        t_ret = run_cmd(cmd_1, cwd=cwd)
+        out, err, exit_code, str_exc = t_ret
 
-    # verify
-    assert exit_code == 0
-    assert len(out.strip()) != 0
+        # verify
+        assert exit_code == 0
+        assert out is not None
+        assert len(out.strip()) != 0
 
     # Something printed to stdout
     valids = (
         (sys.executable, "-V"),
         f"{sys.executable} -V",
     )
-    for cmd in valids:
-        logger.info(f"cmd: {cmd!r}")
+    for cmd_2 in valids:
+        logger.info(f"cmd: {cmd_2!r}")
 
-        t_ret = run_cmd(cmd, env=env)
+        t_ret = run_cmd(cmd_2, env=env)
         out, err, exit_code, str_exc = t_ret
         if exit_code != 0:
             logger.info(f"str_exc: {str_exc!r}")
             logger.info(f"err: {err!r}")
             logger.info(f"out: {out!r}")
         assert exit_code == 0
+        assert out is not None
         assert len(out.strip()) != 0

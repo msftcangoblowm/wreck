@@ -13,6 +13,10 @@ Unit test -- Module
 
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
@@ -35,6 +39,24 @@ from wreck.lock_discrepancy import (
     get_ss_set,
     get_the_fixes,
 )
+
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import (
+        Any,
+        Union,
+    )
+
+    from tests.typing_only import (
+        DOES_NOT_OR_DOES,
+        Never,
+        TypeAlias,
+    )
 
 testdata_extract_full_package_name = (
     (
@@ -147,12 +169,12 @@ ids_extract_full_package_name = (
     ids=ids_extract_full_package_name,
 )
 def test_extract_full_package_name(
-    line,
-    search_for,
-    expected_pkg_name,
-    is_needs_fix,
-    logging_strict,
-):
+    line: str,
+    search_for: str,
+    expected_pkg_name: str,
+    is_needs_fix: bool,
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """For a particular package, check line is an exact match."""
     # pytest -vv --showlocals --log-level INFO -k "test_extract_full_package_name" tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_discrepancy.py::test_extract_full_package_name[unrelated\ package]
@@ -203,23 +225,48 @@ def test_extract_full_package_name(
     pass
 
 
-testdata_choose_version_order_mixed_up = (
+if TYPE_CHECKING:
+    # too complicated to resolve
+    SeqFile: TypeAlias = tuple[
+        str, str, Union[list[str], list[Never]], Union[list[str], list[Never]]
+    ]
+    MyEmptySet: TypeAlias = Union[MutableSet[Any], MutableSet[Version]]
+    testdata_choose_version_order_mixed_up: Sequence[
+        tuple[
+            str,
+            SeqFile,
+            SeqFile,
+            Union[Version, None],
+            MyEmptySet,
+            DOES_NOT_OR_DOES,
+            Union[Version, None],
+            bool,
+        ]
+    ]
+
+testdata_choose_version_order_mixed_up = (  # type: ignore[assignment]
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip>=24.2; python_version <= "3.10"',
-            [">=24.2"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip>=24.2; python_version <= "3.10"',
+                [">=24.2"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("23.0"),
-        {Version("25.0"), Version("24.8"), Version("25.3")},
+        cast("MyEmptySet", {Version("25.0"), Version("24.8"), Version("25.3")}),
         does_not_raise(),
         ">=",
         Version("25.3"),
@@ -227,20 +274,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip; python_version <= "3.10"',
-            [],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip; python_version <= "3.10"',
+                [],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         does_not_raise(),
         ">=",
         Version("25.3"),
@@ -248,20 +301,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip != 25.3; python_version <= "3.10"',
-            ["!=25.3"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip != 25.3; python_version <= "3.10"',
+                ["!=25.3"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         does_not_raise(),
         "==",
         Version("25.0"),
@@ -269,20 +328,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip; python_version <= "3.10"',
-            [],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip; python_version <= "3.10"',
+                [],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         does_not_raise(),
         ">=",
         Version("25.3"),
@@ -290,20 +355,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip==25.0; python_version <= "3.10"',
-            ["==25.0"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip==25.0; python_version <= "3.10"',
+                ["==25.0"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip<=25.3",
-            ["<=25.3"],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip<=25.3",
+                ["<=25.3"],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         does_not_raise(),
         "==",
         Version("25.0"),
@@ -311,20 +382,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip~=25.0; python_version <= "3.10"',
-            ["~=25.0"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip~=25.0; python_version <= "3.10"',
+                ["~=25.0"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip<=25.3",
-            ["<=25.3"],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip<=25.3",
+                ["<=25.3"],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         does_not_raise(),
         "~=",
         Version("25.3"),
@@ -332,20 +409,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip>=23.0, <25.3; python_version <= "3.10"',
-            [">=23.0", "<25.3"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip>=23.0, <25.3; python_version <= "3.10"',
+                [">=23.0", "<25.3"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         does_not_raise(),
         ">=",
         Version("25.0"),
@@ -353,20 +436,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip>=23.0, <25.3, !=25.2; python_version <= "3.10"',
-            [">=23.0", "<25.3", "!=25.2"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip>=23.0, <25.3, !=25.2; python_version <= "3.10"',
+                [">=23.0", "<25.3", "!=25.2"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         pytest.raises(PinMoreThanTwoSpecifiers),
         ">=",
         Version("25.0"),
@@ -374,20 +463,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip~=23.0, <=23.3; python_version <= "3.10"',
-            ["~=23.0", "<=23.3"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip~=23.0, <=23.3; python_version <= "3.10"',
+                ["~=23.0", "<=23.3"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip!=23.4",
-            ["!=23.4"],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip!=23.4",
+                ["!=23.4"],
+                [],
+            ),
         ),
         Version("23.3"),
-        {Version("23.0"), Version("23.1"), Version("23.3")},
+        cast("MyEmptySet", {Version("23.0"), Version("23.1"), Version("23.3")}),
         does_not_raise(),
         "~=23.0, <=23.3, !=23.4",
         Version("23.3"),
@@ -395,20 +490,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_1.in",
-            "pip!=23.4",
-            ["!=23.4"],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip!=23.4",
+                ["!=23.4"],
+                [],
+            ),
         ),
-        (
-            "file_0.in",
-            '"pip~=23.0, <=23.3; python_version <= "3.10"',
-            ["~=23.0", "<=23.3"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip~=23.0, <=23.3; python_version <= "3.10"',
+                ["~=23.0", "<=23.3"],
+                ['python_version <= "3.10"'],
+            ),
         ),
         Version("23.3"),
-        {Version("23.0"), Version("23.1"), Version("23.3")},
+        cast("MyEmptySet", {Version("23.0"), Version("23.1"), Version("23.3")}),
         does_not_raise(),
         "~=23.0, <=23.3, !=23.4",
         Version("23.3"),
@@ -416,20 +517,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip>=23.0, !=22.3; python_version <= "3.10"',
-            [">=23.0", "!=22.3"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip>=23.0, !=22.3; python_version <= "3.10"',
+                [">=23.0", "!=22.3"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("25.0"), Version("23.0"), Version("24.8")},
+        cast("MyEmptySet", {Version("25.0"), Version("23.0"), Version("24.8")}),
         does_not_raise(),
         ">=",
         Version("25.3"),
@@ -437,20 +544,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip<24.2; python_version <= "3.10"',
-            ["<24.2"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip<24.2; python_version <= "3.10"',
+                ["<24.2"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("24.1"),
-        {Version("23.0"), Version("23.5"), Version("24.0")},
+        cast("MyEmptySet", {Version("23.0"), Version("23.5"), Version("24.0")}),
         does_not_raise(),
         "<24.2",
         Version("24.1"),
@@ -458,20 +571,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip>24.2; python_version <= "3.10"',
-            [">24.2"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip>24.2; python_version <= "3.10"',
+                [">24.2"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("24.3"), Version("24.5"), Version("25.0")},
+        cast("MyEmptySet", {Version("24.3"), Version("24.5"), Version("25.0")}),
         does_not_raise(),
         ">24.2",
         Version("25.3"),
@@ -479,20 +598,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip~~24.2; python_version <= "3.10"',
-            ["~~24.2"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip~~24.2; python_version <= "3.10"',
+                ["~~24.2"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("25.3"),
-        {Version("24.3"), Version("24.5"), Version("25.0")},
+        cast("MyEmptySet", {Version("24.3"), Version("24.5"), Version("25.0")}),
         pytest.raises(InvalidSpecifier),
         "~~24.2",
         Version("25.3"),
@@ -500,20 +625,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip==24.2; python_version <= "3.10"',
-            ["==24.2"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip==24.2; python_version <= "3.10"',
+                ["==24.2"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("24.2"),
-        set(),
+        cast("MyEmptySet", set()),
         does_not_raise(),
         "==24.2",
         Version("24.2"),
@@ -521,20 +652,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip===24.2; python_version <= "3.10"',
-            ["===24.2"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip===24.2; python_version <= "3.10"',
+                ["===24.2"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("24.2"),
-        set(),
+        cast("MyEmptySet", set()),
         pytest.raises(ArbitraryEqualityNotImplemented),
         "===24.2",
         Version("24.2"),
@@ -542,20 +679,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip<=23.0; python_version <= "3.10"',
-            ["<=23.0"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip<=23.0; python_version <= "3.10"',
+                ["<=23.0"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         Version("22.8"),
-        {Version("22.0"), Version("22.1"), Version("22.6")},
+        cast("MyEmptySet", {Version("22.0"), Version("22.1"), Version("22.6")}),
         does_not_raise(),
         "<=",
         Version("22.8"),
@@ -563,20 +706,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            '"pip<=23.0; python_version <= "3.10"',
-            ["<=23.0"],
-            ['python_version <= "3.10"'],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                '"pip<=23.0; python_version <= "3.10"',
+                ["<=23.0"],
+                ['python_version <= "3.10"'],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip",
-            [],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip",
+                [],
+                [],
+            ),
         ),
         None,
-        set(),
+        cast("MyEmptySet", set()),
         does_not_raise(),
         None,
         None,
@@ -584,20 +733,26 @@ testdata_choose_version_order_mixed_up = (
     ),
     (
         "pip",
-        (
-            "file_0.in",
-            "pip<24.2",
-            ["<24.2"],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_0.in",
+                "pip<24.2",
+                ["<24.2"],
+                [],
+            ),
         ),
-        (
-            "file_1.in",
-            "pip>=24.2",
-            [">=24.2"],
-            [],
+        cast(
+            "SeqFile",
+            (
+                "file_1.in",
+                "pip>=24.2",
+                [">=24.2"],
+                [],
+            ),
         ),
         None,
-        set(),
+        cast("MyEmptySet", set()),
         does_not_raise(),
         None,
         None,
@@ -637,18 +792,18 @@ ids_choose_version_order_mixed_up = (
     ids=ids_choose_version_order_mixed_up,
 )
 def test_choose_version_order_mixed_up(
-    pkg_name,
-    seq_file_0,
-    seq_file_1,
-    highest,
-    others,
-    expectation,
-    unlock_operator_expected,
-    found_expected,
-    is_found_expected,
-    tmp_path,
-    logging_strict,
-):
+    pkg_name: str,
+    seq_file_0: "SeqFile",
+    seq_file_1: "SeqFile",
+    highest: "Union[Version, None]",
+    others: "MyEmptySet",
+    expectation: "DOES_NOT_OR_DOES",
+    unlock_operator_expected: "Union[str, None]",
+    found_expected: "Union[Version, None]",
+    is_found_expected: bool,
+    tmp_path: "Path",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Have versions in others out of order."""
     # pytest -vv --showlocals --log-level INFO -k "test_choose_version_order_mixed_up" tests
     t_two = logging_strict()
@@ -656,8 +811,8 @@ def test_choose_version_order_mixed_up(
 
     f_relpath_0, line_0, specifiers_0, qualifiers_0 = seq_file_0
     f_relpath_1, line_1, specifiers_1, qualifiers_1 = seq_file_1
-    file_abspath_0 = resolve_joinpath(tmp_path, f_relpath_0)
-    file_abspath_1 = resolve_joinpath(tmp_path, f_relpath_1)
+    file_abspath_0 = cast("Path", resolve_joinpath(tmp_path, f_relpath_0))
+    file_abspath_1 = cast("Path", resolve_joinpath(tmp_path, f_relpath_1))
 
     pind_0 = PinDatum(
         file_abspath_0,
@@ -695,14 +850,14 @@ def test_choose_version_order_mixed_up(
         t_acceptable = filter_acceptable(
             set_pindatum,
             set_ss,
-            highest,
-            others,
+            highest,  # type: ignore[arg-type]
+            cast("set[Version]", others),
         )
         set_acceptable, lsts_specifiers, is_eq_affinity_value = t_acceptable
         t_ret = get_the_fixes(
             set_acceptable,
             lsts_specifiers,
-            highest,
+            highest,  # type: ignore[arg-type]
             is_eq_affinity_value,
             is_ss_count_zero,
         )
@@ -764,9 +919,9 @@ ids_parse_specifiers = (
     ids=ids_parse_specifiers,
 )
 def test_parse_specifiers(
-    specifiers,
-    lst_expected,
-):
+    specifiers: list[str],
+    lst_expected: list[tuple[str, str]],
+) -> None:
     """Just parse each specifier from str to tuple"""
     # pytest -vv --showlocals --log-level INFO -k "test_parse_specifiers" tests
     # Specifiers produced by pip_requirements_parser.RequirementsFile
@@ -851,7 +1006,11 @@ ids_specifier_length = (
     testdata_specifier_length,
     ids=ids_specifier_length,
 )
-def test_specifier_length(specifier, expectation, expected_len):
+def test_specifier_length(
+    specifier: str,
+    expectation: "DOES_NOT_OR_DOES",
+    expected_len: int,
+) -> None:
     """Test operator detection algo."""
     # pytest -vv --showlocals --log-level INFO -k "test_specifier_length" tests
     with expectation:
@@ -860,10 +1019,13 @@ def test_specifier_length(specifier, expectation, expected_len):
         assert actual_len == expected_len
 
 
-def test_class_unresolvable():
+def test_class_unresolvable(
+    request: "pytest.FixtureRequest",
+) -> None:
     """repr of UnResolvable"""
     # pytest -vv --showlocals --log-level INFO -k "test_class_unresolvable" tests
-    abspath_f = Path(__file__).parent.joinpath(
+    abspath_tests_dir = request.path.parent
+    abspath_f = abspath_tests_dir.joinpath(
         "_qualifier_conflicts",
         "qualifier_1.unlock",
     )

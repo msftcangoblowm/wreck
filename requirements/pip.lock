@@ -4,7 +4,7 @@ tomli==2.2.1 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   setuptools-scm
-typing-extensions==4.12.2 ; python_version < "3.11"
+typing-extensions==4.15.0 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   setuptools-scm

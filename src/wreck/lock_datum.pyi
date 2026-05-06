@@ -29,6 +29,7 @@ __all__ = (
     "InFileType",
     "OutLastSuffix",
     "PinDatum",
+    "in_generic",
     "is_pin",
     "has_qualifiers",
     "pprint_pins",
@@ -51,7 +52,7 @@ class PinDatum(Hashable):
     def __lt__(self, right: object) -> bool: ...
 
 # public, not private TypeVar
-DATUM = TypeVar("DATUM", bound=PinDatum)  # noqa: Y001
+DATUM = TypeVar("DATUM", bound=PinDatum)  # noqa: E305,Y001
 DatumByPkg: TypeAlias = dict[str, set[PinDatum]]
 
 def pprint_pins(pins: Iterable[DATUM]) -> str: ...

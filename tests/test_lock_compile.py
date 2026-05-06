@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_lock_compile.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -19,7 +25,10 @@ from pathlib import (
     Path,
     PurePath,
 )
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 
@@ -44,9 +53,24 @@ from wreck.pep518_venvs import (
     get_reqs,
 )
 
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        Iterable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import (
+        Any,
+        Union,
+    )
+
+    from tests.typing_only import DOES_NOT_OR_DOES
+
 testdata_pipcompile_creates_1byte = (
     (
-        (Path(__file__).parent.joinpath("_python_1byte", "empty.in"),),
+        (Path("_python_1byte").joinpath("empty.in"),),
         "requirements/empty.in",
         "requirements/empty.lock",
     ),
@@ -64,11 +88,12 @@ ids_pipcompile_creates_1byte = ("0B .in file 1B .lock file",)
     ids=ids_pipcompile_creates_1byte,
 )
 def test_pipcompile_creates_1byte(
-    seq_copy_these,
-    in_relpath,
-    out_relpath,
-    tmp_path,
-):
+    seq_copy_these: "Sequence[Path]",
+    in_relpath: str,
+    out_relpath: str,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+) -> None:
     """Prove pip-compile creates 1B file, from 0B .in
 
     If ``~/.pip/pip.conf`` has ``extra-index-url`` or ``index-url``
@@ -96,16 +121,17 @@ def test_pipcompile_creates_1byte(
 
     """
     # pytest -vv --showlocals --log-level INFO -k "test_pipcompile_creates_1byte" tests
+    abspath_tests_dir = request.path.parent
     # prepare
     #    dest folders
     path_dir = cast("Path", resolve_joinpath(tmp_path, "requirements"))
     path_dir.mkdir(parents=True, exist_ok=True)
 
     #    copy seq_copy_these
-    for abspath_src in seq_copy_these:
-        src_abspath = str(abspath_src)
+    for relpath_src in seq_copy_these:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         abspath_dest = tmp_path / "requirements" / abspath_src.name
-        shutil.copy2(src_abspath, abspath_dest)
+        shutil.copy2(abspath_src.as_posix(), abspath_dest.as_posix())
     abspath_in = cast("Path", resolve_joinpath(tmp_path, in_relpath))
     abspath_out = cast("Path", resolve_joinpath(tmp_path, out_relpath))
     in_abspath = str(abspath_in)
@@ -154,7 +180,7 @@ def test_pipcompile_creates_1byte(
 
 testdata_empty_in_empty_out = (
     (
-        (Path(__file__).parent.joinpath("_python_1byte", "empty.in"),),
+        (Path("_python_1byte").joinpath("empty.in"),),
         "requirements/empty.in",
         "requirements/empty.lock",
         True,
@@ -162,8 +188,8 @@ testdata_empty_in_empty_out = (
     ),
     (
         (
-            Path(__file__).parent.joinpath("_python_1byte", "empty.in"),
-            Path(__file__).parent.joinpath("_python_1byte", "empty.lock"),
+            Path("_python_1byte").joinpath("empty.in"),
+            Path("_python_1byte").joinpath("empty.lock"),
         ),
         "requirements/empty.in",
         "requirements/empty.lock",
@@ -187,23 +213,26 @@ ids_empty_in_empty_out = (
     ids=ids_empty_in_empty_out,
 )
 def test_empty_in_empty_out(
-    seq_copy_these,
-    in_relpath,
-    out_relpath,
-    is_in_empty_expected,
-    expected_out,
-    tmp_path,
-    prepare_folders_files,
-):
+    seq_copy_these: "Sequence[Path]",
+    in_relpath: str,
+    out_relpath: str,
+    is_in_empty_expected: bool,
+    expected_out: str,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """If .in is empty file pip-compile creates 1B file. Create 0B instead"""
-    # pytest -vv --showlocals --log-level INFO -k "test_empty_in_empty_out" tests
+    # pytest -s -vv --showlocals -k "test_empty_in_empty_out" tests
+    abspath_tests_dir = request.path.parent
     # prepare
     #    dest folders
     path_dir = cast("Path", resolve_joinpath(tmp_path, "requirements"))
     path_dir.mkdir(parents=True, exist_ok=True)
 
     #    copy seq_copy_these
-    for abspath_src in seq_copy_these:
+    for relpath_src in seq_copy_these:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         src_abspath = str(abspath_src)
         abspath_dest = tmp_path / "requirements" / abspath_src.name
         shutil.copy2(src_abspath, abspath_dest)
@@ -268,15 +297,16 @@ ids_compile_one = (
     ids=ids_compile_one,
 )
 def test_compile_one_normal(
-    seq_copy_these,
-    in_relpath,
-    out_relpath,
-    expected_file_size_bytes,
-    tmp_path,
-):
+    seq_copy_these: "Sequence[Path]",
+    in_relpath: str,
+    out_relpath: str,
+    expected_file_size_bytes: "Union[int, None]",
+    tmp_path: "Path",
+) -> None:
     """Use pip-compile to compile lock an .in file. No bypass for empty .in file"""
-    # pytest -vv --showlocals --log-level INFO -k "test_compile_one_normal" tests
+    # pytest -s -vv --showlocals -k "test_compile_one_normal" tests
     path_ep = resolve_path("pip-compile")
+    assert path_ep is not None
     ep_path = str(path_ep)
     path_cwd = tmp_path
     context = ".venv"
@@ -288,9 +318,8 @@ def test_compile_one_normal(
 
     #    Copy real .in files
     for abspath_src in seq_copy_these:
-        src_abspath = str(abspath_src)
         abspath_dest = tmp_path / "requirements" / abspath_src.name
-        shutil.copy2(src_abspath, abspath_dest)
+        shutil.copy2(abspath_src.as_posix(), abspath_dest.as_posix())
     abspath_in = cast("Path", resolve_joinpath(tmp_path, in_relpath))
     abspath_out = cast("Path", resolve_joinpath(tmp_path, out_relpath))
     in_abspath = abspath_in.as_posix()
@@ -316,7 +345,9 @@ def test_compile_one_normal(
     # verify
     t_msg_failure = (context, Path(out_abspath), err_details)
     t_failures = (t_msg_failure,)
-    if err_details is not None and is_timeout(t_failures):
+    if err_details is not None and is_timeout(
+        cast("Iterable[tuple[Any, Any, str]]", t_failures),
+    ):
         pytest.skip("lock_compile requires a web connection")
     else:
         assert optabspath_out is not None
@@ -384,13 +415,13 @@ ids_lock_file_paths_to_relpath = ("remove absolute paths from .lock file",)
     ids=ids_lock_file_paths_to_relpath,
 )
 def test_lock_file_paths_to_relpath(
-    seq_reqs_relpath,
-    lock_file_contents,
-    expected_contents,
-    dest_relpath,
-    tmp_path,
-    prepare_folders_files,
-):
+    seq_reqs_relpath: "Sequence[str]",
+    lock_file_contents: str,
+    expected_contents: str,
+    dest_relpath: str,
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """When creating .lock files post processor abs path --> relative path."""
     # pytest --showlocals --log-level INFO -k "test_lock_file_paths_to_relpath" tests
     # prepare
@@ -414,18 +445,17 @@ def test_lock_file_paths_to_relpath(
 
 testdata_lock_compile_live = (
     pytest.param(
-        Path(__file__).parent.joinpath("_req_files", "venvs_minimal.pyproject_toml"),
+        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
         ".tools",
         (
             "requirements/pins.shared.in",
             "docs/pip-tools.in",
         ),
         "docs/pip-tools.in",
-        "docs/pip-tools.out",
         does_not_raise(),
     ),
     pytest.param(
-        Path(__file__).parent.joinpath("_req_files", "venvs_minimal.pyproject_toml"),
+        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
         ".venv",
         (
             "requirements/pins.shared.in",
@@ -433,7 +463,6 @@ testdata_lock_compile_live = (
             "requirements/pip-tools.in",
         ),
         "requirements/pip-tools.in",
-        "requirements/pip-tools.out",
         does_not_raise(),
     ),
 )
@@ -449,41 +478,49 @@ ids_lock_compile_live = (
     reason="dependency package pip-tools is required",
 )
 @pytest.mark.parametrize(
-    "path_config, venv_relpath, seq_reqs_relpath, in_relpath, out_relpath, expectation",
+    "path_config, venv_relpath, seq_reqs_relpath, in_relpath, expectation",
     testdata_lock_compile_live,
     ids=ids_lock_compile_live,
 )
 def test_lock_compile_live(
-    path_config,
-    venv_relpath,
-    seq_reqs_relpath,
-    in_relpath,
-    out_relpath,
-    expectation,
-    tmp_path,
-    path_project_base,
-    prep_pyproject_toml,
-    prepare_folders_files,
-    logging_strict,
-):
+    path_config: "Path",
+    venv_relpath: str,
+    seq_reqs_relpath: str,
+    in_relpath: str,
+    expectation: "DOES_NOT_OR_DOES",
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    path_project_base: "Callable[[], Path]",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Test lock_compile. Bypass applied for empty .in file, unlike _compile_one."""
-    # pytest -vv --showlocals --log-level INFO -k "test_lock_compile_live" tests
+    # pytest -s -vv --showlocals --log-level INFO -k "test_lock_compile_live" tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(path_config)
     t_two = logging_strict()
     logger, loggers = t_two
 
     path_cwd = path_project_base()
     # prepare
     #    pyproject.toml
-    path_f = prep_pyproject_toml(path_config, tmp_path)
+    path_f = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
 
     # Act
     #    Test without copying over support files
     loader = VenvMapLoader(path_f.as_posix())
     with pytest.raises(NotADirectoryError):
-        lock_compile(loader, venv_relpath)
+        lock_compile(
+            loader,
+            venv_relpath,  # type: ignore[arg-type]
+        )
     #    Test not filtering by venv relpath
     with pytest.raises(NotADirectoryError):
-        lock_compile(loader, None)
+        lock_compile(
+            loader,
+            None,  # type: ignore[arg-type]
+        )
 
     #    create folders (venv and requirements folders)
     venv_relpaths = (
@@ -556,7 +593,7 @@ def test_lock_compile_live(
         t_compiled, t_failures = t_status
         assert isinstance(t_failures, tuple)
         assert isinstance(t_compiled, tuple)
-        if is_timeout(t_failures):
+        if is_timeout(cast("Iterable[tuple[Any, Any, str]]", t_failures)):
             pytest.skip("lock_compile requires a web connection")
         else:
             is_no_failures = len(t_failures) == 0
@@ -567,7 +604,7 @@ def test_lock_compile_live(
 
 testdata_compile_malformed_in = (
     (
-        (Path(__file__).parent.joinpath("_malformed_in/malformed-pip.in"),),
+        (Path("_malformed_in").joinpath("malformed-pip.in"),),
         "requirements/malformed-pip.in",
         "requirements/malformed-pip.lock",
     ),
@@ -585,11 +622,12 @@ ids_compile_malformed_in = ("mix up order oper ver package",)
     ids=ids_compile_malformed_in,
 )
 def test_compile_malformed_in(
-    seq_copy_these,
-    in_relpath,
-    out_relpath,
-    tmp_path,
-):
+    seq_copy_these: "Sequence[Path]",
+    in_relpath: str,
+    out_relpath: str,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+) -> None:
     """Attempt to pip-compile a malformed .in file.
 
     .. seealso::
@@ -600,6 +638,8 @@ def test_compile_malformed_in(
 
     """
     # pytest -vv --showlocals --log-level INFO -k "test_compile_malformed_in" tests
+    abspath_tests_dir = request.path.parent
+
     path_ep = resolve_path("pip-compile")
     ep_path = str(path_ep)
     path_cwd = tmp_path
@@ -613,10 +653,10 @@ def test_compile_malformed_in(
     path_venv.mkdir(parents=True, exist_ok=True)
 
     #    Copy real .in files
-    for abspath_src in seq_copy_these:
-        src_abspath = str(abspath_src)
+    for relpath_src in seq_copy_these:
+        abspath_src = abspath_tests_dir.joinpath(relpath_src)
         abspath_dest = tmp_path / "requirements" / abspath_src.name
-        shutil.copy2(src_abspath, abspath_dest)
+        shutil.copy2(abspath_src.as_posix(), abspath_dest.as_posix())
     abspath_in = cast("Path", resolve_joinpath(tmp_path, in_relpath))
     abspath_out = cast("Path", resolve_joinpath(tmp_path, out_relpath))
     in_abspath = abspath_in.as_posix()
@@ -675,7 +715,7 @@ ids_is_timeout = (
     testdata_is_timeout,
     ids=ids_is_timeout,
 )
-def test_is_timeout(msg, timeout_expected):
+def test_is_timeout(msg: str, timeout_expected: bool) -> None:
     """Exercise is_timeout"""
     # pytest -vv --showlocals --log-level INFO -k "test_is_timeout" tests
     t_three = (None, None, msg)

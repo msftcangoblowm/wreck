@@ -1,6 +1,13 @@
 """
 From setuptools-scm (MIT)
 
+There is no validation occurring, let alone validation against a schema.
+If there is ever a choice, always choose YAML, not TOML. Eventhough the
+former is less human friendly.
+
+Not validating inputs is a classic, often avoidable at the cost of
+effort, exploitable security risk.
+
 .. py:class:: TOML_RESULT
 
 .. py:data:: TOML_RESULT
@@ -24,10 +31,6 @@ From setuptools-scm (MIT)
 
    Module exports
 
-.. seealso::
-
-   `pyproject_reading.py <https://github.com/pypa/setuptools-scm/blob/main/src/setuptools_scm/_integration/toml.py>`_
-
 """
 
 from __future__ import annotations
@@ -35,6 +38,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable
 from typing import (
+    TYPE_CHECKING,
     Any,
     TypedDict,
     cast,
@@ -44,8 +48,8 @@ if sys.version_info >= (3, 11):  # pragma: no cover py-gte-311-else
     import tomllib
     from tomllib import loads as load_toml
 else:  # pragma: no cover py-gte-311
-    import tomli as tomllib
-    from tomli import loads as load_toml
+    import tomli as tomllib  # pyright: ignore[reportMissingImports]
+    from tomli import loads as load_toml  # pyright: ignore[reportMissingImports]
 
 TOML_RESULT = dict[str, Any]
 TOML_LOADER = Callable[[str], TOML_RESULT]
@@ -119,8 +123,10 @@ def load_toml_or_inline_map(data):
     :returns: toml data as a dict
     :rtype: dict[str, typing.Any]
     """
-    is_ng = data is None or not isinstance(data, str) or len(data.strip()) == 0
-    if is_ng:
+    if TYPE_CHECKING:
+        ret: dict[str, Any]
+
+    if data is None or not isinstance(data, str) or not bool(data.strip()):
         ret = {}
     else:
         # non-empty str

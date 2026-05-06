@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_lock_util.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -17,7 +23,10 @@ from pathlib import (
     Path,
     PurePath,
 )
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
@@ -36,6 +45,16 @@ from wreck.lock_util import (
     is_suffixes_ok,
     replace_suffixes_last,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import Union
+
+    from tests.typing_only import DOES_NOT_OR_DOES
 
 testdata_is_shared = (
     (
@@ -120,11 +139,17 @@ ids_is_shared = (
     testdata_is_shared,
     ids=ids_is_shared,
 )
-def test_lock_util_is_shared(file_name, expectation, expected_is_shared):
+def test_lock_util_is_shared(
+    file_name: "Union[float, str, None]",
+    expectation: "DOES_NOT_OR_DOES",
+    expected_is_shared: bool,
+) -> None:
     """Test is_shared."""
     # pytest --showlocals --log-level INFO -k "test_lock_util_is_shared" tests
     with expectation:
-        actual = is_shared(file_name)
+        actual = is_shared(
+            file_name,  # type: ignore[arg-type]
+        )
     if isinstance(expectation, does_not_raise):
         """
         args = (file_name,)
@@ -169,13 +194,13 @@ ids_replace_suffixes_last = (
     ids=ids_replace_suffixes_last,
 )
 def test_replace_suffixes_last(
-    file_name,
-    suffix,
-    expectation,
-    expected_file_name,
-    tmp_path,
-    prepare_folders_files,
-):
+    file_name: str,
+    suffix: str,
+    expectation: "DOES_NOT_OR_DOES",
+    expected_file_name: str,
+    tmp_path: "Path",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """Test replace_suffixes_last."""
     # pytest --showlocals --log-level INFO -k "test_replace_suffixes_last" tests
     # prepare
@@ -258,11 +283,17 @@ ids_is_suffixes_ok = (
     testdata_is_suffixes_ok,
     ids=ids_is_suffixes_ok,
 )
-def test_is_suffixes_ok(relpath, stem, expectation):
+def test_is_suffixes_ok(
+    relpath: "Union[str, Path, float]",
+    stem: str,
+    expectation: "DOES_NOT_OR_DOES",
+) -> None:
     """Test is_suffixes_ok. Demonstrate invalid relpath."""
     # pytest --showlocals --log-level INFO -k "test_is_suffixes_ok" tests
     with expectation:
-        is_suffixes_ok(relpath)
+        is_suffixes_ok(
+            relpath,  # type: ignore[arg-type]
+        )
 
 
 testdata_check_relpath = (
@@ -280,11 +311,11 @@ ids_check_relpath = ("pip.in 1 constraint 3 requirements",)
     ids=ids_check_relpath,
 )
 def test_check_relpath(
-    relpath,
-    expectation,
-    path_project_base,
-    tmp_path,
-):
+    relpath: "Path",
+    expectation: "DOES_NOT_OR_DOES",
+    path_project_base: "Callable[[], Path]",
+    tmp_path: "Path",
+) -> None:
     """check_relpath is relpath relative to cwd"""
     # pytest --showlocals --log-level INFO -k "test_check_relpath" tests
     # prepare
@@ -357,12 +388,12 @@ ids_abspath_relative_to_package_base_folder = (
     ids=ids_abspath_relative_to_package_base_folder,
 )
 def test_abspath_relative_to_package_base_folder(
-    abspath_f,
-    constraint_relpath,
-    expectation,
-    expected_relpath,
-    path_project_base,
-):
+    abspath_f: "Path",
+    constraint_relpath: str,
+    expectation: "DOES_NOT_OR_DOES",
+    expected_relpath: str,
+    path_project_base: "Callable[[], Path]",
+) -> None:
     """Normalize requirement file constraint or requirement relpath to cwd"""
     # pytest --showlocals --log-level INFO -k "test_abspath_relative_to_package_base_folder" tests
     # prepare

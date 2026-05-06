@@ -21,13 +21,13 @@ version_xyz = f"{v.major}.{v.minor}.{v.micro}"
 version_long = str(v)
 
 # @@@ editable
-copyright = "2024–2025, Dave Faulkmore"
+copyright = "2024–2026, Dave Faulkmore"
 # The short X.Y.Z version.
 version = version_xyz
 # The full version, including alpha/beta/rc tags.
-release = "0.3.2"
+release = "0.3.6.dev0"
 # The date of release, in "monthname day, year" format.
-release_date = "February 07, 2025"
+release_date = "May 06, 2026"
 # @@@ end
 
 v = parse(release)

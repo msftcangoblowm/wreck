@@ -62,6 +62,12 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - fix(cli_dependencies): reqs fix two option with short option -v
+   - fix: click remove version pin
+   - chore: drop py39 support
+   - chore: static type checking both mypy pyright
+   - ci: bump versions
+
 .. scriv-start-here
 
 .. _changes_0-3-5:

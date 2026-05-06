@@ -18,6 +18,7 @@ from pathlib import (
     Path,
     PurePath,
 )
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -34,6 +35,19 @@ if sys.version_info >= (3, 11):  # pragma: no cover py-gte-311-else
 else:  # pragma: no cover py-gte-311
     import tomli as tomllib
 
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import Callable
+    from typing import (
+        Any,
+        Union,
+    )
+
+    from tests.typing_only import DOES_NOT_OR_DOES
+
+    testdata_pyproject_data: Sequence[
+        tuple[str, dict[str, str], dict[str, str], dict[str, str], str]
+    ]
 
 testdata_pyproject_data = (
     (
@@ -63,13 +77,13 @@ ids_pyproject_data = (
     ids=ids_pyproject_data,
 )
 def test_pyproject_data(
-    tool_name,
-    section,
-    project,
-    section_parent,
-    expected_project_name,
-    tmp_path,
-):
+    tool_name: str,
+    section: dict[str, str],
+    project: dict[str, str],
+    section_parent: dict[str, str],
+    expected_project_name: str,
+    tmp_path: "Path",
+) -> None:
     """From pyproject.toml confirm can get project name."""
     # pytest --showlocals -vv --log-level INFO -k "test_pyproject_data" tests
     data = PyProjectData(tmp_path, tool_name, project, section, section_parent)
@@ -82,55 +96,37 @@ def test_pyproject_data(
 testdata_read_pyproject_normal = (
     (
         "drain-swamp",
-        Path(__file__).parent.joinpath(
-            "_good_files",
-            "complete-manage-pip-prod-unlock.pyproject_toml",
-        ),
+        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
         does_not_raise(),
         "drain-swamp",
     ),
     (
         ("drain-swamp",),
-        Path(__file__).parent.joinpath(
-            "_good_files",
-            "complete-manage-pip-prod-unlock.pyproject_toml",
-        ),
+        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
         does_not_raise(),
         "drain-swamp",
     ),
     (
         "drain-swamp",
-        Path(__file__).parent.joinpath(
-            "_unsynced",
-            "unsynced_1.lock",
-        ),
+        Path("_unsynced").joinpath("unsynced_1.lock"),
         pytest.raises(tomllib.TOMLDecodeError),
         "drain-swamp",
     ),
     (
         ("wreck.venvs", 7),
-        Path(__file__).parent.joinpath(
-            "_duplicate_line",
-            "prod_and_dev.pyproject_toml",
-        ),
+        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
         does_not_raise(),
         "wreck.venvs",
     ),
     (
         ("wreck.venvs", "   "),
-        Path(__file__).parent.joinpath(
-            "_duplicate_line",
-            "prod_and_dev.pyproject_toml",
-        ),
+        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
         does_not_raise(),
         "wreck.venvs",
     ),
     (
         "wreck.venvs",
-        Path(__file__).parent.joinpath(
-            "_duplicate_line",
-            "prod_and_dev.pyproject_toml",
-        ),
+        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
         does_not_raise(),
         "wreck.venvs",
     ),
@@ -146,62 +142,57 @@ ids_read_pyproject_normal = (
 
 
 @pytest.mark.parametrize(
-    "tool_name, p_toml_file, expectation, expected_tool_name",
+    "tool_name, relpath_toml_file, expectation, expected_tool_name",
     testdata_read_pyproject_normal,
     ids=ids_read_pyproject_normal,
 )
 def test_read_pyproject_normal(
-    tool_name,
-    p_toml_file,
-    expectation,
-    expected_tool_name,
-    tmp_path,
-    prep_pyproject_toml,
-):
+    tool_name: "Union[str, tuple[Any, ...]]",
+    relpath_toml_file: "Path",
+    expectation: "DOES_NOT_OR_DOES",
+    expected_tool_name: str,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+) -> None:
     """Call ReadPyproject __call__. Pass in kwargs."""
     # pytest --showlocals -vv --log-level INFO -k "test_read_pyproject_normal" tests
     # pytest --showlocals -vv --log-level INFO tests/test_patch_pyproject_reading.py::test_read_pyproject_normal\[empty\ str\ or\ whitespace\ ignored\] tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(relpath_toml_file)
+
     # prepare
-    prep_pyproject_toml(p_toml_file, tmp_path)
+    prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
 
     with expectation:
-        data = ReadPyproject()(path=p_toml_file, tool_name=tool_name)
+        data = ReadPyproject()(path=path_pyproject_toml, tool_name=tool_name)
     if isinstance(expectation, does_not_raise):
         assert issubclass(type(data.path), PurePath)
         assert isinstance(data.tool_name, str)
         assert isinstance(data.section, (dict, Sequence))
         assert isinstance(data.project, dict)
-        assert data.path == p_toml_file
+        assert data.path == path_pyproject_toml
         assert data.tool_name == expected_tool_name
 
 
 testdata_read_pyproject_copyright_and_version = (
     (
         "Bob",
-        Path(__file__).parent.joinpath(
-            "_good_files",
-            "full-course-meal-and-shower.pyproject_toml",
-        ),
+        Path("_good_files").joinpath("full-course-meal-and-shower.pyproject_toml"),
         pytest.raises(LookupError),
         False,
         False,
     ),
     (
         "Bob",
-        Path(__file__).parent.joinpath(
-            "_good_files",
-            "complete-manage-pip-prod-unlock.pyproject_toml",
-        ),
+        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
         pytest.raises(LookupError),
         False,
         True,
     ),
     (
         "drain-swamp",
-        Path(__file__).parent.joinpath(
-            "_good_files",
-            "complete-manage-pip-prod-unlock.pyproject_toml",
-        ),
+        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
         does_not_raise(),
         True,
         True,
@@ -210,10 +201,7 @@ testdata_read_pyproject_copyright_and_version = (
         [
             "drain-swamp",
         ],
-        Path(__file__).parent.joinpath(
-            "_good_files",
-            "complete-manage-pip-prod-unlock.pyproject_toml",
-        ),
+        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
         does_not_raise(),
         True,
         True,
@@ -233,16 +221,20 @@ ids_read_pyproject_copyright_and_version = (
     ids=ids_read_pyproject_copyright_and_version,
 )
 def test_read_pyproject_copyright_and_version(
-    tool_name,
-    p_toml_file,
-    expectation,
-    in_keys_version_file,
-    in_keys_copyright,
-):
+    tool_name: "Union[str, Sequence[str]]",
+    p_toml_file: "Path",
+    expectation: "DOES_NOT_OR_DOES",
+    in_keys_version_file: bool,
+    in_keys_copyright: bool,
+    request: "pytest.FixtureRequest",
+) -> None:
     """ReadPyproject __call__ exceptions."""
     # pytest --showlocals -vv --log-level INFO -k "test_read_pyproject_copyright_and_version" tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(p_toml_file)
+
     with expectation:
-        data_1 = ReadPyproject()(path=p_toml_file, tool_name=tool_name)
+        data_1 = ReadPyproject()(path=path_pyproject_toml, tool_name=tool_name)
     if isinstance(expectation, does_not_raise):
         assert isinstance(data_1.project, dict)
         assert isinstance(data_1.section, dict)
@@ -254,7 +246,7 @@ def test_read_pyproject_copyright_and_version(
         assert in_keys_version_file == ("version_file" in keys)
 
 
-def test_update_dict_strict():
+def test_update_dict_strict() -> None:
     """Update a ReadPyprojectStrict dict."""
     # pytest --showlocals -vv --log-level INFO -k "test_update_dict_strict" tests
     d_a = {"root": "the root"}
@@ -359,14 +351,14 @@ ids_toml_array_of_tables = (
     ids=ids_toml_array_of_tables,
 )
 def test_toml_array_of_tables(
-    toml_contents,
-    tool_name,
-    key_name,
-    expectation,
-    expected_section_items_count,
-    tmp_path,
-    logging_strict,
-):
+    toml_contents: str,
+    tool_name: str,
+    key_name: str,
+    expectation: "DOES_NOT_OR_DOES",
+    expected_section_items_count: int,
+    tmp_path: "Path",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """Support list[dict]"""
     # pytest --showlocals -vv --log-level INFO -k "test_toml_array_of_tables" tests
     t_two = logging_strict()
@@ -395,6 +387,10 @@ def test_toml_array_of_tables(
     pass
 
 
+if TYPE_CHECKING:
+    testdata_load_toml_or_inline_map: Sequence[
+        tuple[Union[str, None], dict[str, dict[str, str]]]
+    ]
 testdata_load_toml_or_inline_map = (
     (
         None,
@@ -431,7 +427,10 @@ ids_load_toml_or_inline_map = (
     testdata_load_toml_or_inline_map,
     ids=ids_load_toml_or_inline_map,
 )
-def test_load_toml_or_inline_map(str_in, d_expected):
+def test_load_toml_or_inline_map(
+    str_in: "Union[str, None]",
+    d_expected: dict[str, dict[str, str]],
+) -> None:
     """Test load_toml_or_inline_map can take Any and smile."""
     # pytest --showlocals -vv --log-level INFO -k "test_load_toml_or_inline_map" tests
     d_actual = load_toml_or_inline_map(str_in)

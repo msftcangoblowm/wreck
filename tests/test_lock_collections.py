@@ -14,7 +14,10 @@ Unit test -- Module
 import shutil
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
 
@@ -33,15 +36,26 @@ from wreck.lock_fixing import Fixing
 from wreck.lock_util import replace_suffixes_last
 from wreck.pep518_venvs import VenvMapLoader
 
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import Union
+
+    from tests.typing_only import DOES_NOT_OR_DOES
+
 testdata_why_did_you_do_that = (
     (
-        Path(__file__).parent.joinpath("_req_files", "venvs_minimal.pyproject_toml"),
+        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
         ".tools",
         ("docs/pip-tools",),
         pytest.raises(MissingRequirementsFoldersFiles),
     ),
     (
-        Path(__file__).parent.joinpath("_req_files", "venvs_minimal.pyproject_toml"),
+        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
         ".dogfood",
         ("docs/pip-tools",),
         pytest.raises(KeyError),
@@ -59,17 +73,21 @@ ids_why_did_you_do_that = (
     ids=ids_why_did_you_do_that,
 )
 def test_why_did_you_do_that(
-    path_config,
-    venv_relpath,
-    req_files,
-    expectation,
-    tmp_path,
-    path_project_base,
-    prepare_folders_files,
-    prep_pyproject_toml,
-):
+    path_config: "Path",
+    venv_relpath: str,
+    req_files: "Sequence[str]",
+    expectation: "DOES_NOT_OR_DOES",
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    path_project_base: "Callable[[], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+) -> None:
     """venv relpath is not supposed to be an absolute path."""
     # pytest --showlocals --log-level INFO -k "test_why_did_you_do_that" tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(path_config)
+
     path_cwd = path_project_base()
     abspath_venv = cast("Path", resolve_joinpath(tmp_path, venv_relpath))
     seq_base_dir = (
@@ -80,7 +98,7 @@ def test_why_did_you_do_that(
 
     # prepare
     #    pyproject.toml
-    abspath_config_dest = prep_pyproject_toml(path_config, tmp_path)
+    abspath_config_dest = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
     config_dest_abspath = str(abspath_config_dest)
 
     #    folders
@@ -109,7 +127,7 @@ def test_why_did_you_do_that(
 
     loader = VenvMapLoader(config_dest_abspath)
     #    Will convert abspath_venv --> venv_relpath
-    ins = Ins(loader, abspath_venv)
+    ins = Ins(loader, abspath_venv.as_posix())
     #    __len__ and __iter__
     assert len(iter(ins)) == 0
     #    __contains__
@@ -125,10 +143,7 @@ def test_why_did_you_do_that(
 
 testdata_ins_realistic = (
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".venv",
         (
             (
@@ -192,10 +207,7 @@ testdata_ins_realistic = (
         4,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".venv",
         (
             (
@@ -245,10 +257,7 @@ testdata_ins_realistic = (
         0,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_no_unlock_pins",
-            "prod_and_dev.pyproject_toml",
-        ),
+        Path("_no_unlock_pins").joinpath("prod_and_dev.pyproject_toml"),
         ".venv",
         (
             (
@@ -289,10 +298,7 @@ testdata_ins_realistic = (
         2,
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_no_unlock_pins",
-            "prod_and_dev.pyproject_toml",
-        ),
+        Path("_no_unlock_pins").joinpath("prod_and_dev.pyproject_toml"),
         ".venv",
         (
             (
@@ -343,30 +349,33 @@ ids_ins_realistic = (
     ids=ids_ins_realistic,
 )
 def test_ins_realistic(
-    path_config,
-    venv_path,
-    seq_reqs_primary,
-    seq_reqs_support,
-    seq_empties,
-    req_base_empties,
-    expectation,
-    pkg_pin_count_expected,
-    path_unlocks_expected,
-    tmp_path,
-    prep_pyproject_toml,
-    prepare_folders_files,
-    logging_strict,
-):
+    path_config: "Path",
+    venv_path: str,
+    seq_reqs_primary: "Sequence[tuple[Path, str]]",
+    seq_reqs_support: "Sequence[tuple[Path, str]]",
+    seq_empties: "Sequence[str]",
+    req_base_empties: "Sequence[str]",
+    expectation: "DOES_NOT_OR_DOES",
+    pkg_pin_count_expected: int,
+    path_unlocks_expected: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """test wreck.lock_collections.Ins"""
     # pytest -vv --showlocals --log-level INFO -k "test_ins_realistic" tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_collections.py::test_ins_realistic\[Has\ both\ requirements\ and\ constraints\] tests
     # pytest -vv --showlocals --log-level INFO tests/test_lock_collections.py::test_ins_realistic\[do\ not\ create\ pins\ unlock\ files\] tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(path_config)
     t_two = logging_strict()
     logger, loggers = t_two
 
     # prepare
     #    pyproject.toml or [something].pyproject_toml
-    path_dest_config = prep_pyproject_toml(path_config, tmp_path)
+    path_dest_config = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
 
     #    venv folders must exist. This fixture creates files. So .python-version
     #    requirements empty files and folders; no .unlock or .lock files
@@ -479,10 +488,7 @@ def test_ins_realistic(
 
 testdata_duplicate_lines = (
     (
-        Path(__file__).parent.joinpath(
-            "_duplicate_line",
-            "prod_and_dev.pyproject_toml",
-        ),
+        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
         ".venv",
         (
             (
@@ -526,16 +532,17 @@ ids_duplicate_lines = ("in dev.unlock expect one line not two",)
 )
 @pytest.mark.logging_package_name(g_app_name)
 def test_duplicate_lines(
-    path_config,
-    venv_path,
-    seq_reqs_primary,
-    seq_reqs_support,
-    pattern,
-    num_lines_expected,
-    tmp_path,
-    prep_pyproject_toml,
-    prepare_folders_files,
-):
+    path_config: "Path",
+    venv_path: str,
+    seq_reqs_primary: "Sequence[tuple[Path, str]]",
+    seq_reqs_support: "Sequence[tuple[Path, str]]",
+    pattern: str,
+    num_lines_expected: int,
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+) -> None:
     """Verify .unlock duplicate lines removed.
 
     **Could not reproduce the cause**, instead
@@ -552,9 +559,11 @@ def test_duplicate_lines(
 
     """
     # pytest -vv --showlocals --log-level INFO -k "test_duplicate_lines" tests
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(path_config)
     # prepare
     #    pyproject.toml or [something].pyproject_toml
-    path_dest_config = prep_pyproject_toml(path_config, tmp_path)
+    path_dest_config = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
 
     #    venv folders must exist. This fixture creates files. So .python-version
     venvs_path = (

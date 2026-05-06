@@ -224,26 +224,21 @@ class PinDatum(Hashable):
            - :py:exc:`TypeError` -- right operand is unsupported type
 
         """
-        is_ng = right is None or not isinstance(right, PinDatum)
-        if is_ng:
+        if right is None or not isinstance(right, PinDatum):  # pragma: no branch
             msg_warn = f"Expecting an PinDatum got unsupported type {type(right)}"
             raise TypeError(msg_warn)
-        else:  # pragma: no cover
-            pass
 
         """For purposes of sorting, comparing PinDatum from different
         files is not allowed"""
         is_different_file = (
             self.file_abspath.as_posix() != right.file_abspath.as_posix()
         )
-        if is_different_file:
+        if is_different_file:  # pragma: no branch
             msg_warn = (
                 f"PinDatum from different files cannot be compared "
                 f"left {self.file_abspath!r} right {self.file_abspath!r}"
             )
             raise TypeError(msg_warn)
-        else:  # pragma: no cover
-            pass
 
         # InFiles container stores InFile within a set. So no duplicates
         # Compares tuple(stem_a, relpath_a) vs tuple(stem_b, relpath_b)
@@ -400,21 +395,23 @@ def in_generic(
         str_set_name = str(set_name)
 
     if is_abspath_ok is None or not isinstance(is_abspath_ok, bool):
-        is_abspath_ok = False
-    else:  # pragma: no cover
-        pass
+        abspath_ok = False
+    else:
+        abspath_ok = is_abspath_ok
 
     ret = False
     set_ = getattr(inst, str_set_name, set())
     for in_ in set_:
         # Does not do any path comparisons
-        if is_abspath_ok:
+        if abspath_ok:
             # absolute path (Path)
             mixed_path = getattr(in_, field_name, None)
             is_match_path = (
                 mixed_path is not None
+                and val is not None
                 and issubclass(type(val), PurePath)
-                and val.is_absolute()
+                and hasattr(val, "is_absolute")
+                and Path(val).is_absolute()
                 and str(mixed_path) == str(val)
             )
             is_match_str = (
@@ -432,7 +429,8 @@ def in_generic(
             is_match_path = (
                 val is not None
                 and issubclass(type(val), PurePath)
-                and not val.is_absolute()
+                and hasattr(val, "is_absolute")
+                and not Path(val).is_absolute()
                 and str_relpath == str(val)
             )
             is_match_str = (
@@ -443,9 +441,7 @@ def in_generic(
             )
 
         is_match_type = val is not None and isinstance(val, type(inst)) and in_ == val
-        if is_match_type or is_match_path or is_match_str:
+        if is_match_type or is_match_path or is_match_str:  # pragma: no branch
             ret = True
-        else:  # pragma: no cover
-            pass
 
     return ret

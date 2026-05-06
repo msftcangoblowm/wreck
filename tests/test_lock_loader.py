@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_lock_loader.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -14,7 +20,10 @@ Unit test -- Module
 import shutil
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
-from typing import cast
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 from unittest.mock import patch
 
 import pytest
@@ -35,12 +44,20 @@ from wreck.lock_loader import (
 from wreck.lock_util import replace_suffixes_last
 from wreck.pep518_venvs import VenvMapLoader
 
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import (
+        Callable,
+        MutableSet,
+        Sequence,
+    )
+    from typing import Union
+
+    from wreck.lock_datum import PinDatum
+
 testdata_loader_pindatum = (
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".venv",
         (
             (
@@ -70,10 +87,7 @@ testdata_loader_pindatum = (
         ),
     ),
     (
-        Path(__file__).parent.joinpath(
-            "_req_files",
-            "venvs.pyproject_toml",
-        ),
+        Path("_req_files").joinpath("venvs.pyproject_toml"),
         ".venv",
         (
             (
@@ -116,23 +130,31 @@ ids_loader_pindatum = (
     ids=ids_loader_pindatum,
 )
 def test_loader_pindatum(
-    path_config,
-    venv_path,
-    seq_reqs,
-    bases_relpath,
-    tmp_path,
-    prep_pyproject_toml,
-    prepare_folders_files,
-    logging_strict,
-):
+    path_config: "Path",
+    venv_path: str,
+    seq_reqs: "Sequence[tuple[Path, str]]",
+    bases_relpath: "Sequence[str]",
+    request: "pytest.FixtureRequest",
+    tmp_path: "Path",
+    prep_pyproject_toml: "Callable[[Path, Path, Union[Path, str, None]], Path]",
+    prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
+    logging_strict: "Callable[[], tuple[logging.Logger, Sequence[logging.Logger]]]",
+) -> None:
     """test FilePins."""
     # pytest -vv --showlocals --log-level INFO -k "test_loader_pindatum" tests
+    if TYPE_CHECKING:
+        set_pins_autofixed: set[PinDatum]
+        set_pindatum_0: set[PinDatum]
+        set_pindatum_1: set[PinDatum]
+
+    abspath_tests_dir = request.path.parent
+    path_pyproject_toml = abspath_tests_dir.joinpath(path_config)
     t_two = logging_strict()
     logger, loggers = t_two
 
     # prepare
     #    pyproject.toml or [something].pyproject_toml
-    path_dest_config = prep_pyproject_toml(path_config, tmp_path)
+    path_dest_config = prep_pyproject_toml(path_pyproject_toml, tmp_path, None)
     #    Careful path must be a str
     loader = VenvMapLoader(path_dest_config.as_posix())
     path_base_dir = loader.project_base
@@ -180,11 +202,11 @@ def test_loader_pindatum(
         )
 
     #    support files
-    seq_rel_paths = (
+    seq_rel_paths = [
         "requirements/pins.shared.in",
         "docs/requirements.in",
         "docs/pip-tools.in",
-    )
+    ]
     prepare_folders_files(seq_rel_paths, tmp_path)
 
     #    requirements empty files and folders
@@ -196,16 +218,16 @@ def test_loader_pindatum(
     prepare_folders_files(seq_rel_paths, tmp_path)
 
     for t_paths in seq_reqs:
-        src_abspath, dest_relpath = t_paths
+        abspath_src, dest_relpath = t_paths
 
         #    overwrite 'requirements/dev.unlock'
         abspath_dest = cast("Path", resolve_joinpath(tmp_path, dest_relpath))
         abspath_dest_in = replace_suffixes_last(abspath_dest, suffix_last=SUFFIX_IN)
-        shutil.copy(src_abspath, abspath_dest_in)
+        shutil.copy(abspath_src.as_posix(), abspath_dest_in.as_posix())
 
         #    pip-compile -o [file].lock [file].unlock
         #    careful no .shared
-        src_abspath_lock = replace_suffixes_last(src_abspath, SUFFIX_LOCKED)
+        src_abspath_lock = replace_suffixes_last(abspath_src, SUFFIX_LOCKED)
         abspath_dest_lock = replace_suffixes_last(abspath_dest_in, SUFFIX_LOCKED)
         shutil.copy(src_abspath_lock, abspath_dest_lock)
 
@@ -249,14 +271,14 @@ def test_loader_pindatum(
 
     # act
     #    filter by pin False and .lock file
-    set_pindatum_0 = LoaderPinDatum()(
+    set_pindatum_1 = LoaderPinDatum()(
         loader,
         venv_path,
         suffix=SUFFIX_LOCKED,
         filter_by_pin=False,
     )
     # verify
-    is_there_will_be_pins = len(set_pindatum_0) != 0
+    is_there_will_be_pins = len(set_pindatum_1) != 0
     assert is_there_will_be_pins is True
 
 
@@ -279,7 +301,10 @@ ids_check_filter_by_pin = (
     testdata_check_filter_by_pin,
     ids=ids_check_filter_by_pin,
 )
-def test_check_filter_by_pin(val, expected):
+def test_check_filter_by_pin(
+    val: "Union[float, bool, None]",
+    expected: bool,
+) -> None:
     """Test _check_filter_by_pin"""
     # pytest -vv --showlocals --log-level INFO -k "test_check_filter_by_pin" tests
     actual = _check_filter_by_pin(val)
