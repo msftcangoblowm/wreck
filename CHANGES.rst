@@ -62,6 +62,8 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - ci: Replace Python with Bash to create VER_SHORT and OS_SHORT for tox-test.ini
+   - ci: remove dependency tox-gh-actions
    - ci: empty project extra, toml
    - ci(testsuite): replace os short ubuntu with linux
    - chore: bump dependencies impacted by pins of tox and tox-gh

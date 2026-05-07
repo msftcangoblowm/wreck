@@ -100,15 +100,24 @@ jobs:
       run: |
         python -m build
 
-    - name: get-os-short
-      # tox needs just the OS; platform is `{OS}-{OS version}`
-      # matrix.os-short side effect, more matrix runs; total * [OS count]
+    - name: Set OS and Python short vars
       run: |
-        python -c 'import os; lst="${{ matrix.platform }}".split("-"); os_short = lst[0]; env_file = os.environ.get("GITHUB_ENV"); f = open(env_file, "a"); print(f"OS_SHORT={os_short}", file=f); f.close();'
-        python -c 'import os; pyclean = "${{ matrix.python-version }}" if not "${{ matrix.python-version }}".endswith("-nightly") else "${{ matrix.python-version }}".strip("-nightly"); env_file = os.environ.get("GITHUB_ENV"); f = open(env_file, "a"); print(f"PY_CLEAN={pyclean}", file=f); f.close();'
+        platform="${{ matrix.platform }}"
+        python_version="${{ matrix.python-version }}"
+        echo "OS_SHORT=${platform%%-*}" >> $GITHUB_ENV
+        echo "OS_SHORT=${OS_SHORT/ubuntu/linux}" >> $GITHUB_ENV
+        # Remove '-nightly' suffix if present
+        python_version=${python_version%-nightly}
+        if [[ "$python_version" == pypy-* ]]; then
+          ver_short="${python_version//-/}"  # pypy3.10
+        else
+          ver_short="py${python_version//-/}"  # py3.14
+        fi
+        ver_short="${ver_short//./}"  # remove dots → pypy310 or py314
+        echo "VER_SHORT=$ver_short" >> $GITHUB_ENV
 
     - name: Run tox
       run: |
         echo "env.OS_SHORT ${{ env.OS_SHORT }}"
-        echo "env.PY_CLEAN ${{ env.PY_CLEAN }}"
-        python -m tox -vv -c tox-test.ini -e ${{ env.PY_CLEAN }}-${{ env.OS_SHORT }}
+        echo "env.VER_SHORT ${{ env.VER_SHORT }}"
+        python -m tox -vv -c tox-test.ini -e ${{ env.VER_SHORT }}-${{ env.OS_SHORT }}

@@ -11,4 +11,3 @@
 colorama>=0.4.6 ;platform_system=="Windows"
 tox
 tox-gh
-tox-gh-actions

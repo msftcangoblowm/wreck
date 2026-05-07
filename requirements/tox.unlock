@@ -10,6 +10,5 @@ tomli>=2.4; python_version<'3.11'
 tomli-w>=1.2
 tox>=4.31
 tox-gh
-tox-gh-actions
 typing-extensions>=4.15; python_version<'3.11'
 virtualenv>=21.1
