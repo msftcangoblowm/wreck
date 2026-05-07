@@ -119,8 +119,9 @@ jobs:
       run: |
         platform="${{ matrix.platform }}"
         python_version="${{ matrix.python-version }}"
-        echo "OS_SHORT=${platform%%-*}" >> $GITHUB_ENV
-        echo "OS_SHORT=${OS_SHORT/ubuntu/linux}" >> $GITHUB_ENV
+        OS_SHORT="${platform%%-*}"
+        OS_SHORT="${OS_SHORT/ubuntu/linux}"
+        echo "OS_SHORT=$OS_SHORT" >> $GITHUB_ENV
         if [[ "$python_version" == pypy-* ]]; then
           ver_short="${python_version//-/}"  # pypy3.10
         else

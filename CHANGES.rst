@@ -62,6 +62,7 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - ci: OS_SHORT write to GITHUB_ENV once
    - ci: Replace Python with Bash to create VER_SHORT and OS_SHORT for tox-test.ini
    - ci: remove dependency tox-gh-actions
    - ci: empty project extra, toml
