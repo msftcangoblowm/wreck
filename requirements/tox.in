@@ -10,6 +10,9 @@
 # We copy it here so it can get pinned.
 colorama>=0.4.6 ;platform_system=="Windows"
 
+# The user requested cachetools==5.5.0
+# tox 4.53.1 depends on cachetools>=7.0.3
+cachetools>=7.0.3
 # pin by tox-gh==1.7.1
 tox>=4.31
 tox-gh

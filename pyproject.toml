@@ -30,7 +30,7 @@ readme = "README.rst"
 requires-python = ">=3.10"
 classifiers = [
     "Environment :: Console",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -55,13 +55,15 @@ maintainers = [
 
 [project.urls]
 # https://github.com/pypi/warehouse/blob/70eac9796fa1eae24741525688a112586eab9010/warehouse/templates/packaging/detail.html#L20-L62
-"Documentation" = 'https://msftcangoblowm.github.io/wreck'
-"Docs (rtd)" = 'https://wreck.readthedocs.io/en/stable'
-"Changes" = 'https://raw.githubusercontent.com/msftcangoblowm/wreck/master/CHANGES.rst'
-"PyPI Releases" = 'https://pypi.org/project/wreck'
-"Source code" = 'https://github.com/msftcangoblowm/wreck'
-"Issue tracker" = 'https://github.com/msftcangoblowm/wreck/issues'
-"Mastodon" = 'https://mastodon.social/@msftcangoblowme'
+Homepage = 'https://github.com/msftcangoblowm/wreck'
+Repository = 'https://github.com/msftcangoblowm/wreck'
+Source = 'https://github.com/msftcangoblowm/wreck'
+Documentation = 'https://wreck.readthedocs.io/en/stable'
+# "Docs (gh)" = 'https://msftcangoblowm.github.io/wreck'
+Changelog = 'https://raw.githubusercontent.com/msftcangoblowm/wreck/master/CHANGES.rst'
+Releases = 'https://github.com/msftcangoblowm/wreck/releases'
+Issues = 'https://github.com/msftcangoblowm/wreck/issues'
+Mastodon = 'https://mastodon.social/@msftcangoblowme'
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -28,17 +28,6 @@ missing, raises :py:exc:`LookupError`.
 
    Module exports
 
-.. py:data:: log
-   :type: logging.Logger
-
-   module level logger
-
-.. py:data:: is_module_debug
-   :type: bool
-   :value: False
-
-   Turn on during debugging
-
 """
 
 from __future__ import annotations
@@ -60,7 +49,9 @@ from .pyproject_reading import (
     read_toml_content,
 )
 
+#: logging.Logger: module level logger
 log = logging.getLogger(f"{g_app_name}.monkey.patch_pyproject_reading")
+#: bool: on/off switch for module level debugging
 is_module_debug = False
 
 __all__ = (

@@ -1,4 +1,4 @@
-cachetools==5.5.0
+cachetools==7.1.1
     # via tox
 chardet==5.2.0
     # via tox
