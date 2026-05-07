@@ -1,12 +1,7 @@
 import logging
 from collections.abc import Callable
 from pathlib import Path
-from typing import (
-    Any,
-    Final,
-)
-
-import click
+from typing import Final
 
 from .lock_datum import PinDatum
 from .lock_discrepancy import (

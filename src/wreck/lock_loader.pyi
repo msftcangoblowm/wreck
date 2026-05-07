@@ -2,10 +2,7 @@ import abc
 from pathlib import Path
 from typing import Any
 
-from .lock_datum import (
-    DATUM,
-    PinDatum,
-)
+from .lock_datum import PinDatum
 from .lock_filepins import FilePins
 from .pep518_venvs import VenvMapLoader
 

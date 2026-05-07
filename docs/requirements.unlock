@@ -16,5 +16,5 @@ sphinx-tabs
 sphinx>=8
 sphinx_design
 sphobjinv
-tomli>=2.2.1; python_version<"3.11"
+tomli>=2.4.1; python_version<"3.11"
 typing-extensions; python_version<"3.11"

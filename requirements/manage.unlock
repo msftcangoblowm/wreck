@@ -6,6 +6,6 @@ packaging
 pip-requirements-parser
 pip-tools
 pre-commit
-tomli>=2.2.1; python_version<"3.11"
+tomli>=2.4; python_version<"3.11"
 typing-extensions; python_version<"3.11"
-virtualenv>=20.29.0
+virtualenv>=21.1

@@ -16,7 +16,7 @@ cffi==1.17.1
     # via
     #   -c requirements/pins-cffi.in
     #   cryptography
-charset-normalizer==3.4.0
+charset-normalizer==3.4.2
     # via requests
 click==8.3.3
     # via
@@ -90,7 +90,7 @@ mypy-extensions==1.0.0
     #   mypy
 nh3==0.2.17
     # via readme-renderer
-packaging==25.0
+packaging==26.2
     # via
     #   -r requirements/prod.in
     #   black
@@ -107,7 +107,7 @@ pip-tools==7.5.3
     # via -r requirements/prod.in
 pkginfo==1.10.0
     # via twine
-platformdirs==4.3.6
+platformdirs==4.9.6
     # via black
 pluggy==1.6.0
     # via pytest
@@ -169,7 +169,7 @@ strictyaml==1.7.3
     # via
     #   logging-strict
     #   pytest-logging-strict
-tomli==2.2.1 ; python_version < "3.11"
+tomli==2.4.1 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   black

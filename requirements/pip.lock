@@ -1,6 +1,6 @@
-packaging==25.0
+packaging==26.2
     # via setuptools-scm
-tomli==2.2.1 ; python_version < "3.11"
+tomli==2.4.1 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   setuptools-scm

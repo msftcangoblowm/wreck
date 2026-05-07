@@ -10,25 +10,25 @@ cibuildwheel==2.22.0
     # via -r requirements/kit.in
 dependency-groups==1.3.0
     # via cibuildwheel
-filelock==3.16.1
+filelock==3.29.0
     # via cibuildwheel
 importlib-metadata==8.7.0
     # via
     #   -r requirements/kit.in
     #   build
-packaging==25.0
+packaging==26.2
     # via
     #   auditwheel
     #   build
     #   cibuildwheel
     #   dependency-groups
-platformdirs==4.3.6
+platformdirs==4.9.6
     # via cibuildwheel
 pyelftools==0.31
     # via auditwheel
 pyproject-hooks==1.2.0
     # via build
-tomli==2.2.1 ; python_version < "3.11"
+tomli==2.4.1 ; python_version < "3.11"
     # via
     #   build
     #   cibuildwheel

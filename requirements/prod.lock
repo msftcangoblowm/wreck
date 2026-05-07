@@ -12,7 +12,7 @@ importlib-metadata==8.7.0
     #   build
 logging-strict==1.6.1
     # via -r requirements/prod.in
-packaging==25.0
+packaging==26.2
     # via
     #   -r requirements/prod.in
     #   build
@@ -35,7 +35,7 @@ six==1.17.0
     # via python-dateutil
 strictyaml==1.7.3
     # via logging-strict
-tomli==2.2.1 ; python_version < "3.11"
+tomli==2.4.1 ; python_version < "3.11"
     # via
     #   build
     #   logging-strict

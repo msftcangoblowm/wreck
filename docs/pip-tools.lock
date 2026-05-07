@@ -1,6 +1,6 @@
 certifi==2025.4.26
     # via requests
-charset-normalizer==3.4.0
+charset-normalizer==3.4.2
     # via requests
 get-pypi-latest-version==0.0.12
     # via -r docs/pip-tools.in
@@ -8,7 +8,7 @@ html5lib==1.1
     # via get-pypi-latest-version
 idna==3.10
     # via requests
-packaging==25.0
+packaging==26.2
     # via build
 pip-tools==7.4.1
     # via -r docs/pip-tools.in
@@ -20,7 +20,7 @@ requests==2.32.3
     # via get-pypi-latest-version
 six==1.17.0
     # via html5lib
-tomli==2.2.1 ; python_version < "3.11"
+tomli==2.4.1 ; python_version < "3.11"
     # via
     #   -c docs/../requirements/pins.shared.in
     #   build

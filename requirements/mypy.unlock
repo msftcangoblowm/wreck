@@ -2,6 +2,6 @@ mypy
 pytest>=7.1
 pytest-logging-strict>=0.2.3
 pytest-regressions
-tomli>=2.2.1 ; python_version<"3.11"
+tomli>=2.4 ; python_version<"3.11"
 types-setuptools>=78.1.0.20250329
 typing-extensions ; python_version<"3.11"

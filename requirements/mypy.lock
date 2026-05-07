@@ -18,7 +18,7 @@ mypy==1.15.0
     # via -r requirements/mypy.in
 mypy-extensions==1.0.0
     # via mypy
-packaging==25.0
+packaging==26.2
     # via pytest
 pathspec==0.12.1
     # via mypy
@@ -50,7 +50,7 @@ strictyaml==1.7.3
     # via
     #   logging-strict
     #   pytest-logging-strict
-tomli==2.2.1 ; python_version < "3.11"
+tomli==2.4.1 ; python_version < "3.11"
     # via
     #   -c requirements/pins.shared.in
     #   mypy
