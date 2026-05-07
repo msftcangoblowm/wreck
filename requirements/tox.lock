@@ -27,14 +27,14 @@ tomli==2.2.1 ; python_version < "3.11"
     #   -c requirements/pins.shared.in
     #   pyproject-api
     #   tox
-tox==4.23.2
+tox==4.53.1
     # via
     #   -r requirements/tox.in
     #   tox-gh
     #   tox-gh-actions
 tox-gh==1.7.1
     # via -r requirements/tox.in
-tox-gh-actions==3.2.0
+tox-gh-actions==3.5.0
     # via -r requirements/tox.in
 typing-extensions==4.15.0 ; python_version < "3.11"
     # via

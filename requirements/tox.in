@@ -10,6 +10,7 @@
 # We copy it here so it can get pinned.
 colorama>=0.4.6 ;platform_system=="Windows"
 
-tox
+# pin by tox-gh==1.7.1
+tox>=4.31
 tox-gh
 tox-gh-actions

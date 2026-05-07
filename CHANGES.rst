@@ -62,6 +62,7 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - ci: tox-gh requires tox>=4.31
    - fix(tox.ini): add tox-gh section and dependency
    - ci(release.yml): build package with py310
    - fix(cli_dependencies): reqs fix two option with short option -v
