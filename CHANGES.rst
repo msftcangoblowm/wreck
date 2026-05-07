@@ -62,6 +62,8 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - ci: empty project extra, toml
+   - ci(testsuite): replace os short ubuntu with linux
    - chore: bump dependencies impacted by pins of tox and tox-gh
    - chore: adjusted project.urls
    - fix(tox.ini): add tox-gh section and dependency

@@ -74,6 +74,8 @@ reqs = "wreck.cli_dependencies:main"
 
 [tool.setuptools.dynamic]
 dependencies = { file = ['requirements/prod.unlock'] }
+# required by drain-swamp for some unknown reason
+optional-dependencies.toml = { file = [] }
 optional-dependencies.pip = { file = ['requirements/pip.lock'] }
 optional-dependencies.pip_tools = { file = ['requirements/pip-tools.lock'] }
 optional-dependencies.dev = { file = ['requirements/dev.lock'] }

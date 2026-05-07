@@ -119,7 +119,7 @@ jobs:
       # tox needs just the OS; platform is `{OS}-{OS version}`
       # matrix.os-short side effect, more matrix runs; total * [OS count]
       run: |
-        python -c 'import os; lst="${{ matrix.platform }}".split("-"); os_short = lst[0]; env_file = os.environ.get("GITHUB_ENV"); f = open(env_file, "a"); print(f"OS_SHORT={os_short}", file=f); f.close();'
+        python -c 'import os; lst="${{ matrix.platform }}".split("-"); os_short = lst[0]; os_short = os_short.replace("ubuntu", "linux"); env_file = os.environ.get("GITHUB_ENV"); f = open(env_file, "a"); print(f"OS_SHORT={os_short}", file=f); f.close();'
 
     - name: Test with tox
       run: |
