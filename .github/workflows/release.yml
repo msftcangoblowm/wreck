@@ -30,7 +30,7 @@ jobs:
         platform:
         - ubuntu-22.04
         python-version:
-        - '3.9'
+        - '3.10'
 
     steps:
     # checkout and python-setup
