@@ -62,22 +62,26 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - ci: OS_SHORT write to GITHUB_ENV once
-   - ci: Replace Python with Bash to create VER_SHORT and OS_SHORT for tox-test.ini
-   - ci: remove dependency tox-gh-actions
-   - ci: empty project extra, toml
-   - ci(testsuite): replace os short ubuntu with linux
-   - chore: bump dependencies impacted by pins of tox and tox-gh
-   - chore: adjusted project.urls
-   - fix(tox.ini): add tox-gh section and dependency
-   - ci(release.yml): build package with py310
-   - fix(cli_dependencies): reqs fix two option with short option -v
-   - fix: click remove version pin
-   - chore: drop py39 support
-   - chore: static type checking both mypy pyright
-   - ci: bump versions
-
 .. scriv-start-here
+
+.. _changes_0-3-6:
+
+Version 0.3.6 — 2026-05-08
+--------------------------
+
+- chore: drop py39 support
+- chore: static type checking both mypy pyright
+- chore: bump dependencies impacted by pins of tox and tox-gh
+- fix(tox.ini): add tox-gh section and dependency
+- fix(cli_dependencies): reqs fix two option with short option -v
+- fix: click remove version pin
+- fix: drain-swamp require extras toml
+- chore: adjusted project.urls
+- ci: remove dependency tox-gh-actions
+- ci: bump versions
+- ci: Replace Python with Bash to create VER_SHORT and OS_SHORT for tox-test.ini
+- ci(testsuite): replace os short ubuntu with linux
+- ci(release.yml): build package with py310
 
 .. _changes_0-3-5:
 

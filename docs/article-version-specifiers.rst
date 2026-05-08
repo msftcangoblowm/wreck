@@ -4,9 +4,11 @@ Semantic versions
 This is a terse review of semantic versioning beyond just
 ``[major].[minor].[micro]`` scheme
 
-Emphasis is placed on explaining when to use: alpha, beta, rc, and post releases
+Emphasis is placed on explaining when to use: alpha, beta, rc, and post releases.
 
-`[Full article] <https://packaging.python.org/en/latest/specifications/version-specifiers/#version-scheme>`_
+.. see-also::
+
+`[version specifiers] <https://packaging.python.org/en/latest/specifications/version-specifiers/#version-scheme>`_
 
 Public version identifiers
 ---------------------------
@@ -50,7 +52,8 @@ indicated by including a pre-release segment in the version identifier:
 Final releases
 ---------------
 
-A version identifier that consists solely of a release segment and optionally an epoch identifier is termed a “final release”.
+A version identifier that consists solely of a release segment and
+optionally an epoch identifier is termed a “final release”.
 
 The release segment consists of one or more non-negative integer values, separated by dots:
 
@@ -61,14 +64,19 @@ The release segment consists of one or more non-negative integer values, separat
 Post-releases
 --------------
 
-Some projects use post-releases to address minor errors in a final release that do not affect the distributed software (for example, correcting an error in the release notes).
+Some projects use post-releases to address minor errors in a final release
+that do not affect the distributed software, e.g. correcting an error
+in the release notes.
 
 Developmental releases
 -------------------------
 
-Some projects make regular developmental releases, and system packagers (especially for Linux distributions) may wish to create early releases directly from source control which do not conflict with later project releases.
+Some projects make regular developmental releases, and system packagers
+(especially for Linux distributions) may wish to create early releases
+directly from source control which do not conflict with later project releases.
 
-If used as part of a project’s development cycle, these developmental releases are indicated by including a developmental release segment in the version identifier:
+If used as part of a project’s development cycle, these developmental releases
+are indicated by including a developmental release segment in the version identifier:
 
 .. code-block:: text
 

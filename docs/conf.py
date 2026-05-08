@@ -25,9 +25,9 @@ copyright = "2024–2026, Dave Faulkmore"
 # The short X.Y.Z version.
 version = version_xyz
 # The full version, including alpha/beta/rc tags.
-release = "0.3.6.dev7"
+release = "0.3.6"
 # The date of release, in "monthname day, year" format.
-release_date = "May 07, 2026"
+release_date = "May 09, 2026"
 # @@@ end
 
 v = parse(release)

@@ -82,10 +82,13 @@ setup docs venv and install dependencies
 
    mkdir -p .doc/.venv
    cd .doc
+   echo "3.10.14" >> .python-version
    python -m venv .venv
    . .venv/bin/activate
    python -m pip install -r ../docs/pip-tools.lock  -r ../docs/requirements.lock
-   python -m build
+   cd ../docs
+   make htmlall
+   make linkcheck
 
 When using :code:`pip install -r` **NEVER** break command into multiple calls.
 
@@ -113,9 +116,11 @@ package venv
 .. code-block:: shell
 
    mkdir .venv
-   python -m venv .venv
+   cd .venv
+   echo "3.10.14" >> .python-version
+   python -m venv .
    . .venv/bin/activate
-   python -m pip install -r requirements/pip-tools.lock -r requirements/prod.lock -r requirements/kit.lock -r requirements/manage.lock -r requirements/dev.lock
+   python -m pip install -r ../requirements/pip-tools.lock -r ../requirements/prod.unlock -r ../requirements/kit.lock -r ../requirements/manage.lock -r ../requirements/dev.lock
 
 When using :code:`pip install -r` **NEVER** break command into multiple calls.
 
@@ -164,6 +169,7 @@ The ``.tox/.python-version`` needs all the versions tox will have access to
    3.10.14
    3.11.9
    3.12.4
+   3.13.3
    pypy3.10-7.3.16
    EOF
 

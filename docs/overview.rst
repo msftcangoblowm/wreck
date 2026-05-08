@@ -14,7 +14,7 @@ Create and fix ``.lock``. Using know-how just gleened, fix ``.unlock``
 What wreck means?
 ------------------
 
-``wreck`` is a homophone (same or similar pronunciation) of req,
+|project_name| is a homophone (same or similar pronunciation) of req,
 abbreviated form of requirement. The past tense of wreck is either
 wrecked or rekt; depending on how old you are.
 
@@ -139,8 +139,8 @@ falls into these categories:
    ``.shared.in`` constraints are included into many venv, special care
    must be taken.
 
-   ``wreck`` deals with fixing requirements and constraints which apply
-   to one venv at a time. When applies to multiple venv, ``wreck`` supports
+   |project_name| deals with fixing requirements and constraints which apply
+   to one venv at a time. When applies to multiple venv, |project_name| supports
    this, but can't fix conflicts.
 
 Usage
@@ -150,16 +150,18 @@ Usage
 
 .. code-block:: shell
 
+   git add .
    req fix --venv-relpath='.venv'
    cd .tox && tox -r --root=.. -c ../tox-req.ini -e docs --workdir=.; cd - &>/dev/null
 
 The later calls :code:`req fix --venv-relpath='.doc/.venv'` in venv with py310
 
-Provide path to the ``pyproject.toml`` if different location from cwd.
+If location is not cwd, provide path to the other package's ``pyproject.toml``.
 Either the absolute path to the base folder or the file.
 
 .. code-block:: shell
 
+   git add .
    req fix --venv-relpath='.venv' --path=~/parent_folder/package_base_folder
    req fix --venv-relpath='.venv' --path=~/parent_folder/package_base_folder/pyproject.toml
 
@@ -173,7 +175,7 @@ Command options
    :widths: auto
 
    "-p/--path", "cwd", "absolute path to package base folder"
-   "-v/--venv-relpath", "None", "venv relative path. None implies all venv use the same python interpreter version"
+   "-e/--venv-relpath", "None", "venv relative path. None implies all venv use the same python interpreter version"
    "-t/--timeout", "15", "Web connection time in seconds"
    "--show-unresolvables", "True", "For each venv, in a table print the unresolvable dependency conflicts"
    "--show-fixed", "True", "For each venv, in a table print fixed issues"
