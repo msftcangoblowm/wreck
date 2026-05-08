@@ -6,9 +6,9 @@ This is a terse review of semantic versioning beyond just
 
 Emphasis is placed on explaining when to use: alpha, beta, rc, and post releases.
 
-.. see-also::
+.. seealso::
 
-`[version specifiers] <https://packaging.python.org/en/latest/specifications/version-specifiers/#version-scheme>`_
+   `[version specifiers] <https://packaging.python.org/en/latest/specifications/version-specifiers/#version-scheme>`_
 
 Public version identifiers
 ---------------------------
