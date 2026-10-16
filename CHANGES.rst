@@ -116,15 +116,20 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
-   - ci: pypy3.11 support by remove rust dependency
-   - chore: dev environment keep rust free remove twine
-   - fix: pin pip-tools pip-tools#2436
-   - refactor: remove is_ok functions logging-strict implementation has TypeGuard
-   - refactor: follow refurb suggestions
-   - tests: test data and id within pytest.param
-   - chore: drop py310 and pypy3.10
-
 .. scriv-start-here
+
+.. _changes_0-3-7:
+
+Version 0.3.7 — 2026-10-16
+--------------------------
+
+- ci: pypy3.11 support by remove rust dependency
+- chore: dev environment keep rust free remove twine
+- fix: pin pip-tools pip-tools#2436
+- refactor: remove is_ok functions logging-strict implementation has TypeGuard
+- refactor: follow refurb suggestions
+- tests: test data and id within pytest.param
+- chore: drop py310 and pypy3.10
 
 .. _changes_0-3-6:
 

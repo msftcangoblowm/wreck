@@ -42,6 +42,7 @@ pyproject.toml tool.wreck section; tool.wreck.create_pins_unlock config option;
 remove .in file handling legacy implementation (\#17);
 warn .in includes .lock (\#23); remove setuptools and pip in .lock (\#35);
 cower and pay homage to pypi.org cartel (\#30); drop py310 and pypy3.10 support;
+pypy3.11 support;
 
 **new in 0.2.x**
 
