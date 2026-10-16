@@ -8,6 +8,60 @@ Changelog
    Feature request
    .................
 
+   - pyright
+
+     Leverage logging-strict: tox.ini, pyright-custom-config.json, pyproject.toml,
+     logging_strict/.github/workflows/quality-pyright.yml
+
+   - support resolving extras
+
+     function `wreck.lock_collections.resolve_zeroes` in-code doc states
+     does not support resolving extras, e.g. `coverage[toml]`.
+     pip-compile does this via `--strip-extras`. There does not appear to be
+     a test that would resolve, .e.g. `camoufox[geoip]` and the resulting lines
+     would become:
+
+     Now or at least can't find test case
+
+     .. code:: text
+
+        camoufox[geoip]==0.5.6
+            # via -r requirements/playwright.unlock
+        geoip2==5.3.0
+            # via camoufox
+        maxminddb==3.2.0
+            # via geoip2
+
+     Should be resolved to:
+
+     .. code:: text
+
+        camoufox==0.5.6
+            # via -r requirements/playwright.unlock
+        geoip2==5.3.0
+            # via camoufox
+        maxminddb==3.2.0
+            # via geoip2
+
+     In `wreck.lock_compile._one_compile` and `wreck.lock_compile.lock_compile`
+     there is no param to pass `--strip-extras` to `pip-compile`.
+
+     Relates to
+     `pip-tools\#1613 issue <https://github.com/jazzband/pip-tools/issues/1613>`_
+
+     `--strip-extras` slated to become default, so hardcode the option.
+     Currently on by default and issues this
+     ``WARNING: --strip-extras is becoming the default in version 8.0.0.``
+
+   - no-upgrade
+
+     ``pip-compile`` has option ``--upgrade``/``--no-upgrade``. Create
+     this ``reqs fix`` option.
+
+     It's very annoying when ``pip-compile`` upgrades package versions rather
+     than looking at existing versions. Also creates .unlock pins, which have
+     to be reverted.
+
    - add support for package url
 
    - release-drafter creating release notes on commit rather than on release
@@ -61,6 +115,12 @@ Changelog
 
    Commit items for NEXT VERSION
    ..............................
+
+   - fix: pin pip-tools pip-tools#2436
+   - refactor: remove is_ok functions logging-strict implementation has TypeGuard
+   - refactor: follow refurb suggestions
+   - tests: test data and id within pytest.param
+   - chore: drop py310 and pypy3.10
 
 .. scriv-start-here
 

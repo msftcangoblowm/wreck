@@ -3,14 +3,6 @@
 
 Portions of a Path take into account platform must be dealt withpSafely deal with paths.
 
-.. py:data:: __all__
-   :type: tuple[str, str, str, str, str, str, str, str]
-   :value: ("fix_relpath", "is_linux", "is_macos", "is_win", \
-   "replace_suffixes", "resolve_path", "resolve_joinpath", \
-   "get_venv_python_abspath")
-
-   Module exports
-
 """
 
 import platform
@@ -202,14 +194,12 @@ def get_venv_python_abspath(path_cwd, venv_relpath):
 
     """
     is_path_cwd_ng = path_cwd is None or not issubclass(type(path_cwd), PurePath)
-    if is_path_cwd_ng:
+    if is_path_cwd_ng:  # pragma: no branch
         msg_warn = (
             "Expecting either Path or PurePath got unsupported type "
             f"{type(path_cwd)}"
         )
         raise TypeError(msg_warn)
-    else:  # pragma: no cover
-        pass
 
     """Guessing path to python executable.
     :code:`sys.executable` or :code:`sys._base_executable` are for the
@@ -224,20 +214,23 @@ def get_venv_python_abspath(path_cwd, venv_relpath):
     abspath_venv = cast("Path", resolve_joinpath(path_cwd, venv_relpath))
     is_venv_folder_exists = not abspath_venv.exists() and not abspath_venv.is_dir()
 
-    if is_venv_folder_exists:
+    if is_venv_folder_exists:  # pragma: no branch
         """gh workflow and tox, only one Python executable.
         Would need to setup venv w/ appropriate and respective python interpretor
         """
-        reason = "venv relative path did not find a folder containing a venv"
-        raise NotADirectoryError(reason)
-    else:
-        abspath_venv_python = cast(
-            "Path",
-            resolve_joinpath(
-                abspath_venv,
-                binary_posix_relpath,
-            ),
+        reason = (
+            f"venv relative path {abspath_venv!s} did not find a folder "
+            "containing a venv"
         )
-        venv_python_abspath = str(abspath_venv_python)
+        raise NotADirectoryError(reason)
+
+    abspath_venv_python = cast(
+        "Path",
+        resolve_joinpath(
+            abspath_venv,
+            binary_posix_relpath,
+        ),
+    )
+    venv_python_abspath = str(abspath_venv_python)
 
     return venv_python_abspath

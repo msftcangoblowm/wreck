@@ -60,26 +60,21 @@ if TYPE_CHECKING:
 
     from tests.typing_only import DOES_NOT_OR_DOES
 
-testdata_get_path_cwd_exception = (
-    (
-        None,
-        pytest.raises(MissingPackageBaseFolder),
-    ),
-    (
-        1.234,
-        pytest.raises(MissingPackageBaseFolder),
-    ),
-)
-ids_get_path_cwd_exception = (
-    "unsupported type None",
-    "unsupported type float",
-)
-
 
 @pytest.mark.parametrize(
     "loader, expectation",
-    testdata_get_path_cwd_exception,
-    ids=ids_get_path_cwd_exception,
+    (
+        pytest.param(
+            None,
+            pytest.raises(MissingPackageBaseFolder),
+            id="unsupported-type-None",
+        ),
+        pytest.param(
+            1.234,
+            pytest.raises(MissingPackageBaseFolder),
+            id="unsupported-type-float",
+        ),
+    ),
 )
 def test_get_path_cwd_exception(
     loader: "VenvMapLoader",
@@ -120,47 +115,41 @@ def test_get_path_cwd_normal(
         assert path_cwd_actual == path_package_base_folder
 
 
-testdata_pindatum_realistic = (
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".venv",
-        (
-            "requirements/pip-tools",
-            "requirements/pip",
-            "requirements/prod",
-            "requirements/kit",
-            "requirements/tox",
-            "requirements/mypy",
-            "requirements/manage",
-            "requirements/dev",
-        ),
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".venv",
-        (
-            "requirements/pip-tools",
-            "requirements/pip",
-            "requirements/prod",
-            "requirements/kit",
-            "requirements/tox",
-            "requirements/mypy",
-            "requirements/manage",
-            "requirements/dev",
-        ),
-    ),
-)
-ids_pindatum_realistic = (
-    "Parse venv requirements files into Pins",
-    "importlib-metadata unsynced see prod.lock and dev.lock",
-)
-
-
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "relpath_config, venv_path, bases_relpath",
-    testdata_pindatum_realistic,
-    ids=ids_pindatum_realistic,
+    (
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".venv",
+            (
+                "requirements/pip-tools",
+                "requirements/pip",
+                "requirements/prod",
+                "requirements/kit",
+                "requirements/tox",
+                "requirements/mypy",
+                "requirements/manage",
+                "requirements/dev",
+            ),
+            id="Parse-venv-requirements-files-into-Pins",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".venv",
+            (
+                "requirements/pip-tools",
+                "requirements/pip",
+                "requirements/prod",
+                "requirements/kit",
+                "requirements/tox",
+                "requirements/mypy",
+                "requirements/manage",
+                "requirements/dev",
+            ),
+            id="importlib-metadata-unsynced-see-prod.lock-and-dev.lock",
+        ),
+    ),
 )
 def test_pindatum_realistic(
     relpath_config: "Path",
@@ -364,22 +353,18 @@ def test_pindatum_realistic(
     assert is_left_greater
 
 
-testdata_filepins_resolve = (
-    (
-        Path(__file__).parent.parent.joinpath(
-            "docs",
-            "pip-tools.in",
-        ),
-        "../requirements/pins.shared.in",
-    ),
-)
-ids_filepins_resolve = ("Resolve",)
-
-
 @pytest.mark.parametrize(
     "abspath_f, constraint_relpath",
-    testdata_filepins_resolve,
-    ids=ids_filepins_resolve,
+    (
+        pytest.param(
+            Path(__file__).parent.parent.joinpath(
+                "docs",
+                "pip-tools.in",
+            ),
+            "../requirements/pins.shared.in",
+            id="Resolve",
+        ),
+    ),
 )
 def test_filepins_resolve(
     abspath_f: "Path",

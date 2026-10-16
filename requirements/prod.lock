@@ -10,7 +10,7 @@ importlib-metadata==8.7.0
     # via
     #   -r requirements/prod.in
     #   build
-logging-strict==1.6.1
+logging-strict==1.7.1
     # via -r requirements/prod.in
 packaging==26.2
     # via
@@ -19,7 +19,7 @@ packaging==26.2
     #   pip-requirements-parser
 pip-requirements-parser==32.0.1
     # via -r requirements/prod.in
-pip-tools==7.5.3
+pip-tools==7.6.2
     # via -r requirements/prod.in
 pyparsing==3.2.0
     # via pip-requirements-parser

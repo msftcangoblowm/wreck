@@ -29,41 +29,41 @@ repos:
   - id: typos
 
 - repo: https://github.com/abravalheri/validate-pyproject
-  rev: v0.23
+  rev: v0.25
   hooks:
   - id: validate-pyproject
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.14.0
+  rev: v2.16.0
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
 
 - repo: https://github.com/psf/black
-  rev: 25.1.0
+  rev: 26.10.1
   hooks:
   - id: black
 
 - repo: https://github.com/keewis/blackdoc
-  rev: v0.3.9
+  rev: v0.4.6
   hooks:
   - id: blackdoc
-    additional_dependencies: [black==25.1.0]
+    additional_dependencies: [black==26.10.1]
   - id: blackdoc-autoupdate-black
 
 - repo: https://github.com/PyCQA/flake8
-  rev: 7.1.2
+  rev: 7.3.0
   hooks:
   - id: flake8
     args: ['--ignore=E704,E203,W503,W605,W293,W291,E501']
 
 - repo: https://github.com/PyCQA/isort
-  rev: 6.0.1
+  rev: 9.0.0a3
   hooks:
   - id: isort
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.20.2
+  rev: v2.1.0
   hooks:
   - id: mypy
     pass_filenames: false
@@ -88,3 +88,8 @@ repos:
     language: python
     types: [file, python]
     additional_dependencies: [click, strictyaml, logging-strict, packaging, pip-requirements-parser]
+
+- repo: https://github.com/dosisod/refurb
+  rev: v2.3.1
+  hooks:
+  - id: refurb

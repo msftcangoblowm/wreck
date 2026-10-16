@@ -1,14 +1,14 @@
 # Licensed under the AGPLv3+ License: https://www.gnu.org/licenses/
 # For details: https://github.com/msftcangoblowm/wreck/blob/master/NOTICE.txt
 
+# .in --> .lock file
+-r pins-pip-tools.in
+
 # setuptools-scm --> setuptools --> pip. docs '<=24.2'; prod '>24.2'
 # setuptools-scm toml reading code vendored
 
 # entrypoints
 click
-
-# .in --> .lock file
-pip-tools
 
 # SpecifierSet
 packaging

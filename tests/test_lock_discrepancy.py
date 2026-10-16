@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -s -vv --showlocals tests/test_lock_discrepancy.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -58,115 +64,110 @@ if TYPE_CHECKING:
         TypeAlias,
     )
 
-testdata_extract_full_package_name = (
-    (
-        'colorama ;platform_system=="Windows"',
-        "colorama",
-        "colorama",
-        False,
-    ),
-    (
-        'tomli; python_version<"3.11"',
-        "tomli",
-        "tomli",
-        False,
-    ),
-    (
-        "pip @ remote",
-        "pip",
-        "pip",
-        False,
-    ),
-    (
-        "pip@ remote",
-        "pip",
-        "pip",
-        False,
-    ),
-    (
-        "pip @remote",
-        "pip",
-        "pip",
-        False,
-    ),
-    (
-        "tox>=1.1.0",
-        "tox",
-        "tox",
-        False,
-    ),
-    (
-        "tox-gh-action>=1.1.0",
-        "tox",
-        "tox-gh-action",
-        False,
-    ),
-    (
-        'tomli>=2.2.1; python_version<"3.11"',
-        "tomli",
-        "tomli",
-        False,
-    ),
-    (
-        'tomli>=2.2.1; python_version<"3.11" ;platform_system=="Windows"',
-        "tomli",
-        "tomli",
-        False,
-    ),
-    (
-        'tomli ; python_version<"3.11" ;platform_system=="Windows"',
-        "tomli",
-        "tomli",
-        False,
-    ),
-    (
-        "tomli",
-        "pip",
-        "tomli",
-        False,
-    ),
-    (
-        "pip-requirements-parser ~~ 24.2",
-        "pip-requirements-parser",
-        "pip-requirements-parser",
-        True,
-    ),
-    (
-        "pip-requirements-parser~~24.2",
-        "pip-requirements-parser",
-        "pip-requirements-parser",
-        True,
-    ),
-    (
-        "namespaces.py <= 1.0.1",
-        "namespaces.py",
-        "namespaces.py",
-        False,
-    ),
-)
-ids_extract_full_package_name = (
-    "space semicolon",
-    "semicolon space",
-    "space at space",
-    "at space",
-    "space at",
-    "exact pkg name operator ge",
-    "not a match",
-    "pkg with specifier and qualifier",
-    "pkg with specifier and two qualifiers",
-    "pkg without specifier and two qualifiers",
-    "unrelated package",
-    "pkg name with hyphens or underscores and unknown token possible whitespace",
-    "pkg name with hyphens or underscores and unknown token no whitespace",
-    "pkg name containing a period",
-)
-
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "line, search_for, expected_pkg_name, is_needs_fix",
-    testdata_extract_full_package_name,
-    ids=ids_extract_full_package_name,
+    (
+        pytest.param(
+            'colorama ;platform_system=="Windows"',
+            "colorama",
+            "colorama",
+            False,
+            id="space-semicolon",
+        ),
+        pytest.param(
+            'tomli; python_version<"3.11"',
+            "tomli",
+            "tomli",
+            False,
+            id="semicolon-space",
+        ),
+        pytest.param(
+            "pip @ remote",
+            "pip",
+            "pip",
+            False,
+            id="space-at-space",
+        ),
+        pytest.param(
+            "pip@ remote",
+            "pip",
+            "pip",
+            False,
+            id="at-space",
+        ),
+        pytest.param(
+            "pip @remote",
+            "pip",
+            "pip",
+            False,
+            id="space-at",
+        ),
+        pytest.param(
+            "tox>=1.1.0",
+            "tox",
+            "tox",
+            False,
+            id="exact-pkg-name-operator-ge",
+        ),
+        pytest.param(
+            "tox-gh-action>=1.1.0",
+            "tox",
+            "tox-gh-action",
+            False,
+            id="not-a-match",
+        ),
+        pytest.param(
+            'tomli>=2.2.1; python_version<"3.11"',
+            "tomli",
+            "tomli",
+            False,
+            id="pkg-with-specifier-and-qualifier",
+        ),
+        pytest.param(
+            'tomli>=2.2.1; python_version<"3.11" ;platform_system=="Windows"',
+            "tomli",
+            "tomli",
+            False,
+            id="pkg-with-specifier-and-two-qualifiers",
+        ),
+        pytest.param(
+            'tomli ; python_version<"3.11" ;platform_system=="Windows"',
+            "tomli",
+            "tomli",
+            False,
+            id="pkg-without-specifier-and-two-qualifiers",
+        ),
+        pytest.param(
+            "tomli",
+            "pip",
+            "tomli",
+            False,
+            id="unrelated-package",
+        ),
+        pytest.param(
+            "pip-requirements-parser ~~ 24.2",
+            "pip-requirements-parser",
+            "pip-requirements-parser",
+            True,
+            id="pkg-name-with-hyphens-or-underscores-and-unknown-token-possible-whitespace",
+        ),
+        pytest.param(
+            "pip-requirements-parser~~24.2",
+            "pip-requirements-parser",
+            "pip-requirements-parser",
+            True,
+            id="pkg-name-with-hyphens-or-underscores-and-unknown-token-no-whitespace",
+        ),
+        pytest.param(
+            "namespaces.py <= 1.0.1",
+            "namespaces.py",
+            "namespaces.py",
+            False,
+            id="pkg-name-containing-a-period",
+        ),
+    ),
 )
 def test_extract_full_package_name(
     line: str,
@@ -214,7 +215,7 @@ def test_extract_full_package_name(
                 assert pkg_name_actual == expected_pkg_name
             else:
                 # unknown operator in different or same pkg. This is a fix issue
-                assert is_needs_fix is True
+                assert is_needs_fix
 
     # Couldn't figure out how to make re.match fail
     """
@@ -872,51 +873,45 @@ def test_choose_version_order_mixed_up(
             assert lock_nudge_pin == f"=={found_expected!s}"
 
 
-testdata_parse_specifiers = (
-    (
-        [">=24.2"],
-        [(">=", "24.2")],
-    ),
-    (
-        ["<=24.2"],
-        [("<=", "24.2")],
-    ),
-    (
-        ["<24.2"],
-        [("<", "24.2")],
-    ),
-    (
-        [">24.2"],
-        [(">", "24.2")],
-    ),
-    (
-        ["!=24.2"],
-        [("!=", "24.2")],
-    ),
-    (
-        ["==24.2"],
-        [("==", "24.2")],
-    ),
-    (
-        ["~=24.2"],
-        [("~=", "24.2")],
-    ),
-)
-ids_parse_specifiers = (
-    "ge 24.2",
-    "le 24.2",
-    "lt 24.2",
-    "gt 24.2",
-    "ne 24.2",
-    "eq 24.2",
-    "shortcut for between version and next major release",
-)
-
-
 @pytest.mark.parametrize(
     "specifiers, lst_expected",
-    testdata_parse_specifiers,
-    ids=ids_parse_specifiers,
+    (
+        pytest.param(
+            [">=24.2"],
+            [(">=", "24.2")],
+            id="ge-24.2",
+        ),
+        pytest.param(
+            ["<=24.2"],
+            [("<=", "24.2")],
+            id="le-24.2",
+        ),
+        pytest.param(
+            ["<24.2"],
+            [("<", "24.2")],
+            id="lt-24.2",
+        ),
+        pytest.param(
+            [">24.2"],
+            [(">", "24.2")],
+            id="gt-24.2",
+        ),
+        pytest.param(
+            ["!=24.2"],
+            [("!=", "24.2")],
+            id="ne-24.2",
+        ),
+        pytest.param(
+            ["==24.2"],
+            [("==", "24.2")],
+            id="eq-24.2",
+        ),
+        pytest.param(
+            ["~=24.2"],
+            [("~=", "24.2")],
+            id="shortcut-for-between-version-and-next-major-release",
+        ),
+    ),
 )
 def test_parse_specifiers(
     specifiers: list[str],
@@ -941,70 +936,64 @@ def test_parse_specifiers(
         assert lst_expected[idx] == t_datum
 
 
-testdata_specifier_length = (
-    (
-        "<",
-        does_not_raise(),
-        1,
-    ),
-    (
-        ">",
-        does_not_raise(),
-        1,
-    ),
-    (
-        "<=",
-        does_not_raise(),
-        2,
-    ),
-    (
-        ">=",
-        does_not_raise(),
-        2,
-    ),
-    (
-        "~=",
-        does_not_raise(),
-        2,
-    ),
-    (
-        "!=",
-        does_not_raise(),
-        2,
-    ),
-    (
-        "==",
-        does_not_raise(),
-        2,
-    ),
-    (
-        "===",
-        does_not_raise(),
-        3,
-    ),
-    (
-        "!==",
-        pytest.raises(ValueError),
-        3,
-    ),
-)
-ids_specifier_length = (
-    "lt 1",
-    "gt 1",
-    "le 2",
-    "ge 2",
-    "compatible release 2",
-    "ne 2",
-    "eq 2",
-    "=== 3",
-    "!== ValueError",
-)
-
-
 @pytest.mark.parametrize(
     "specifier, expectation, expected_len",
-    testdata_specifier_length,
-    ids=ids_specifier_length,
+    (
+        pytest.param(
+            "<",
+            does_not_raise(),
+            1,
+            id="lt-1",
+        ),
+        pytest.param(
+            ">",
+            does_not_raise(),
+            1,
+            id="gt 1",
+        ),
+        pytest.param(
+            "<=",
+            does_not_raise(),
+            2,
+            id="le-2",
+        ),
+        pytest.param(
+            ">=",
+            does_not_raise(),
+            2,
+            id="ge-2",
+        ),
+        pytest.param(
+            "~=",
+            does_not_raise(),
+            2,
+            id="compatible-release-2",
+        ),
+        pytest.param(
+            "!=",
+            does_not_raise(),
+            2,
+            id="ne-2",
+        ),
+        pytest.param(
+            "==",
+            does_not_raise(),
+            2,
+            id="eq-2",
+        ),
+        pytest.param(
+            "===",
+            does_not_raise(),
+            3,
+            id="===-3",
+        ),
+        pytest.param(
+            "!==",
+            pytest.raises(ValueError),
+            3,
+            id="!==-ValueError",
+        ),
+    ),
 )
 def test_specifier_length(
     specifier: str,

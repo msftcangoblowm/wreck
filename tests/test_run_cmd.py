@@ -3,7 +3,13 @@
 
 Module _run_cmd encapsulates subprocess typical usage.
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   pytest -vv --showlocals tests/test_run_cmd.py
+
+With coverage
 
 .. code-block:: shell
 

@@ -89,7 +89,7 @@ if __name__ == "__main__" and __spec__ is None:  # pragma: no cover
             )
             __spec__ = spec_this
 elif (
-    __name__ == "__main__" and isinstance(__package__, str) and len(__package__) == 0
+    __name__ == "__main__" and isinstance(__package__, str) and not __package__
 ):  # pragma: no cover
     # When package is not installed
     # python -m wreck.cli_dependencies {fix,unlock,fix_v1}
@@ -407,7 +407,7 @@ def requirements_fix_v2(
 
     :type show_resolvable_shared: bool
     """
-    global _logger
+    # global _logger
     str_path = path.as_posix()
     dotted_path = f"{g_app_name}.cli_dependencies.dependencies_lock"
     fcn = click.secho

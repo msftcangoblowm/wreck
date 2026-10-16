@@ -14,17 +14,6 @@ would have to be invalidated
 
    Module exports
 
-.. py:data:: is_module_debug
-   :type: bool
-   :value: False
-
-   Toggle on/off module level logging
-
-.. py:data:: _logger
-   :type: logging.Logger
-
-   Module level logger
-
 """
 
 import copy
@@ -40,7 +29,8 @@ from pathlib import (
     PurePath,
 )
 
-from .check_type import is_ok
+from logging_strict.util.check_type import is_ok
+
 from .constants import (
     SUFFIX_IN,
     SUFFIX_LOCKED,
@@ -69,8 +59,12 @@ from .pep518_venvs import (
     check_loader,
 )
 
+#: bool: Toggle on/off module level logging
 is_module_debug = False
+
+#: logging.Logger: Module level logger
 _logger = logging.getLogger(f"{g_app_name}.lock_collections")
+
 __all__ = (
     "Ins",
     "unlock_compile",
@@ -208,8 +202,7 @@ class Ins(Collection[FilePins]):
         is_suffix_dot_in = suffix_last == SUFFIX_IN
         if is_suffix_dot_in:  # pragma: no branch
             # move fpins --> _files
-            for fpin in fpins:
-                self._files.add(fpin)
+            self._files.update(fpins)
 
             if is_module_debug:  # pragma: no branch  # pragma: no cover
                 msg_info = f"{dotted_path} _files (before) {self._files}"
@@ -487,8 +480,7 @@ class Ins(Collection[FilePins]):
             _logger.info(msg_info)
 
         # remove from self._files
-        for in_ in del_these:
-            self._files.discard(in_)
+        self._files.difference_update(del_these)
 
         if is_module_debug:  # pragma: no branch  # pragma: no cover
             msg_info = f"{dotted_path} self.files (after): {self._files}"
@@ -685,11 +677,11 @@ class Ins(Collection[FilePins]):
         """
         file_name = "file_abspath"
         if set_name is None or not isinstance(set_name, InFileType):
-            str_set_name = str(InFileType.FILES)
+            str_set_name = str(InFileType.FILES)  # noqa: FURB123
         else:  # pragma: no cover
             str_set_name = str(set_name)
 
-        msg_exc = f"Expected an absolute Path. Got {type(abspath_f)}"
+        msg_exc = f"Expected an absolute Path. Got {abspath_f!r}"
         if abspath_f is not None:
             if issubclass(type(abspath_f), PurePath):
                 abspath_g = abspath_f
@@ -823,9 +815,7 @@ class Ins(Collection[FilePins]):
 
                 # in_._pins lacks constraints and requirements
                 sep = os.linesep
-                lst_reqs_unsorted = []
-                for pindatum in in_._pins:
-                    lst_reqs_unsorted.append(pindatum.line)
+                lst_reqs_unsorted = [pindatum.line for pindatum in in_._pins]
 
                 # From children
                 for package_line in in_.pkgs_from_resolved:

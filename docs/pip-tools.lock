@@ -10,7 +10,7 @@ idna==3.10
     # via requests
 packaging==26.2
     # via build
-pip-tools==7.4.1
+pip-tools==7.6.2
     # via -r docs/pip-tools.in
 pyproject-hooks==1.2.0
     # via

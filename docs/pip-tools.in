@@ -2,8 +2,8 @@
 # For details: https://github.com/msftcangoblowm/wreck/blob/master/NOTICE.txt
 
 -c ../requirements/pins.shared.in
+-r ../requirements/pins-pip-tools.in
 
 # pip<24.2
 
-pip-tools
 get-pypi-latest-version

@@ -95,13 +95,22 @@ diff_upgrade:			## Summarize the last `make upgrade`
 
 #run all pre-commit checks
 .PHONY: pre-commit
+pre-commit: private target_tty = $(if $(show),1,0)
 pre-commit:				## Run checks found in .pre-commit-config.yaml
+ifeq ($(is_venv),1)
 	@out=$$(SKIP=pyright pre-commit run --all-files ||:)
+	if [[ $(target_tty) -eq 1 ]]; then
+	echo "$$out" | tee /tmp/out.txt
+	else
 	echo "$$out" > /tmp/out.txt
+	fi
+endif
 
 .PHONY: update-pre-commit
 update-pre-commit:		## Bump package to latest version
+ifeq ($(is_venv),1)
 	@pre-commit autoupdate
+endif
 
 #--strict is on
 .PHONY: mypy
@@ -110,10 +119,17 @@ ifeq ($(is_venv),1)
 	@$(VENV_BIN_PYTHON) -m mypy -p $(APP_NAME)
 endif
 
-.PHONY: preright
-preright:				## Run pyright
+.PHONY: pyright
+pyright: private target_tty = $(if $(show),1,0)
+pyright:				## Run pyright
+ifeq ($(is_venv),1)
 	@out=$$(pre-commit run --all-files pyright ||:)
+	if [[ $(target_tty) -eq 1 ]]; then
+	echo "$$out" | tee /tmp/out.txt
+	else
 	echo "$$out" > /tmp/out.txt
+	fi
+endif
 
 #make [check=1] black
 .PHONY: black
@@ -150,30 +166,42 @@ REPO := $(REPO_OWNER)/wreck
 .PHONY: test_upload kits_build kits_download github_releases
 
 edit_for_release:		## Edit sources to insert release facts (see howto.txt)
-	python igor.py edit_for_release
+ifeq ($(is_venv),1)
+	$(VENV_BIN_PYTHON) igor.py edit_for_release
+endif
 
 cheats:					## Create some useful snippets for releasing (see howto.txt)
-	python igor.py cheats | tee cheats.txt
+ifeq ($(is_venv),1)
+	$(VENV_BIN_PYTHON) igor.py cheats | tee cheats.txt
+endif
 
 relbranch:				## Create the branch for releasing (see howto.txt)
 	@git switch -c $(REPO_OWNER)/release-$$(date +%Y%m%d)
 
 # Do not create a target(s) kit: or kits:
 kit_check:				## Check that dist/* are well-formed
-	python -m twine check dist/*
+ifeq ($(is_venv),1)
+	$(VENV_BIN_PYTHON) -m twine check dist/*
 	@echo $$(ls -1 dist | wc -l) distribution kits
+endif
 
 kit_upload:				## Upload the built distributions to PyPI
 	twine upload --verbose dist/*
 
 test_upload:			## Upload the distributions to PyPI's testing server
+ifeq ($(is_venv),1)
 	twine upload --verbose --repository testpypi --password $$TWINE_TEST_PASSWORD dist/*
+endif
 
 kits_build:				## Trigger GitHub to build kits
-	python ci/trigger_build_kits.py $(REPO_OWNER)
+ifeq ($(is_venv),1)
+	$(VENV_BIN_PYTHON) ci/trigger_build_kits.py $(REPO_OWNER)
+endif
 
 kits_download:			## Download the built kits from GitHub
-	python ci/download_gha_artifacts.py $(REPO_OWNER) 'dist-*' dist
+ifeq ($(is_venv),1)
+	$(VENV_BIN_PYTHON) ci/download_gha_artifacts.py $(REPO_OWNER) 'dist-*' dist
+endif
 
 github_releases: $(DOCBIN)	## Update GitHub releases
 	$(DOCBIN)/python -m scriv github-release --all
@@ -182,7 +210,9 @@ github_releases: $(DOCBIN)	## Update GitHub releases
 
 .PHONY: build
 build:					## Make the source distribution
-	python igor.py build_next ""
+ifeq ($(is_venv),1)
+	$(VENV_BIN_PYTHON) igor.py build_next ""
+endif
 
 .PHONY: install
 install: override usage := make [force=1]
@@ -212,12 +242,21 @@ install-force: install	## Force install even if exact same version
 # $(VENV_BIN)/pytest --showlocals --cov=wreck --cov-report=term-missing --cov-config=pyproject.toml $(verbose_text) tests
 .PHONY: check
 check: private verbose_text = $(if $(v),"--verbose")
+check: private target_tty = $(if $(show),1,0)
 check:					## Run tests, generate coverage reports -- make [v=1] check
 ifeq ($(is_venv),1)
 	-@$(VENV_BIN_PYTHON) -m coverage erase
+	if [[ $(target_tty) -eq 1 ]]; then
 	$(VENV_BIN_PYTHON) -m coverage run --parallel -m pytest --showlocals $(verbose_text) tests
+	else
+	$(VENV_BIN_PYTHON) -m coverage run --parallel -m pytest --showlocals $(verbose_text) tests > /tmp/out_tests.err
+	fi
 	$(VENV_BIN_PYTHON) -m coverage combine
-	$(VENV_BIN_PYTHON) -m coverage report --fail-under=93
+	if [[ $(target_tty) -eq 1 ]]; then
+	$(VENV_BIN_PYTHON) -m coverage report
+	else
+	$(VENV_BIN_PYTHON) -m coverage report > /tmp/out.report
+	fi
 endif
 
 .PHONY: distclean

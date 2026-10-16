@@ -34,7 +34,6 @@
 
 import enum
 import io
-import sys
 from collections.abc import Hashable
 from dataclasses import dataclass
 from pathlib import (
@@ -49,10 +48,7 @@ from .constants import (
     SUFFIX_UNLOCKED,
 )
 
-if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
-    DC_SLOTS = {"slots": True}
-else:  # pragma: no cover py-gte-310
-    DC_SLOTS = {}
+DC_SLOTS = {"slots": True}
 
 __all__ = (
     "DATUM",
@@ -303,7 +299,7 @@ class InFileType(enum.Enum):
         :returns: Ins set's name
         :rtype: str
         """
-        return f"{self.value}"
+        return str(self.value)
 
     def __eq__(self, other):
         """Equality check
@@ -341,7 +337,7 @@ class OutLastSuffix(enum.Enum):
         :returns: Ins set's name
         :rtype: str
         """
-        return f"{self.value}"
+        return str(self.value)
 
     def __eq__(self, other):
         """Equality check
@@ -390,7 +386,7 @@ def in_generic(
     :rtype: bool
     """
     if set_name is None or not isinstance(set_name, InFileType):
-        str_set_name = str(InFileType.FILES)
+        str_set_name = str(InFileType.FILES)  # noqa: FURB123
     else:  # pragma: no cover
         str_set_name = str(set_name)
 

@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   pytest -vv --showlocals tests/test_version.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -31,21 +37,18 @@ if TYPE_CHECKING:
 
     from tests.typing_only import DOES_NOT_OR_DOES
 
-testdata_version_file = (
-    (
-        __version__,
-        version_tuple,
-        does_not_raise(),
-        __version__,
-    ),
-)
-ids_version_file = ("check valid semantic version str",)
-
 
 @pytest.mark.parametrize(
     "version_package_str, version_package_tuple, expectation, expected_version",
-    testdata_version_file,
-    ids=ids_version_file,
+    (
+        pytest.param(
+            __version__,
+            version_tuple,
+            does_not_raise(),
+            __version__,
+            id="check valid semantic version str",
+        ),
+    ),
 )
 def test_version_file(
     version_package_str: str,

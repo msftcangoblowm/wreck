@@ -19,9 +19,9 @@ With coverage
 
 """
 
-import sys
 import tempfile
 import unittest
+from collections.abc import Sequence
 from pathlib import (
     Path,
     PurePath,
@@ -32,15 +32,9 @@ from logging_strict.tech_niques import get_locals_dynamic  # noqa: F401
 
 from wreck.constants import g_app_name
 from wreck.pep518_read import (
-    _is_ok,
     find_project_root,
     find_pyproject_toml,
 )
-
-if sys.version_info >= (3, 9):  # pragma: no cover
-    from collections.abc import Sequence  # noqa: F401 Used by sphinx
-else:  # pragma: no cover
-    from typing import Sequence  # noqa: F401 Used by sphinx
 
 
 class Pep518Sections(unittest.TestCase):
@@ -55,26 +49,6 @@ class Pep518Sections(unittest.TestCase):
             # not cached
             self.path_tests = Path(__file__).parent
         self.cwd = self.path_tests.parent
-
-    def test_is_ok(self) -> None:
-        """Is not None and a non-empty string.
-
-        Vendered from package/module, logging-strict.util.check_type
-        """
-        invalids = (
-            None,  # not str
-            "",  # empty string
-            0.123,  # not str
-            "    ",  # contains only whitespace
-        )
-        for invalid in invalids:
-            out_actual = _is_ok(invalid)
-            self.assertFalse(out_actual)
-
-        valids = ("Hello World!",)  # non-empty string
-        for valid in valids:
-            out_actual = _is_ok(valid)
-            self.assertTrue(out_actual)
 
     def test_find_project_root(self) -> None:
         """Check possibilities: .git, .hg, pyproject.toml, or file system root."""

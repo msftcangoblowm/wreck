@@ -4,9 +4,9 @@ Wreck
 From .in requirement files generate and fix .lock and .unlock files
 
 |  |kit| |codecov| |license|
-|  |last-commit| |test-status| |quality-status| |docs|
-|  |versions| |implementations|
-|  |platforms| |black|
+|  |last-commit| |quality-status| |docs|
+|  |platforms| |test-status| |versions|
+|  |implementations| |black|
 |  |downloads| |stars|
 |  |mastodon-msftcangoblowm|
 
@@ -14,14 +14,14 @@ From .in requirement files generate and fix .lock and .unlock files
 
 .. PYVERSIONS
 
-\* Python 3.10 through 3.14, PyPy
+\* Python 3.11 through 3.15, PyPy3.11
 
 **new in 0.3.x**
 
 pyproject.toml tool.wreck section; tool.wreck.create_pins_unlock config option;
 remove .in file handling legacy implementation (\#17);
 warn .in includes .lock (\#23); remove setuptools and pip in .lock (\#35);
-cower and pay homage to pypi.org cartel (\#30); drop py39 support;
+cower and pay homage to pypi.org cartel (\#30); drop py310 and pypy3.10 support;
 
 **new in 0.2.x**
 
@@ -352,9 +352,12 @@ Meaning pay to support the project and towards funding ongoing package maintenan
 .. |kit| image:: https://img.shields.io/pypi/v/wreck
     :target: https://pypi.org/project/wreck/
     :alt: PyPI status
-.. |versions| image:: https://img.shields.io/pypi/pyversions/wreck.svg?logo=python&logoColor=FBE072
+.. |versions| image:: https://img.shields.io/badge/CI%20tested-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15%20%7C%20pypy3.11-blue?logo=python&logoColor=FBE072
     :target: https://pypi.org/project/wreck/
     :alt: Python versions supported
+
+.. https://img.shields.io/pypi/pyversions/wreck.svg?logo=python&logoColor=FBE072
+
 .. |license| image:: https://img.shields.io/github/license/msftcangoblowm/wreck
     :target: https://pypi.org/project/wreck/blob/master/LICENSE
     :alt: License
@@ -371,9 +374,9 @@ Meaning pay to support the project and towards funding ongoing package maintenan
    :target: https://github.com/ambv/black
 .. |downloads| image:: https://img.shields.io/pypi/dm/wreck
 .. |implementations| image:: https://img.shields.io/pypi/implementation/wreck
-.. |platforms| image:: https://img.shields.io/badge/platform-linux-lightgrey
+.. |platforms| image:: https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey
 
-.. https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey
+.. https://img.shields.io/badge/platform-linux-lightgrey
 
 .. |feature banner| image:: /docs/_static/wreck-banner-611-255-1.svg
    :alt: fixes python package requirement files

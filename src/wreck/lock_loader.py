@@ -129,7 +129,7 @@ def from_loader_filepins(
     # NotADirectoryError, ValueError, KeyError, MissingRequirementsFoldersFiles
     abspath_reqs = get_reqs(loader, relpath_venv, suffix_last=suffix_last)
 
-    fpins = list()
+    fpins = []
     for abspath_req in abspath_reqs:
         try:
             fp = FilePins(abspath_req)
@@ -200,11 +200,9 @@ def _from_loader_pindatum(
             else:
                 is_add = True
 
-            if is_add is True:
+            if is_add:  # pragma: no branch
                 assert isinstance(pin, PinDatum)
                 pins.add(pin)
-            else:  # pragma: no cover
-                pass
 
     return pins
 

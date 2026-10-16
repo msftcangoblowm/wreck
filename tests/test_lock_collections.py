@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_lock_collections.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -47,30 +53,25 @@ if TYPE_CHECKING:
 
     from tests.typing_only import DOES_NOT_OR_DOES
 
-testdata_why_did_you_do_that = (
-    (
-        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
-        ".tools",
-        ("docs/pip-tools",),
-        pytest.raises(MissingRequirementsFoldersFiles),
-    ),
-    (
-        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
-        ".dogfood",
-        ("docs/pip-tools",),
-        pytest.raises(KeyError),
-    ),
-)
-ids_why_did_you_do_that = (
-    "missing support requirement files",
-    "no such venv",
-)
-
 
 @pytest.mark.parametrize(
     "path_config, venv_relpath, req_files, expectation",
-    testdata_why_did_you_do_that,
-    ids=ids_why_did_you_do_that,
+    (
+        pytest.param(
+            Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
+            ".tools",
+            ("docs/pip-tools",),
+            pytest.raises(MissingRequirementsFoldersFiles),
+            id="missing-support-requirement-files",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
+            ".dogfood",
+            ("docs/pip-tools",),
+            pytest.raises(KeyError),
+            id="no-such-venv",
+        ),
+    ),
 )
 def test_why_did_you_do_that(
     path_config: "Path",
@@ -141,212 +142,206 @@ def test_why_did_you_do_that(
         ins.load(suffix_last=".dogfood")
 
 
-testdata_ins_realistic = (
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "dev.in",
-                ),
-                "requirements/dev.in",
-            ),
-        ),
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "prod.in",
-                ),
-                "requirements/prod.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "pins.shared.in",
-                ),
-                "requirements/pins.shared.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "pins-cffi.in",
-                ),
-                "requirements/pins-cffi.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "pins-validate-pyproject-pep639.in",
-                ),
-                "requirements/pins-validate-pyproject-pep639.in",
-            ),
-        ),
-        (
-            ".venv/.python-version",
-            ".doc/.venv/.python-version",
-            "requirements/pins.shared.in",
-            "requirements/pins-typing.in",
-        ),
-        (
-            "docs/pip-tools",
-            "docs/requirements",
-            "requirements/pip-tools",
-            "requirements/pip",
-            "requirements/prod",
-            "requirements/kit",
-            "requirements/tox",
-            "requirements/mypy",
-            "requirements/manage",
-            "requirements/dev",
-        ),
-        does_not_raise(),
-        8,
-        4,
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "dev.in",
-                ),
-                "requirements/dev.in",
-            ),
-        ),
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "prod.in",
-                ),
-                "requirements/prod.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "pins.shared.in",
-                ),
-                "requirements/pins.shared.in",
-            ),
-        ),
-        (
-            ".venv/.python-version",
-            ".doc/.venv/.python-version",
-            "requirements/pins.shared.in",
-            "requirements/pins-typing.in",
-        ),
-        (
-            "docs/pip-tools",
-            "docs/requirements",
-            "requirements/pip-tools",
-            "requirements/pip",
-            "requirements/prod",
-            "requirements/kit",
-            "requirements/tox",
-            "requirements/mypy",
-            "requirements/manage",
-            "requirements/dev",
-        ),
-        pytest.raises(MissingRequirementsFoldersFiles),
-        8,
-        0,
-    ),
-    (
-        Path("_no_unlock_pins").joinpath("prod_and_dev.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.joinpath(
-                    "_no_unlock_pins",
-                    "prod.in",
-                ),
-                "requirements/prod.in",
-            ),
-        ),
-        (
-            (
-                Path(__file__).parent.joinpath(
-                    "_no_unlock_pins",
-                    "dev.in",
-                ),
-                "requirements/dev.in",
-            ),
-            (
-                Path(__file__).parent.joinpath(
-                    "_no_unlock_pins",
-                    "pins-tomli.in",
-                ),
-                "requirements/pins-tomli.in",
-            ),
-        ),
-        (
-            ".venv/.python-version",
-            "requirements/pins-tomli.in",
-        ),
-        (
-            "requirements/prod",
-            "requirements/dev",
-            "requirements/pins-tomli",
-        ),
-        does_not_raise(),
-        2,
-        2,
-    ),
-    (
-        Path("_no_unlock_pins").joinpath("prod_and_dev.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.joinpath(
-                    "_no_unlock_pins",
-                    "dev.in",
-                ),
-                "requirements/dev.in",
-            ),
-        ),
-        (
-            (
-                Path(__file__).parent.joinpath(
-                    "_no_unlock_pins",
-                    "support.in",
-                ),
-                "requirements/support.in",
-            ),
-        ),
-        (
-            ".venv/.python-version",
-            "requirements/dev.in",
-        ),
-        (
-            "requirements/dev",
-            "requirements/support",
-        ),
-        pytest.raises(MissingRequirementsFoldersFiles),
-        2,
-        0,
-    ),
-)
-ids_ins_realistic = (
-    "Has both requirements and constraints",
-    "missing a support file",
-    "do not create pins unlock files",
-    "-r missing",
-)
-
-
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
         "path_config, venv_path, seq_reqs_primary, seq_reqs_support, seq_empties, "
         "req_base_empties, expectation, pkg_pin_count_expected, path_unlocks_expected"
     ),
-    testdata_ins_realistic,
-    ids=ids_ins_realistic,
+    (
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "dev.in",
+                    ),
+                    "requirements/dev.in",
+                ),
+            ),
+            (
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "prod.in",
+                    ),
+                    "requirements/prod.in",
+                ),
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "pins.shared.in",
+                    ),
+                    "requirements/pins.shared.in",
+                ),
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "pins-cffi.in",
+                    ),
+                    "requirements/pins-cffi.in",
+                ),
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "pins-validate-pyproject-pep639.in",
+                    ),
+                    "requirements/pins-validate-pyproject-pep639.in",
+                ),
+            ),
+            (
+                ".venv/.python-version",
+                ".doc/.venv/.python-version",
+                "requirements/pins.shared.in",
+                "requirements/pins-typing.in",
+            ),
+            (
+                "docs/pip-tools",
+                "docs/requirements",
+                "requirements/pip-tools",
+                "requirements/pip",
+                "requirements/prod",
+                "requirements/kit",
+                "requirements/tox",
+                "requirements/mypy",
+                "requirements/manage",
+                "requirements/dev",
+            ),
+            does_not_raise(),
+            8,
+            4,
+            id="Has-both-requirements-and-constraints",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "dev.in",
+                    ),
+                    "requirements/dev.in",
+                ),
+            ),
+            (
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "prod.in",
+                    ),
+                    "requirements/prod.in",
+                ),
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "pins.shared.in",
+                    ),
+                    "requirements/pins.shared.in",
+                ),
+            ),
+            (
+                ".venv/.python-version",
+                ".doc/.venv/.python-version",
+                "requirements/pins.shared.in",
+                "requirements/pins-typing.in",
+            ),
+            (
+                "docs/pip-tools",
+                "docs/requirements",
+                "requirements/pip-tools",
+                "requirements/pip",
+                "requirements/prod",
+                "requirements/kit",
+                "requirements/tox",
+                "requirements/mypy",
+                "requirements/manage",
+                "requirements/dev",
+            ),
+            pytest.raises(MissingRequirementsFoldersFiles),
+            8,
+            0,
+            id="missing-a-support-file",
+        ),
+        pytest.param(
+            Path("_no_unlock_pins").joinpath("prod_and_dev.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path(__file__).parent.joinpath(
+                        "_no_unlock_pins",
+                        "prod.in",
+                    ),
+                    "requirements/prod.in",
+                ),
+            ),
+            (
+                (
+                    Path(__file__).parent.joinpath(
+                        "_no_unlock_pins",
+                        "dev.in",
+                    ),
+                    "requirements/dev.in",
+                ),
+                (
+                    Path(__file__).parent.joinpath(
+                        "_no_unlock_pins",
+                        "pins-tomli.in",
+                    ),
+                    "requirements/pins-tomli.in",
+                ),
+            ),
+            (
+                ".venv/.python-version",
+                "requirements/pins-tomli.in",
+            ),
+            (
+                "requirements/prod",
+                "requirements/dev",
+                "requirements/pins-tomli",
+            ),
+            does_not_raise(),
+            2,
+            2,
+            id="do-not-create-pins-unlock-files",
+        ),
+        pytest.param(
+            Path("_no_unlock_pins").joinpath("prod_and_dev.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path(__file__).parent.joinpath(
+                        "_no_unlock_pins",
+                        "dev.in",
+                    ),
+                    "requirements/dev.in",
+                ),
+            ),
+            (
+                (
+                    Path(__file__).parent.joinpath(
+                        "_no_unlock_pins",
+                        "support.in",
+                    ),
+                    "requirements/support.in",
+                ),
+            ),
+            (
+                ".venv/.python-version",
+                "requirements/dev.in",
+            ),
+            (
+                "requirements/dev",
+                "requirements/support",
+            ),
+            pytest.raises(MissingRequirementsFoldersFiles),
+            2,
+            0,
+            id="-r-missing",
+        ),
+    ),
 )
 def test_ins_realistic(
     path_config: "Path",
@@ -486,51 +481,47 @@ def test_ins_realistic(
         pass
 
 
-testdata_duplicate_lines = (
-    (
-        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.joinpath(
-                    "_duplicate_line",
-                    "dev.in",
-                ),
-                "requirements/dev.in",
-            ),
-            (
-                Path(__file__).parent.joinpath(
-                    "_duplicate_line",
-                    "prod.in",
-                ),
-                "requirements/prod.in",
-            ),
-        ),
-        (
-            (
-                Path(__file__).parent.joinpath(
-                    "_duplicate_line",
-                    "dev.unlock",
-                ),
-                "requirements/dev.unlock",
-            ),
-        ),
-        "logging-strict>=1.5.0",
-        1,
-    ),
-)
-ids_duplicate_lines = ("in dev.unlock expect one line not two",)
-
-
+@pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     (
         "path_config, venv_path, seq_reqs_primary, seq_reqs_support, "
         "pattern, num_lines_expected"
     ),
-    testdata_duplicate_lines,
-    ids=ids_duplicate_lines,
+    (
+        pytest.param(
+            Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path(__file__).parent.joinpath(
+                        "_duplicate_line",
+                        "dev.in",
+                    ),
+                    "requirements/dev.in",
+                ),
+                (
+                    Path(__file__).parent.joinpath(
+                        "_duplicate_line",
+                        "prod.in",
+                    ),
+                    "requirements/prod.in",
+                ),
+            ),
+            (
+                (
+                    Path(__file__).parent.joinpath(
+                        "_duplicate_line",
+                        "dev.unlock",
+                    ),
+                    "requirements/dev.unlock",
+                ),
+            ),
+            "logging-strict>=1.5.0",
+            1,
+            id="in-dev.unlock-expect-one-line-not-two",
+        ),
+    ),
 )
-@pytest.mark.logging_package_name(g_app_name)
 def test_duplicate_lines(
     path_config: "Path",
     venv_path: str,

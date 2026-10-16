@@ -2,7 +2,4 @@
 # For details: https://github.com/msftcangoblowm/wreck/blob/master/NOTICE.txt
 
 -c pip.in
-
-# pip-tools commit 53309647980e2a4981db54c0033f98c61142de0b
-# Supposed to fix the absolute path issue, but didn't
-pip-tools
+-r pins-pip-tools.in

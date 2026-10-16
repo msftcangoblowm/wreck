@@ -3,7 +3,13 @@
 
 Module _safe_path deals with platform related path issues
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   pytest -vv --showlocals tests/test_safe_path.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -42,7 +48,6 @@ if TYPE_CHECKING:
         Callable,
         Iterable,
     )
-    from typing import Union
 
 
 def test_platform_checks() -> None:
@@ -78,36 +83,30 @@ def test_resolve_joinpath(tmp_path: "Path") -> None:
             assert abspath_from_joining == abspath_from_parts
 
 
-testdata_resolve_path = (
-    pytest.param(
-        "true",
-        "\\true",
-        marks=pytest.mark.skipif(not is_win(), reason="Windows platform issue"),
-    ),
-    pytest.param(
-        "true",
-        "/true",
-        marks=pytest.mark.skipif(is_win(), reason="MacOS and linux platform issue"),
-    ),
-    pytest.param(
-        "adsfdsafdsafdsafasfsadfafsadfasdfsadfasdf",
-        None,
-        marks=pytest.mark.skipif(is_win(), reason="MacOS and linux platform issue"),
-    ),
-)
-ids_resolve_path = (
-    "Windows",
-    "Linux and MacOS",
-    "nonexistent executable",
-)
-
-
 @pytest.mark.parametrize(
     "f_path, expected",
-    testdata_resolve_path,
-    ids=ids_resolve_path,
+    (
+        pytest.param(
+            "true",
+            "\\true",
+            marks=pytest.mark.skipif(not is_win(), reason="Windows platform issue"),
+            id="Windows",
+        ),
+        pytest.param(
+            "true",
+            "/true",
+            marks=pytest.mark.skipif(is_win(), reason="MacOS and linux platform issue"),
+            id="Linux-and-MacOS",
+        ),
+        pytest.param(
+            "adsfdsafdsafdsafasfsadfafsadfasdfsadfasdf",
+            None,
+            marks=pytest.mark.skipif(is_win(), reason="MacOS and linux platform issue"),
+            id="nonexistent-executable",
+        ),
+    ),
 )
-def test_resolve_path(f_path: str, expected: "Union[str, None]") -> None:
+def test_resolve_path(f_path: str, expected: "str | None") -> None:
     """Test resolve_path.
 
     Do not know the exact absolute path. So just check contains the
@@ -121,38 +120,32 @@ def test_resolve_path(f_path: str, expected: "Union[str, None]") -> None:
         assert expected in actual
 
 
-testdata_replace_suffixes = (
-    (
-        "ted.txt",
-        [".tar", ".gz"],
-        "ted.tar.gz",
-    ),
-    (
-        "ted.txt",
-        None,
-        "ted",
-    ),
-    (
-        "ted.txt",
-        "",
-        "ted",
-    ),
-)
-ids_replace_suffixes = (
-    "txt to tarball",
-    "suffixes None",
-    "suffixes empty str",
-)
-
-
 @pytest.mark.parametrize(
     "relpath, suffixes, expected_name",
-    testdata_replace_suffixes,
-    ids=ids_replace_suffixes,
+    (
+        pytest.param(
+            "ted.txt",
+            [".tar", ".gz"],
+            "ted.tar.gz",
+            id="txt-to-tarball",
+        ),
+        pytest.param(
+            "ted.txt",
+            None,
+            "ted",
+            id="suffixes-None",
+        ),
+        pytest.param(
+            "ted.txt",
+            "",
+            "ted",
+            id="suffixes-empty-str",
+        ),
+    ),
 )
 def test_replace_suffixes(
     relpath: str,
-    suffixes: "Union[Sequence[str], str, None]",
+    suffixes: "Sequence[str] | str | None",
     expected_name: str,
     tmp_path: "Path",
 ) -> None:
@@ -226,7 +219,7 @@ def test_get_venv_python_abspath(
                         venv_python_executable_abspath.exists()
                         and venv_python_executable_abspath.is_file()
                     )
-                    assert is_file is True
+                    assert is_file
 
         # Force a NotADirectoryError
         relpath_venv_1 = cast(

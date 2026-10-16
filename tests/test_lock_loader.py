@@ -55,79 +55,62 @@ if TYPE_CHECKING:
 
     from wreck.lock_datum import PinDatum
 
-testdata_loader_pindatum = (
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "dev.unlock",
-                ),
-                "requirements/dev.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "prod.unlock",
-                ),
-                "requirements/prod.in",
-            ),
-        ),
-        (
-            "requirements/pip-tools",
-            "requirements/pip",
-            "requirements/prod",
-            "requirements/kit",
-            "requirements/tox",
-            "requirements/mypy",
-            "requirements/manage",
-            "requirements/dev",
-        ),
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "dev.in",
-                ),
-                "requirements/dev.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "prod.unlock",
-                ),
-                "requirements/prod.in",
-            ),
-        ),
-        (
-            "requirements/pip-tools",
-            "requirements/pip",
-            "requirements/prod",
-            "requirements/kit",
-            "requirements/tox",
-            "requirements/mypy",
-            "requirements/manage",
-            "requirements/dev",
-        ),
-    ),
-)
-ids_loader_pindatum = (
-    "Parse venv requirements files into Pins",
-    "has two constraints and a requirement",
-)
-
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
     "path_config, venv_path, seq_reqs, bases_relpath",
-    testdata_loader_pindatum,
-    ids=ids_loader_pindatum,
+    (
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path("requirements").joinpath("dev.unlock"),
+                    "requirements/dev.in",
+                ),
+                (
+                    Path("requirements").joinpath("prod.unlock"),
+                    "requirements/prod.in",
+                ),
+            ),
+            (
+                "requirements/pip-tools",
+                "requirements/pip",
+                "requirements/prod",
+                "requirements/kit",
+                "requirements/tox",
+                "requirements/mypy",
+                "requirements/manage",
+                "requirements/dev",
+            ),
+            id="Parse-venv-requirements-files-into-Pins",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path("requirements").joinpath("dev.in"),
+                    "requirements/dev.in",
+                ),
+                (
+                    Path("requirements").joinpath("prod.unlock"),
+                    "requirements/prod.in",
+                ),
+            ),
+            (
+                "requirements/pip-tools",
+                "requirements/pip",
+                "requirements/prod",
+                "requirements/kit",
+                "requirements/tox",
+                "requirements/mypy",
+                "requirements/manage",
+                "requirements/dev",
+            ),
+            id="has-two-constraints-and-a-requirement",
+        ),
+    ),
 )
 def test_loader_pindatum(
     path_config: "Path",
@@ -218,7 +201,8 @@ def test_loader_pindatum(
     prepare_folders_files(seq_rel_paths, tmp_path)
 
     for t_paths in seq_reqs:
-        abspath_src, dest_relpath = t_paths
+        relpath_src, dest_relpath = t_paths
+        abspath_src = abspath_tests_dir.parent.joinpath(relpath_src)
 
         #    overwrite 'requirements/dev.unlock'
         abspath_dest = cast("Path", resolve_joinpath(tmp_path, dest_relpath))
@@ -255,7 +239,7 @@ def test_loader_pindatum(
     )
     # verify
     assert isinstance(set_pins_autofixed, set)
-    assert len(set_pins_autofixed) != 0
+    assert set_pins_autofixed
 
     # act
     #    filter by pin True and .lock file
@@ -267,7 +251,7 @@ def test_loader_pindatum(
     )
     # verify
     is_there_will_be_pins = len(set_pindatum_0) != 0
-    assert is_there_will_be_pins is True
+    assert is_there_will_be_pins
 
     # act
     #    filter by pin False and .lock file
@@ -279,27 +263,33 @@ def test_loader_pindatum(
     )
     # verify
     is_there_will_be_pins = len(set_pindatum_1) != 0
-    assert is_there_will_be_pins is True
-
-
-testdata_check_filter_by_pin = (
-    (None, True),
-    (1.234, True),
-    (False, False),
-    (True, True),
-)
-ids_check_filter_by_pin = (
-    "None --> default",
-    "unsupported type --> default",
-    "False is valid",
-    "True is valid",
-)
+    assert is_there_will_be_pins
 
 
 @pytest.mark.parametrize(
     "val, expected",
-    testdata_check_filter_by_pin,
-    ids=ids_check_filter_by_pin,
+    (
+        pytest.param(
+            None,
+            True,
+            id="None-default",
+        ),
+        pytest.param(
+            1.234,
+            True,
+            id="unsupported-type-default",
+        ),
+        pytest.param(
+            False,
+            False,
+            id="False-is-valid",
+        ),
+        pytest.param(
+            True,
+            True,
+            id="True-is-valid",
+        ),
+    ),
 )
 def test_check_filter_by_pin(
     val: "Union[float, bool, None]",

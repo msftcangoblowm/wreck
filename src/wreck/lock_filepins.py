@@ -28,12 +28,12 @@ from pathlib import (
 )
 from typing import cast
 
+from logging_strict.util.check_type import is_ok
 from pip_requirements_parser import (  # pyright: ignore[reportMissingTypeStubs]
     InstallationError,
     RequirementsFile,
 )
 
-from .check_type import is_ok
 from .constants import g_app_name
 from .exceptions import (
     MissingPackageBaseFolder,
@@ -152,15 +152,13 @@ class FilePins(Collection[PinDatum], Hashable):
                 "dict[str, int | str]",
                 d_req.get("requirement_line", {}),
             )
-            is_line_str = "line" in d_req_line.keys() and isinstance(
-                d_req_line["line"], str
-            )
+            is_line_str = "line" in d_req_line and isinstance(d_req_line["line"], str)
             if is_line_str:
                 line: str = cast(str, d_req_line["line"])
             else:  # pragma: no cover
                 line: str = ""
 
-            if len(line.strip()) != 0:  # pragma: no branch
+            if line.strip():  # pragma: no branch
                 qualifiers = _parse_qualifiers(line)
 
                 # Create Pin
@@ -194,19 +192,17 @@ class FilePins(Collection[PinDatum], Hashable):
         set_requirements = set()
         for d_opt in rf_opts:
             # constraints|requirements, line, line_number
-            is_constraint = "constraints" in d_opt.keys()
-            is_requirements = "requirements" in d_opt.keys()
+            is_constraint = "constraints" in d_opt
+            is_requirements = "requirements" in d_opt
             if is_constraint:  # pragma: no branch
                 # strip_inline_comments
                 constraints_relpath = cast("list[str]", d_opt["constraints"])
-                for constraint_relpath in constraints_relpath:  # pragma: no branch
-                    set_constraints.add(constraint_relpath)
+                set_constraints.update(constraints_relpath)
 
             if is_requirements:  # pragma: no branch
                 # strip_inline_comments
                 requirements_relpath = cast("list[str]", d_opt["requirements"])
-                for requirement_relpath in requirements_relpath:  # pragma: no branch
-                    set_requirements.add(requirement_relpath)
+                set_requirements.update(requirements_relpath)
 
         # constraints and requirements are relpath. Existence not checked
         # lock_infile.InFile checked only the constraints and not the requirements
@@ -409,12 +405,10 @@ class FilePins(Collection[PinDatum], Hashable):
         :type requirements: set[str]
         """
         # From child's ancestors. Obtained recursively
-        for req in requirements:
-            self.pkgs_from_resolved.add(req)
+        self.pkgs_from_resolved.update(requirements)
 
         # From child
-        for pindatum in fpins:
-            self.pkgs_from_resolved.add(pindatum.line)
+        self.pkgs_from_resolved.update(pindatum.line for pindatum in fpins)
 
     @property
     def depth(self):

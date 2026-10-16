@@ -13,17 +13,6 @@ how best to resolve the issue.
 
 KISS principle applies. Keep it simple
 
-.. py:data:: is_module_debug
-   :type: bool
-   :value: False
-
-   Flag to turn on module level logging. Should be off in production
-
-.. py:data:: _logger
-   :type: logging.Logger
-
-   Module level logger
-
 .. py:data:: __all__
    :type: tuple[str, str]
    :value: ("is_timeout", "lock_compile")
@@ -44,13 +33,14 @@ from pathlib import (
     PurePath,
 )
 
+from logging_strict.util.check_type import is_ok
+
 from ._package_installed import is_package_installed
 from ._run_cmd import run_cmd
 from ._safe_path import (
     get_venv_python_abspath,
     resolve_path,
 )
-from .check_type import is_ok
 from .constants import (
     SUFFIX_LOCKED,
     g_app_name,
@@ -59,7 +49,10 @@ from .exceptions import MissingRequirementsFoldersFiles
 from .lock_util import replace_suffixes_last
 from .pep518_venvs import get_reqs
 
+#: bool: Flag to turn on module level logging. Should be off in production
 is_module_debug = False
+
+#: logging.Logger: Module level logger
 _logger = logging.getLogger(f"{g_app_name}.lock_compile")
 
 __all__ = (
@@ -195,7 +188,7 @@ def _compile_one(
         "--pip-args='--isolated'",
         "--no-emit-options",
         f"--pip-args='--timeout={int_timeout!s}'",
-        f"{line_python}",
+        line_python,
         "-o",
         lock_abspath,
         in_abspath,
@@ -288,7 +281,7 @@ def _compile_one(
 
     # Remove tempfile
     if is_do_compare and fp_name is not None:  # pragma: no branch
-        os.unlink(fp_name)
+        Path(fp_name).unlink()
 
     return ret
 
@@ -320,19 +313,18 @@ def _empty_in_empty_out(in_abspath, lock_abspath):
     abspath_in = Path(in_abspath)
     abspath_lock = Path(lock_abspath)
     in_size = abspath_in.stat().st_size
-    is_in_empty = in_size == 0 or in_size == 1
+    is_in_empty = in_size in (0, 1)
     is_lock_file_exists = abspath_lock.exists() and abspath_lock.is_file()
 
-    if is_in_empty:
+    if is_in_empty:  # pragma: no branch
         if is_lock_file_exists:
             # trunicate file
-            open(abspath_lock, "wb").close()
+            abspath_lock.open("wb").close()
         else:  # pragma: no cover
             # file doesn't exist, create it
             abspath_lock.touch()
-    else:
-        # .in is non-empty. Use pip-compile
-        pass
+    # else condition -- .in is non-empty. Use pip-compile
+    pass
 
     ret = is_in_empty
 

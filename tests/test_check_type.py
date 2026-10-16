@@ -25,102 +25,121 @@ import pytest
 
 from wreck.check_type import (
     click_bool,
-    is_ok,
     is_relative_required,
 )
 from wreck.constants import SUFFIX_IN
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import (
-        Any,
-        Union,
-    )
+    from typing import Any
 
     from tests.typing_only import DOES_NOT_OR_DOES
-
-testdata_is_ok = (
-    (None, False),
-    ("", False),
-    (0.123, False),
-    ("    ", False),
-    ("Hello World!", True),
-)
-ids_is_ok = (
-    "not str",
-    "empty string",
-    "not str",
-    "contains only whitespace",
-    "non-empty string",
-)
-
-
-@pytest.mark.parametrize(
-    "mystr, expected",
-    testdata_is_ok,
-    ids=ids_is_ok,
-)
-def test_is_ok(
-    mystr: "Union[str, float, None]",
-    expected: bool,
-) -> None:
-    """Test is_ok check."""
-    # pytest --showlocals --log-level INFO -k "test_is_ok" tests
-    actual = is_ok(mystr)
-    assert actual == expected
-
-
-if TYPE_CHECKING:
-    testdata_is_relative_required: Sequence[
-        tuple[Union[Path, str, None], Any, DOES_NOT_OR_DOES, bool]
-    ]
-
-testdata_is_relative_required = (
-    (None, None, pytest.raises(TypeError), False),
-    (None, 1.12345, pytest.raises(TypeError), False),
-    (None, 1, pytest.raises(TypeError), False),
-    (None, "Hello world!", pytest.raises(TypeError), False),
-    (None, (), pytest.raises(ValueError), False),
-    (None, [], pytest.raises(ValueError), False),
-    (None, (None, 1.12345, 1), pytest.raises(ValueError), False),
-    (None, (SUFFIX_IN,), does_not_raise(), False),
-    ("requirements/horse.in", (SUFFIX_IN,), does_not_raise(), False),
-    (Path("requirements/horse.in"), (SUFFIX_IN,), does_not_raise(), True),
-    (Path("requirements/horse.in"), ("in",), does_not_raise(), True),
-    (Path("requirements/horse.in"), (".pip",), does_not_raise(), False),
-    (
-        Path("requirements/horse.pip"),
-        (SUFFIX_IN,),
-        does_not_raise(),
-        False,
-    ),
-    (Path("requirements/horse.in"), (".tar", ".gz"), does_not_raise(), False),
-)
-ids_is_relative_required = (
-    "ext unsupported type None",
-    "ext unsupported type float",
-    "ext unsupported type int",
-    "ext unsupported type str disallowed sequence",
-    "ext empty sequence tuple",
-    "ext empty sequence list",
-    "ext sequence containing only unsupported types",
-    "Path | None",
-    "must be a Path, got str. matching extensions",
-    "Path provided matching extensions",
-    "autofix missing period",
-    "exts different has .in expect .pip",
-    "exts different has .pip expect .in",
-    "exts different has .in expect .tar or .gz",
-)
 
 
 @pytest.mark.parametrize(
     "relative_path, exts, expectation, expected",
-    testdata_is_relative_required,
-    ids=ids_is_relative_required,
+    (
+        pytest.param(
+            None,
+            None,
+            pytest.raises(TypeError),
+            False,
+            id="ext-unsupported-type-None",
+        ),
+        pytest.param(
+            None,
+            1.12345,
+            pytest.raises(TypeError),
+            False,
+            id="ext-unsupported-type-float",
+        ),
+        pytest.param(
+            None,
+            1,
+            pytest.raises(TypeError),
+            False,
+            id="ext-unsupported-type-int",
+        ),
+        pytest.param(
+            None,
+            "Hello world!",
+            pytest.raises(TypeError),
+            False,
+            id="ext-unsupported-type-str-disallowed-sequence",
+        ),
+        pytest.param(
+            None,
+            (),
+            pytest.raises(ValueError),
+            False,
+            id="ext-empty-sequence-tuple",
+        ),
+        pytest.param(
+            None,
+            [],
+            pytest.raises(ValueError),
+            False,
+            id="ext-empty-sequence-list",
+        ),
+        pytest.param(
+            None,
+            (None, 1.12345, 1),
+            pytest.raises(ValueError),
+            False,
+            id="ext-sequence-containing-only-unsupported-types",
+        ),
+        pytest.param(
+            None,
+            (SUFFIX_IN,),
+            does_not_raise(),
+            False,
+            id="Path-or-None",
+        ),
+        pytest.param(
+            "requirements/horse.in",
+            (SUFFIX_IN,),
+            does_not_raise(),
+            False,
+            id="must-be-a-Path-got-str.-matching-extensions",
+        ),
+        pytest.param(
+            Path("requirements/horse.in"),
+            (SUFFIX_IN,),
+            does_not_raise(),
+            True,
+            id="Path-provided-matching-extensions",
+        ),
+        pytest.param(
+            Path("requirements/horse.in"),
+            ("in",),
+            does_not_raise(),
+            True,
+            id="autofix-missing-period",
+        ),
+        pytest.param(
+            Path("requirements/horse.in"),
+            (".pip",),
+            does_not_raise(),
+            False,
+            id="exts-different-has-.in-expect-.pip",
+        ),
+        pytest.param(
+            Path("requirements/horse.pip"),
+            (SUFFIX_IN,),
+            does_not_raise(),
+            False,
+            id="exts-different-has-.pip-expect-.in",
+        ),
+        pytest.param(
+            Path("requirements/horse.in"),
+            (".tar", ".gz"),
+            does_not_raise(),
+            False,
+            id="exts-different-has-.in-expect-.tar-or-.gz",
+        ),
+    ),
 )
 def test_is_relative_required(
-    relative_path: "Union[Path, str, None]",
+    relative_path: "Path | str | None",
     exts: "Any",
     expectation: "DOES_NOT_OR_DOES",
     expected: bool,
@@ -136,32 +155,44 @@ def test_is_relative_required(
         assert actual == expected
 
 
-testdata_click_bool = (
-    (None, None),
-    ("George", None),
-    ("0", False),
-    ("off", False),
-    ("1", True),
-    ("on", True),
-)
-ids_click_bool = (
-    "None",
-    "Unknown str",
-    "str number indicating a bool value False",
-    "off means False",
-    "str number indicating a bool value True",
-    "off means True",
-)
-
-
 @pytest.mark.parametrize(
     "val, expected",
-    testdata_click_bool,
-    ids=ids_click_bool,
+    (
+        pytest.param(
+            None,
+            None,
+            id="None",
+        ),
+        pytest.param(
+            "George",
+            None,
+            id="Unknown-str",
+        ),
+        pytest.param(
+            "0",
+            False,
+            id="str-number-indicating-a-bool-value-False",
+        ),
+        pytest.param(
+            "off",
+            False,
+            id="off-means-False",
+        ),
+        pytest.param(
+            "1",
+            True,
+            id="str-number-indicating-a-bool-value-True",
+        ),
+        pytest.param(
+            "on",
+            True,
+            id="off-means-True",
+        ),
+    ),
 )
 def test_click_bool(
-    val: "Union[str, None]",
-    expected: "Union[bool, None]",
+    val: "str | None",
+    expected: "bool | None",
 ) -> None:
     """Test click.Bool check."""
     # pytest --showlocals --log-level INFO -k "test_click_bool" tests

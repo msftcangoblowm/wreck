@@ -14,9 +14,9 @@ import os
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from logging_strict.util.check_type import is_ok
 from packaging.specifiers import InvalidSpecifier
 
-from .check_type import is_ok
 from .constants import (
     SUFFIX_LOCKED,
     SUFFIX_UNLOCKED,
@@ -243,15 +243,13 @@ def _get_qualifiers(d_subset):
             # Does this pin have qualifiers?
             quals = pin.qualifiers
             has_quals = len(quals) != 0
-            if (
-                pkg_name not in d_pkg_qualifiers.keys() and has_quals
-            ):  # pragma: no branch
+            if pkg_name not in d_pkg_qualifiers and has_quals:  # pragma: no branch
                 str_pkg_qualifiers = "; ".join(quals)
                 str_pkg_qualifiers = f"; {str_pkg_qualifiers}"
                 d_pkg_qualifiers[pkg_name] = str_pkg_qualifiers
 
         # empty str for a package without qualifiers
-        if pkg_name not in d_pkg_qualifiers.keys():  # pragma: no branch
+        if pkg_name not in d_pkg_qualifiers:  # pragma: no branch
             d_pkg_qualifiers[pkg_name] = ""
 
     return d_pkg_qualifiers
@@ -376,7 +374,7 @@ def _load_once(
 
     # get_issues -- no corresponding pin in .in file
     # Pure .lock package dependency conflict
-    for pkg_name, set_datum in locks_by_pkg_w_issues_remaining.items():
+    for pkg_name in locks_by_pkg_w_issues_remaining:
         str_pkg_qualifiers = d_qualifiers_lock[pkg_name]
 
         # Choose highest

@@ -68,15 +68,6 @@ if TYPE_CHECKING:
 
     from tests.typing_only import DOES_NOT_OR_DOES
 
-testdata_pipcompile_creates_1byte = (
-    (
-        (Path("_python_1byte").joinpath("empty.in"),),
-        "requirements/empty.in",
-        "requirements/empty.lock",
-    ),
-)
-ids_pipcompile_creates_1byte = ("0B .in file 1B .lock file",)
-
 
 @pytest.mark.xfail(
     not is_package_installed("pip-tools"),
@@ -84,8 +75,14 @@ ids_pipcompile_creates_1byte = ("0B .in file 1B .lock file",)
 )
 @pytest.mark.parametrize(
     "seq_copy_these, in_relpath, out_relpath",
-    testdata_pipcompile_creates_1byte,
-    ids=ids_pipcompile_creates_1byte,
+    (
+        pytest.param(
+            (Path("_python_1byte").joinpath("empty.in"),),
+            "requirements/empty.in",
+            "requirements/empty.lock",
+            id="0B-.in-file-1B-.lock-file",
+        ),
+    ),
 )
 def test_pipcompile_creates_1byte(
     seq_copy_these: "Sequence[Path]",
@@ -168,39 +165,13 @@ def test_pipcompile_creates_1byte(
     lines_minus_flags = [
         line
         for line in lines
-        if not line.startswith("--extra-index-url")
-        and not line.startswith("--index-url")
-        and len(line) != 0
+        if not line.startswith(("--extra-index-url", "--index-url"))
+        and line
         and line != "\n"
     ]
     line_count = len(lines_minus_flags)
 
     assert line_count == 0
-
-
-testdata_empty_in_empty_out = (
-    (
-        (Path("_python_1byte").joinpath("empty.in"),),
-        "requirements/empty.in",
-        "requirements/empty.lock",
-        True,
-        "",
-    ),
-    (
-        (
-            Path("_python_1byte").joinpath("empty.in"),
-            Path("_python_1byte").joinpath("empty.lock"),
-        ),
-        "requirements/empty.in",
-        "requirements/empty.lock",
-        True,
-        "",
-    ),
-)
-ids_empty_in_empty_out = (
-    "0B in file created using touch. No pre-existing lock file",
-    "0B in file created using touch. Pre-existing lock file",
-)
 
 
 @pytest.mark.xfail(
@@ -209,8 +180,27 @@ ids_empty_in_empty_out = (
 )
 @pytest.mark.parametrize(
     "seq_copy_these, in_relpath, out_relpath, is_in_empty_expected, expected_out",
-    testdata_empty_in_empty_out,
-    ids=ids_empty_in_empty_out,
+    (
+        pytest.param(
+            (Path("_python_1byte").joinpath("empty.in"),),
+            "requirements/empty.in",
+            "requirements/empty.lock",
+            True,
+            "",
+            id="0B-in-file-created-using-touch.-No-pre-existing-lock-file",
+        ),
+        pytest.param(
+            (
+                Path("_python_1byte").joinpath("empty.in"),
+                Path("_python_1byte").joinpath("empty.lock"),
+            ),
+            "requirements/empty.in",
+            "requirements/empty.lock",
+            True,
+            "",
+            id="0B-in-file-created-using-touch.-Pre-existing-lock-file",
+        ),
+    ),
 )
 def test_empty_in_empty_out(
     seq_copy_these: "Sequence[Path]",
@@ -260,41 +250,38 @@ def test_empty_in_empty_out(
     assert abspath_out_size_after == 0
 
 
-testdata_compile_one = (
-    (
-        (
-            Path(__file__).parent.parent.joinpath("requirements/pins.shared.in"),
-            Path(__file__).parent.parent.joinpath("requirements/pip.in"),
-            Path(__file__).parent.parent.joinpath("requirements/pip-tools.in"),
-        ),
-        "requirements/pip-tools.in",
-        "requirements/pip-tools.out",
-        None,
-    ),
-    (
-        (
-            Path(__file__).parent.joinpath("_python_1byte/empty.in"),
-            Path(__file__).parent.joinpath("_python_1byte/empty.lock"),  # 1 Byte not 0B
-        ),
-        "requirements/empty.in",
-        "requirements/empty.out",
-        1,  # len(os.linesep) is 2 on Windows
-    ),
-)
-ids_compile_one = (
-    "pip-tools.in --> pip-tools.lock pip-compile upgrades dependencies",
-    "empty.in --> empty.lock 1B file containing newline. Skips pip-compile",
-)
-
-
 @pytest.mark.xfail(
     not is_package_installed("pip-tools"),
     reason="dependency package pip-tools is required",
 )
 @pytest.mark.parametrize(
     "seq_copy_these, in_relpath, out_relpath, expected_file_size_bytes",
-    testdata_compile_one,
-    ids=ids_compile_one,
+    (
+        pytest.param(
+            (
+                Path(__file__).parent.parent.joinpath("requirements/pins.shared.in"),
+                Path(__file__).parent.parent.joinpath("requirements/pip.in"),
+                Path(__file__).parent.parent.joinpath("requirements/pins-pip-tools.in"),
+                Path(__file__).parent.parent.joinpath("requirements/pip-tools.in"),
+            ),
+            "requirements/pip-tools.in",
+            "requirements/pip-tools.out",
+            None,
+            id="pip-tools.in-pip-tools.lock-pip-compile-upgrades-dependencies",
+        ),
+        pytest.param(
+            (
+                Path(__file__).parent.joinpath("_python_1byte/empty.in"),
+                Path(__file__).parent.joinpath(
+                    "_python_1byte/empty.lock"
+                ),  # 1 Byte not 0B
+            ),
+            "requirements/empty.in",
+            "requirements/empty.out",
+            1,  # len(os.linesep) is 2 on Windows
+            id="empty.in-empty.lock-1B-file-containing-newline.-Skips-pip-compile",
+        ),
+    ),
 )
 def test_compile_one_normal(
     seq_copy_these: "Sequence[Path]",
@@ -305,6 +292,7 @@ def test_compile_one_normal(
 ) -> None:
     """Use pip-compile to compile lock an .in file. No bypass for empty .in file"""
     # pytest -s -vv --showlocals -k "test_compile_one_normal" tests
+
     path_ep = resolve_path("pip-compile")
     assert path_ep is not None
     ep_path = str(path_ep)
@@ -373,46 +361,42 @@ def test_compile_one_normal(
             assert line_count == 0
 
 
-testdata_lock_file_paths_to_relpath = (
-    (
-        (
-            "requirements/prod.shared.in",
-            "docs/requirements.in",
-        ),
-        (
-            "#\n"
-            "click==8.1.7\n"
-            "    # via\n"
-            "    #   -c {tmp_path!s}/docs/../requirements/prod.shared.in\n"
-            "    #   click-log\n"
-            "    #   scriv\n"
-            "    #   sphinx-external-toc-strict\n"
-            "    #   uvicorn\n"
-            "sphobjinv==2.3.1.1\n"
-            "    # via -r {tmp_path!s}/docs/requirements.in\n\n"
-        ),
-        (
-            "#\n"
-            "click==8.1.7\n"
-            "    # via\n"
-            "    #   -c docs/../requirements/prod.shared.in\n"
-            "    #   click-log\n"
-            "    #   scriv\n"
-            "    #   sphinx-external-toc-strict\n"
-            "    #   uvicorn\n"
-            "sphobjinv==2.3.1.1\n"
-            "    # via -r docs/requirements.in\n\n"
-        ),
-        "docs/requirements.lock",
-    ),
-)
-ids_lock_file_paths_to_relpath = ("remove absolute paths from .lock file",)
-
-
 @pytest.mark.parametrize(
     "seq_reqs_relpath, lock_file_contents, expected_contents, dest_relpath",
-    testdata_lock_file_paths_to_relpath,
-    ids=ids_lock_file_paths_to_relpath,
+    (
+        pytest.param(
+            (
+                "requirements/prod.shared.in",
+                "docs/requirements.in",
+            ),
+            (
+                "#\n"
+                "click==8.1.7\n"
+                "    # via\n"
+                "    #   -c {tmp_path!s}/docs/../requirements/prod.shared.in\n"
+                "    #   click-log\n"
+                "    #   scriv\n"
+                "    #   sphinx-external-toc-strict\n"
+                "    #   uvicorn\n"
+                "sphobjinv==2.3.1.1\n"
+                "    # via -r {tmp_path!s}/docs/requirements.in\n\n"
+            ),
+            (
+                "#\n"
+                "click==8.1.7\n"
+                "    # via\n"
+                "    #   -c docs/../requirements/prod.shared.in\n"
+                "    #   click-log\n"
+                "    #   scriv\n"
+                "    #   sphinx-external-toc-strict\n"
+                "    #   uvicorn\n"
+                "sphobjinv==2.3.1.1\n"
+                "    # via -r docs/requirements.in\n\n"
+            ),
+            "docs/requirements.lock",
+            id="remove-absolute-paths-from-.lock-file",
+        ),
+    ),
 )
 def test_lock_file_paths_to_relpath(
     seq_reqs_relpath: "Sequence[str]",
@@ -439,37 +423,8 @@ def test_lock_file_paths_to_relpath(
     #    Within file contents, absolute path of parent folder is absent
     actual_contents = path_doc_lock.read_text()
     is_not_occur_once = str(tmp_path) not in actual_contents
-    assert is_not_occur_once is True
+    assert is_not_occur_once
     assert actual_contents == expected_contents
-
-
-testdata_lock_compile_live = (
-    pytest.param(
-        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
-        ".tools",
-        (
-            "requirements/pins.shared.in",
-            "docs/pip-tools.in",
-        ),
-        "docs/pip-tools.in",
-        does_not_raise(),
-    ),
-    pytest.param(
-        Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
-        ".venv",
-        (
-            "requirements/pins.shared.in",
-            "requirements/pip.in",
-            "requirements/pip-tools.in",
-        ),
-        "requirements/pip-tools.in",
-        does_not_raise(),
-    ),
-)
-ids_lock_compile_live = (
-    "recipe for docs/pip-tools.in --> docs/pip-tools.lock",
-    "recipe for requirements/pip-tools.in --> requirements/pip-tools.lock",
-)
 
 
 @pytest.mark.logging_package_name(g_app_name)
@@ -479,8 +434,33 @@ ids_lock_compile_live = (
 )
 @pytest.mark.parametrize(
     "path_config, venv_relpath, seq_reqs_relpath, in_relpath, expectation",
-    testdata_lock_compile_live,
-    ids=ids_lock_compile_live,
+    (
+        pytest.param(
+            Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
+            ".tools",
+            (
+                "requirements/pins.shared.in",
+                "requirements/pins-pip-tools.in",
+                "docs/pip-tools.in",
+            ),
+            "docs/pip-tools.in",
+            does_not_raise(),
+            id="recipe-for-docs-pip-tools.in-docs-pip-tools.lock",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs_minimal.pyproject_toml"),
+            ".venv",
+            (
+                "requirements/pins.shared.in",
+                "requirements/pip.in",
+                "requirements/pins-pip-tools.in",
+                "requirements/pip-tools.in",
+            ),
+            "requirements/pip-tools.in",
+            does_not_raise(),
+            id="recipe-for-requirements-pip-tools.in-requirements-pip-tools.lock",
+        ),
+    ),
 )
 def test_lock_compile_live(
     path_config: "Path",
@@ -602,24 +582,20 @@ def test_lock_compile_live(
             assert compiled_count == 1
 
 
-testdata_compile_malformed_in = (
-    (
-        (Path("_malformed_in").joinpath("malformed-pip.in"),),
-        "requirements/malformed-pip.in",
-        "requirements/malformed-pip.lock",
-    ),
-)
-ids_compile_malformed_in = ("mix up order oper ver package",)
-
-
 @pytest.mark.xfail(
     not is_package_installed("pip-tools"),
     reason="dependency package pip-tools is required",
 )
 @pytest.mark.parametrize(
     "seq_copy_these, in_relpath, out_relpath",
-    testdata_compile_malformed_in,
-    ids=ids_compile_malformed_in,
+    (
+        pytest.param(
+            (Path("_malformed_in").joinpath("malformed-pip.in"),),
+            "requirements/malformed-pip.in",
+            "requirements/malformed-pip.lock",
+            id="mix-up-order-oper-ver-package",
+        ),
+    ),
 )
 def test_compile_malformed_in(
     seq_copy_these: "Sequence[Path]",
@@ -694,26 +670,20 @@ def test_compile_malformed_in(
     assert "pip._internal.exceptions.InstallationError" in err_details
 
 
-testdata_is_timeout = (
-    (
-        "blah blah blah timeout blah blah blah",
-        True,
-    ),
-    (
-        "blah blah blah blah blah blah",
-        False,
-    ),
-)
-ids_is_timeout = (
-    "failure msg contains timeout",
-    "failure msg does not contain timeout",
-)
-
-
 @pytest.mark.parametrize(
     "msg, timeout_expected",
-    testdata_is_timeout,
-    ids=ids_is_timeout,
+    (
+        pytest.param(
+            "blah blah blah timeout blah blah blah",
+            True,
+            id="failure-msg-contains-timeout",
+        ),
+        pytest.param(
+            "blah blah blah blah blah blah",
+            False,
+            id="failure-msg-does-not-contain-timeout",
+        ),
+    ),
 )
 def test_is_timeout(msg: str, timeout_expected: bool) -> None:
     """Exercise is_timeout"""

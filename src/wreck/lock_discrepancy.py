@@ -17,17 +17,6 @@
 
    Module exports
 
-.. py:data:: is_module_debug
-   :type: bool
-   :value: False
-
-   Flag to turn on module level logging. Should be off in production
-
-.. py:data:: _logger
-   :type: logging.Logger
-
-   Module level logger
-
 """
 
 from __future__ import annotations
@@ -36,7 +25,6 @@ import io
 import logging
 import operator
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
@@ -62,12 +50,12 @@ from .lock_datum import (
     pprint_pins,
 )
 
-if sys.version_info >= (3, 10):  # pragma: no cover py-gte-310-else
-    DC_SLOTS = {"slots": True}
-else:  # pragma: no cover py-gte-310
-    DC_SLOTS = {}
+DC_SLOTS = {"slots": True}
 
+#: bool: Flag to turn on module level logging. Should be off in production
 is_module_debug = True
+
+#: logging.Logger: Module level logger
 _logger = logging.getLogger(f"{g_app_name}.lock_discrepancy")
 
 __all__ = (
@@ -216,9 +204,7 @@ def _get_specifiers(set_pindatum):
     :return: Specifiers lists
     :rtype: list[list[str]]
     """
-    lst = []
-    for pin in set_pindatum:
-        lst.append(pin.specifiers)
+    lst = [pin.specifiers for pin in set_pindatum]
 
     return lst
 
@@ -350,10 +336,11 @@ def filter_acceptable(
         _logger.info(msg_info)
 
     # Remove empty list(s)
-    empty_idx = []
-    for idx, lst_specifiers in enumerate(lsts_specifiers):
-        if len(lst_specifiers) == 0:  # pragma: no branch
-            empty_idx.append(idx)
+    empty_idx = [
+        idx
+        for idx, lst_specifiers in enumerate(lsts_specifiers)
+        if len(lst_specifiers) == 0
+    ]
 
     #    reversed so higher idx removed first
     for idx in reversed(empty_idx):
@@ -459,8 +446,8 @@ def get_compatible_release(
 
     set_v_identifiers = set()
     for l_specifiers in lsts_specifiers:
-        for specifier in l_specifiers:
-            set_v_identifiers.add(specifier)
+        set_v_identifiers.update(l_specifiers)
+
     l_v_identifiers = list(set_v_identifiers)
     nudge_pin_unlock = ", ".join(l_v_identifiers)
 
@@ -692,15 +679,16 @@ def get_the_fixes(
                 for ver_test in set_acceptable
                 if func(ver_test, Version(unlock_ver))
             ]
-            if len(lst) != 0:
+            if not lst:
+                # Unresolvable
+                t_ret_v2 = (None, None, False)
+            else:
                 lst_sorted = sorted(lst)
                 found_1 = lst_sorted[idx_from_list]
                 nudge_pin_unlock = nudge_pin_unlock_v1(unlock_operator, found_1)
                 nudge_pin_lock = nudge_pin_lock_v1(found_1)
                 t_ret_v2 = (nudge_pin_lock, nudge_pin_unlock, True)
-            else:
-                # Unresolvable
-                t_ret_v2 = (None, None, False)
+
         else:
             # ==
             nudge_pin_lock = nudge_pin_lock_v1(

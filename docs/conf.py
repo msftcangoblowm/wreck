@@ -61,9 +61,7 @@ project = f"{proj_project} {version_xyz}"
 rst_epilog = """
 .. |project_name| replace:: {slug}
 .. |package-equals-release| replace:: wreck=={release}
-""".format(
-    release=release, slug=slug
-)
+""".format(release=release, slug=slug)
 
 html_theme_options = {
     "description": proj_description,
@@ -170,7 +168,7 @@ autodoc_type_aliases = {
 }
 
 extlinks = {
-    "pypi_org": (  # url to: aiologger
+    "pypi_org": (
         "https://pypi.org/project/%s",
         "%s",
     ),

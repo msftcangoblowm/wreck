@@ -1,5 +1,4 @@
 get-pypi-latest-version
-pip-tools
-# pip<24.2
+pip-tools>=7.6.1
 tomli>=2.4.1; python_version<"3.11"
 typing-extensions; python_version<"3.11"

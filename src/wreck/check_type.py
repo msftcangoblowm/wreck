@@ -2,8 +2,8 @@
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
 .. py:data:: __all__
-   :type: tuple[str, str, str, str]
-   :value: ("is_ok", "is_relative_required", "is_iterable_not_str", "click_bool")
+   :type: tuple[str, ...]
+   :value: ( "is_relative_required", "is_iterable_not_str", "click_bool")
 
    Module exports
 
@@ -42,7 +42,6 @@ from .constants import (
 
 __package__ = "wreck"
 __all__ = (
-    "is_ok",
     "is_relative_required",
     "is_iterable_not_str",
     "click_bool",
@@ -51,28 +50,6 @@ __all__ = (
 DEFAULT_EXTENSIONS = (SUFFIX_IN, SUFFIX_SHARED_IN)
 CLICK_TRUE = ("1", "true", "t", "yes", "y", "on")
 CLICK_FALSE = ("0", "false", "f", "no", "n", "off")
-
-
-def is_ok(test):
-    """Check if non-empty str
-
-    Edge case: contains only whitespace --> ``False``
-
-    :param test: variable to test
-    :type test: typing.Any | None
-    :returns: ``True`` if non-empty str otherwise ``False``
-    :rtype: bool
-
-    """
-    ret = False
-    if test is not None and isinstance(test, str):
-        # Edge case: contains only whitespace
-        str_stripped = test.strip()
-        ret = len(str_stripped) != 0
-    else:
-        ret = False
-
-    return ret
 
 
 def is_relative_required(
@@ -114,14 +91,12 @@ def is_relative_required(
         else:
             lst_ext.append(ext)
 
-    if len(lst_ext) == 0:
+    if not lst_ext:  # pragma: no branch
         msg_exc = (
             "Expecting at least one suffix to compare against the "
             "relative paths suffixes"
         )
         raise ValueError(msg_exc)
-    else:  # pragma: no cover
-        pass
 
     is_relative_path_acceptable = (
         path_relative is not None
@@ -143,11 +118,7 @@ def is_iterable_not_str(mixed):
     """
     ret = (
         mixed is not None
-        and (
-            isinstance(mixed, Sequence)
-            or isinstance(mixed, set)
-            or isinstance(mixed, Generator)
-        )
+        and isinstance(mixed, Sequence | set | Generator)
         and not isinstance(mixed, str)
     )
 

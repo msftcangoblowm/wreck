@@ -48,7 +48,7 @@ jobs:
           # See https://github.com/deadsnakes/nightly for the source of the nightly
           # builds.
           # bionic: 18, focal: 20, jammy: 22, noble: 24
-        - ubuntu-22.04
+        - ubuntu-latest
         python-version:
           # When changing this list, be sure to check the [gh] list in
           # tox.ini so that tox will run properly. PYVERSIONS
@@ -59,12 +59,12 @@ jobs:
         - '3.13'
           # - "3.14-full"
           # https://github.com/actions/setup-python#available-versions-of-pypy
-        - pypy-3.10-nightly
+        - pypy-3.11-nightly
       fail-fast: false
 
     steps:
     - name: Check out the repo
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@v7.0.1
 
     - name: Get latest tag
       id: vars
@@ -72,13 +72,13 @@ jobs:
         echo "tag=$(git describe --tags)" >> $GITHUB_OUTPUT
 
     - name: Install ${{ matrix.python-version }} with deadsnakes
-      uses: deadsnakes/action@ef54298f4881dc40a8a4e9b367f91578fdbe12a1
+      uses: deadsnakes/action@158b00b4c02a7c8c501fce569f02f7e1948bb5be
       if: "!startsWith(matrix.python-version, 'pypy-')"
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Install ${{ matrix.python-version }} with setup-python
-      uses: actions/setup-python@v6.2.0
+      uses: actions/setup-python@v7.0.0
       if: startsWith(matrix.python-version, 'pypy-')
       with:
         python-version: ${{ matrix.python-version }}
@@ -110,7 +110,7 @@ jobs:
         # Remove '-nightly' suffix if present
         python_version=${python_version%-nightly}
         if [[ "$python_version" == pypy-* ]]; then
-          ver_short="${python_version//-/}"  # pypy3.10
+          ver_short="${python_version//-/}"  # pypy3.11
         else
           ver_short="py${python_version//-/}"  # py3.14
         fi

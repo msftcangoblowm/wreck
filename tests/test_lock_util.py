@@ -56,88 +56,83 @@ if TYPE_CHECKING:
 
     from tests.typing_only import DOES_NOT_OR_DOES
 
-testdata_is_shared = (
-    (
-        f"dog{SUFFIX_IN}",
-        does_not_raise(),
-        False,
-    ),
-    (
-        f"dog{SUFFIX_SHARED_IN}",
-        does_not_raise(),
-        True,
-    ),
-    (
-        f"dog{SUFFIX_LOCKED}",
-        does_not_raise(),
-        False,
-    ),
-    (
-        f"dog.shared{SUFFIX_LOCKED}",
-        does_not_raise(),
-        True,
-    ),
-    (
-        f"dog{SUFFIX_UNLOCKED}",
-        does_not_raise(),
-        False,
-    ),
-    (
-        f"dog.shared{SUFFIX_UNLOCKED}",
-        does_not_raise(),
-        True,
-    ),
-    (
-        "dog",
-        does_not_raise(),
-        False,
-    ),
-    (
-        "dog.shared",
-        does_not_raise(),
-        True,
-    ),
-    (
-        None,
-        pytest.raises(ValueError),
-        False,
-    ),
-    (
-        "",
-        pytest.raises(ValueError),
-        False,
-    ),
-    (
-        "   ",
-        pytest.raises(ValueError),
-        False,
-    ),
-    (
-        1.2345,
-        pytest.raises(ValueError),
-        False,
-    ),
-)
-ids_is_shared = (
-    SUFFIX_IN,
-    SUFFIX_SHARED_IN,
-    SUFFIX_LOCKED,
-    f".shared{SUFFIX_LOCKED}",
-    SUFFIX_UNLOCKED,
-    f".shared{SUFFIX_UNLOCKED}",
-    "no suffixes",
-    "no ending .shared",
-    "None",
-    "empty str",
-    "just whitespace",
-    "unsupported type",
-)
-
 
 @pytest.mark.parametrize(
     "file_name, expectation, expected_is_shared",
-    testdata_is_shared,
-    ids=ids_is_shared,
+    (
+        pytest.param(
+            f"dog{SUFFIX_IN}",
+            does_not_raise(),
+            False,
+            id=SUFFIX_IN,
+        ),
+        pytest.param(
+            f"dog{SUFFIX_SHARED_IN}",
+            does_not_raise(),
+            True,
+            id=SUFFIX_SHARED_IN,
+        ),
+        pytest.param(
+            f"dog{SUFFIX_LOCKED}",
+            does_not_raise(),
+            False,
+            id=SUFFIX_LOCKED,
+        ),
+        pytest.param(
+            f"dog.shared{SUFFIX_LOCKED}",
+            does_not_raise(),
+            True,
+            id=f".shared{SUFFIX_LOCKED}",
+        ),
+        pytest.param(
+            f"dog{SUFFIX_UNLOCKED}",
+            does_not_raise(),
+            False,
+            id=SUFFIX_UNLOCKED,
+        ),
+        pytest.param(
+            f"dog.shared{SUFFIX_UNLOCKED}",
+            does_not_raise(),
+            True,
+            id=f".shared{SUFFIX_UNLOCKED}",
+        ),
+        pytest.param(
+            "dog",
+            does_not_raise(),
+            False,
+            id="no-suffixes",
+        ),
+        pytest.param(
+            "dog.shared",
+            does_not_raise(),
+            True,
+            id="no-ending-.shared",
+        ),
+        pytest.param(
+            None,
+            pytest.raises(ValueError),
+            False,
+            id="None",
+        ),
+        pytest.param(
+            "",
+            pytest.raises(ValueError),
+            False,
+            id="empty-str",
+        ),
+        pytest.param(
+            "   ",
+            pytest.raises(ValueError),
+            False,
+            id="just-whitespace",
+        ),
+        pytest.param(
+            1.2345,
+            pytest.raises(ValueError),
+            False,
+            id="unsupported-type",
+        ),
+    ),
 )
 def test_lock_util_is_shared(
     file_name: "Union[float, str, None]",
@@ -161,37 +156,31 @@ def test_lock_util_is_shared(
         assert actual is expected_is_shared
 
 
-testdata_replace_suffixes_last = (
-    (
-        "dog",
-        SUFFIX_IN,
-        does_not_raise(),
-        f"dog{SUFFIX_IN}",
-    ),
-    (
-        "dog.shared",
-        SUFFIX_IN,
-        does_not_raise(),
-        f"dog{SUFFIX_SHARED_IN}",
-    ),
-    (
-        f"dog.shared{SUFFIX_UNLOCKED}",
-        SUFFIX_IN,
-        does_not_raise(),
-        f"dog{SUFFIX_SHARED_IN}",
-    ),
-)
-ids_replace_suffixes_last = (
-    "No suffix",
-    f"add suffix {SUFFIX_IN}",
-    f".shared{SUFFIX_UNLOCKED} --> {SUFFIX_SHARED_IN}",
-)
-
-
 @pytest.mark.parametrize(
     "file_name, suffix, expectation, expected_file_name",
-    testdata_replace_suffixes_last,
-    ids=ids_replace_suffixes_last,
+    (
+        pytest.param(
+            "dog",
+            SUFFIX_IN,
+            does_not_raise(),
+            f"dog{SUFFIX_IN}",
+            id="No-suffix",
+        ),
+        pytest.param(
+            "dog.shared",
+            SUFFIX_IN,
+            does_not_raise(),
+            f"dog{SUFFIX_SHARED_IN}",
+            id=f"add-suffix-{SUFFIX_IN}",
+        ),
+        pytest.param(
+            f"dog.shared{SUFFIX_UNLOCKED}",
+            SUFFIX_IN,
+            does_not_raise(),
+            f"dog{SUFFIX_SHARED_IN}",
+            id=f".shared{SUFFIX_UNLOCKED}--{SUFFIX_SHARED_IN}",
+        ),
+    ),
 )
 def test_replace_suffixes_last(
     file_name: str,
@@ -230,58 +219,52 @@ def test_replace_suffixes_last(
             replace_suffixes_last(relpath_f, suffix)
 
 
-testdata_is_suffixes_ok = (
-    (
-        "requirements/prod.shared",
-        "prod.shared",
-        pytest.raises(ValueError),
-    ),
-    (
-        "requirements/prod",
-        "prod",
-        pytest.raises(ValueError),
-    ),
-    (
-        "requirements/prod.shared.frog",
-        "prod.shared",
-        pytest.raises(ValueError),
-    ),
-    (
-        "requirements/prod.frog",
-        "prod",
-        pytest.raises(ValueError),
-    ),
-    (
-        7.4,
-        "prod",
-        pytest.raises(TypeError),
-    ),
-    (
-        "requirements/prod.shared.in",
-        "prod.shared.in",
-        does_not_raise(),
-    ),
-    (
-        Path("requirements/prod.shared.in"),
-        "prod.shared.in",
-        does_not_raise(),
-    ),
-)
-ids_is_suffixes_ok = (
-    "no ENDING",
-    "No suffixes",
-    ".shared then unknown ENDING",
-    "not .shared then unknown ENDING",
-    "unsupported type",
-    "acceptable relative path",
-    "acceptable relative Path",
-)
-
-
 @pytest.mark.parametrize(
     "relpath, stem, expectation",
-    testdata_is_suffixes_ok,
-    ids=ids_is_suffixes_ok,
+    (
+        pytest.param(
+            "requirements/prod.shared",
+            "prod.shared",
+            pytest.raises(ValueError),
+            id="no-ENDING",
+        ),
+        pytest.param(
+            "requirements/prod",
+            "prod",
+            pytest.raises(ValueError),
+            id="No-suffixes",
+        ),
+        pytest.param(
+            "requirements/prod.shared.frog",
+            "prod.shared",
+            pytest.raises(ValueError),
+            id=".shared-then-unknown-ENDING",
+        ),
+        pytest.param(
+            "requirements/prod.frog",
+            "prod",
+            pytest.raises(ValueError),
+            id="unknown-ENDING",
+        ),
+        pytest.param(
+            7.4,
+            "prod",
+            pytest.raises(TypeError),
+            id="unsupported-type",
+        ),
+        pytest.param(
+            "requirements/prod.shared.in",
+            "prod.shared.in",
+            does_not_raise(),
+            id="acceptable-relative-path",
+        ),
+        pytest.param(
+            Path("requirements/prod.shared.in"),
+            "prod.shared.in",
+            does_not_raise(),
+            id="acceptable-relative-Path",
+        ),
+    ),
 )
 def test_is_suffixes_ok(
     relpath: "Union[str, Path, float]",
@@ -296,19 +279,15 @@ def test_is_suffixes_ok(
         )
 
 
-testdata_check_relpath = (
-    (
-        Path("requirements/pip.in"),
-        does_not_raise(),
-    ),
-)
-ids_check_relpath = ("pip.in 1 constraint 3 requirements",)
-
-
 @pytest.mark.parametrize(
     "relpath, expectation",
-    testdata_check_relpath,
-    ids=ids_check_relpath,
+    (
+        pytest.param(
+            Path("requirements/pip.in"),
+            does_not_raise(),
+            id="pip.in-1-constraint-3-requirements",
+        ),
+    ),
 )
 def test_check_relpath(
     relpath: "Path",
@@ -349,43 +328,37 @@ def test_check_relpath(
         check_relpath(path_cwd, relpath)
 
 
-testdata_abspath_relative_to_package_base_folder = (
-    (
-        Path(__file__).parent.parent.joinpath(
-            "docs",
-            "pip-tools.in",
-        ),
-        "../requirements/pins.shared.in",
-        does_not_raise(),
-        "requirements/pins.shared.in",
-    ),
-    (
-        Path(__file__).parent.parent.joinpath(
-            "docs",
-            "pip-tools.in",
-        ),
-        "../requirements/dogfood.shared.in",
-        pytest.raises(FileNotFoundError),
-        "requirements/dogfood.shared.in",
-    ),
-    (
-        Path(site.getuserbase()),
-        "../requirements/dogfood.shared.in",
-        pytest.raises(ValueError),
-        "requirements/dogfood.shared.in",
-    ),
-)
-ids_abspath_relative_to_package_base_folder = (
-    "different folders",
-    "impossible to resolve requirements file not found",
-    "not subpath not relative to",
-)
-
-
 @pytest.mark.parametrize(
     "abspath_f, constraint_relpath, expectation, expected_relpath",
-    testdata_abspath_relative_to_package_base_folder,
-    ids=ids_abspath_relative_to_package_base_folder,
+    (
+        pytest.param(
+            Path(__file__).parent.parent.joinpath(
+                "docs",
+                "pip-tools.in",
+            ),
+            "../requirements/pins.shared.in",
+            does_not_raise(),
+            "requirements/pins.shared.in",
+            id="different-folders",
+        ),
+        pytest.param(
+            Path(__file__).parent.parent.joinpath(
+                "docs",
+                "pip-tools.in",
+            ),
+            "../requirements/dogfood.shared.in",
+            pytest.raises(FileNotFoundError),
+            "requirements/dogfood.shared.in",
+            id="impossible-to-resolve-requirements-file-not-found",
+        ),
+        pytest.param(
+            Path(site.getuserbase()),
+            "../requirements/dogfood.shared.in",
+            pytest.raises(ValueError),
+            "requirements/dogfood.shared.in",
+            id="not-subpath-not-relative-to",
+        ),
+    ),
 )
 def test_abspath_relative_to_package_base_folder(
     abspath_f: "Path",

@@ -4,7 +4,7 @@ importlib-metadata>=8.7.0
 logging-strict>=1.6.1
 packaging
 pip-requirements-parser
-pip-tools
+pip-tools>=7.6.1
 pre-commit
 tomli>=2.4; python_version<"3.11"
 typing-extensions; python_version<"3.11"

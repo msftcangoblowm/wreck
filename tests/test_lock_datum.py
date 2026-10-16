@@ -59,51 +59,46 @@ if TYPE_CHECKING:
 
     from tests.typing_only import DOES_NOT_OR_DOES
 
-testdata_pin_methods = (
-    (
-        Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
-        "requirements/qualifier_1.in",
-        "pip",
-        0,
-        True,
-    ),
-    (
-        Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
-        "requirements/qualifier_1.in",
-        "tomli",
-        1,
-        True,
-    ),
-    (
-        Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
-        "requirements/qualifier_1.in",
-        "isort",
-        0,
-        False,
-    ),
-    (
-        Path("_qualifier_conflicts").joinpath("qualifier_0.unlock"),
-        "requirements/qualifier_0.in",
-        "colorama",
-        1,
-        False,
-    ),
-)
-ids_pin_methods = (
-    "various constraints pip",
-    "various constraints tomli",
-    "various constraints isort",
-    "constraints conflicts normalize qualifier",
-)
-
 
 @pytest.mark.parametrize(
     (
         "relpath_req_src, dest_relpath, pkg_name, "
         "qualifiers_expected_count, has_specifiers"
     ),
-    testdata_pin_methods,
-    ids=ids_pin_methods,
+    (
+        pytest.param(
+            Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
+            "requirements/qualifier_1.in",
+            "pip",
+            0,
+            True,
+            id="various-constraints-pip",
+        ),
+        pytest.param(
+            Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
+            "requirements/qualifier_1.in",
+            "tomli",
+            1,
+            True,
+            id="various-constraints-tomli",
+        ),
+        pytest.param(
+            Path("_qualifier_conflicts").joinpath("qualifier_1.unlock"),
+            "requirements/qualifier_1.in",
+            "isort",
+            0,
+            False,
+            id="various-constraints-isort",
+        ),
+        pytest.param(
+            Path("_qualifier_conflicts").joinpath("qualifier_0.unlock"),
+            "requirements/qualifier_0.in",
+            "colorama",
+            1,
+            False,
+            id="constraints-conflicts-normalize-qualifier",
+        ),
+    ),
 )
 def test_pindatum_type(
     relpath_req_src: "Path",
@@ -259,7 +254,7 @@ def test_in_generic(
 
     fpins_0 = FilePins(abspath_dest)
     ins_0 = Ins(loader, venv_path)
-    ins_0._file_pins = list()
+    ins_0._file_pins = []
     # property getter is a Generator. property setter accepts Any. This confuses mypy
     ins_0.files = fpins_0  # type: ignore[assignment]
 
@@ -370,57 +365,46 @@ def test_pprint_pindatum(
         assert isinstance(str_pretty, str)
 
 
-if TYPE_CHECKING:
-    testdata_is_pin: Sequence[
-        tuple[str, str, list[str], list[str], DOES_NOT_OR_DOES, bool]
-    ]
-
-testdata_is_pin = (
-    (
-        "typing-extensions",
-        '''typing-extensions; python_version<"3.10"''',
-        [],
-        ['''; python_version<"3.10"'''],
-        does_not_raise(),
-        False,
-    ),
-    (
-        "tomli",
-        '''tomli>=2.0.2; python_version<"3.11"''',
-        [">=2.0.2"],
-        ['''; python_version<"3.11"'''],
-        does_not_raise(),
-        True,
-    ),
-    (
-        "pip",
-        "pip>=24.2",
-        [">=24.2"],
-        [],
-        does_not_raise(),
-        True,
-    ),
-    (
-        "isort",
-        "isort",
-        [],
-        [],
-        does_not_raise(),
-        False,
-    ),
-)
-ids_is_pin = (
-    "Not a pin, but has qualifiers",
-    "pin and has qualifiers",
-    "nudge pin",
-    "just a normal package. No package version nor qualifiers",
-)
-
-
 @pytest.mark.parametrize(
     "pkg_name, line, specifiers, qualifiers_expected, expectation, expected_is_pin",
-    testdata_is_pin,
-    ids=ids_is_pin,
+    (
+        pytest.param(
+            "typing-extensions",
+            '''typing-extensions; python_version<"3.10"''',
+            [],
+            ['''; python_version<"3.10"'''],
+            does_not_raise(),
+            False,
+            id="Not-a-pin-but-has-qualifiers",
+        ),
+        pytest.param(
+            "tomli",
+            '''tomli>=2.0.2; python_version<"3.11"''',
+            [">=2.0.2"],
+            ['''; python_version<"3.11"'''],
+            does_not_raise(),
+            True,
+            id="pin-and-has-qualifiers",
+        ),
+        pytest.param(
+            "pip",
+            "pip>=24.2",
+            [">=24.2"],
+            [],
+            does_not_raise(),
+            True,
+            id="nudge-pin",
+        ),
+        pytest.param(
+            "isort",
+            "isort",
+            [],
+            [],
+            does_not_raise(),
+            False,
+            id="just-a-normal-package.-No-package-version-nor-qualifiers",
+        ),
+    ),
 )
 def test_is_pin(
     pkg_name: str,
@@ -448,28 +432,22 @@ def test_is_pin(
         assert actual_is_pin is expected_is_pin
 
 
-testdata_outlastsuffix = (
-    (
-        OutLastSuffix.LOCK,
-        SUFFIX_LOCKED,
-        True,
-    ),
-    (
-        OutLastSuffix.UNLOCK,
-        SUFFIX_UNLOCKED,
-        False,
-    ),
-)
-ids_outlastsuffix = (
-    "lock",
-    "unlock",
-)
-
-
 @pytest.mark.parametrize(
     "enum_item, str_item_expected, is_lock_expected",
-    testdata_outlastsuffix,
-    ids=ids_outlastsuffix,
+    (
+        pytest.param(
+            OutLastSuffix.LOCK,
+            SUFFIX_LOCKED,
+            True,
+            id="lock",
+        ),
+        pytest.param(
+            OutLastSuffix.UNLOCK,
+            SUFFIX_UNLOCKED,
+            False,
+            id="unlock",
+        ),
+    ),
 )
 def test_outlastsuffix(
     enum_item: "OutLastSuffix",

@@ -90,7 +90,7 @@ def run_cmd(cmd, cwd=None, env=None):
         )
     except OSError as e:
         # e.g. cmd=("bin/true",)
-        str_err = str(f"{e.strerror} {e.filename}")
+        str_err = f"{e.strerror} {e.filename}"
         ret = (None, None, None, str_err)
     except (
         subprocess.CalledProcessError,

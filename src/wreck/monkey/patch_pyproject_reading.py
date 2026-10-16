@@ -42,7 +42,8 @@ from collections.abc import (
 from pathlib import Path
 from typing import NamedTuple
 
-from ..check_type import is_ok
+from logging_strict.util.check_type import is_ok
+
 from ..constants import g_app_name
 from .pyproject_reading import (
     TOML_RESULT,

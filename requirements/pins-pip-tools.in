@@ -1,0 +1,4 @@
+# pip-26.2 incompatibility issue
+# github.com/pypa/pip-tools/issues/2436
+# github.com/pypa/pip-tools/pull/2438
+pip-tools>=7.6.1

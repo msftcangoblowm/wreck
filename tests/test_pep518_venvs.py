@@ -132,7 +132,7 @@ def test_venvmaploader(
     venv_relpath = ".venv"
     assert venv_relpath in venv_map
     is_nonsense_in_venv_map = 3 in venv_map
-    assert is_nonsense_in_venv_map is False
+    assert not is_nonsense_in_venv_map
 
     # __getitem__
     venv_map[0:1]
@@ -194,30 +194,24 @@ def test_venvmaploader(
         loader.parse_data()
 
 
-testdata_venvreq = (
-    (
-        ".venv",
-        "requirements/dev",
-        ("requirements",),
-        does_not_raise(),
-    ),
-    (
-        ".venv/crap.txt",
-        "requirements/dev",
-        ("requirements",),
-        does_not_raise(),
-    ),
-)
-ids_venvreq = (
-    "in .venv, a dev requirement",
-    "will raise NotADirectoryError during parsing, not during load",
-)
-
-
 @pytest.mark.parametrize(
     "venv_relpath, req_relpath, t_folders_relpath, expectation",
-    testdata_venvreq,
-    ids=ids_venvreq,
+    (
+        pytest.param(
+            ".venv",
+            "requirements/dev",
+            ("requirements",),
+            does_not_raise(),
+            id="in-.venv-a-dev-requirement",
+        ),
+        pytest.param(
+            ".venv/crap.txt",
+            "requirements/dev",
+            ("requirements",),
+            does_not_raise(),
+            id="will-raise-NotADirectoryError-during-parsing-not-during-load",
+        ),
+    ),
 )
 def test_venvreq(
     venv_relpath: str,
@@ -261,116 +255,110 @@ def test_venvreq(
         assert len(abspath_in_files) == len(seq_relpath) / len(suffix_types)
 
 
-testdata_venv_get_reqs = (
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".venv",
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "dev.in",
-                ),
-                "requirements/dev.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "prod.unlock",
-                ),
-                "requirements/prod.in",
-            ),
-        ),
-        (
-            "docs/pip-tools",
-            "docs/requirements",
-            "requirements/pip-tools",
-            "requirements/pip",
-            "requirements/prod",
-            "requirements/kit",
-            "requirements/tox",
-            "requirements/mypy",
-            "requirements/manage",
-            "requirements/dev",
-        ),
-        does_not_raise(),
-        8,
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".doc/.venv",
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "docs",
-                    "pip-tools.in",
-                ),
-                "docs/pip-tools.in",
-            ),
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "requirements",
-                    "pins.shared.in",
-                ),
-                "requirements/pins.shared.in",
-            ),
-        ),
-        (
-            "docs/pip-tools",
-            "docs/requirements",
-        ),
-        does_not_raise(),
-        2,
-    ),
-    (
-        Path("_requirements_none").joinpath("requires-none.pyproject_toml"),
-        ".venv",
-        (),
-        (),
-        does_not_raise(),
-        0,
-    ),
-    (
-        Path("_requirements_none").joinpath("requires-none.pyproject_toml"),
-        0.1234,
-        (),
-        (),
-        pytest.raises(TypeError),
-        0,
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        ".doc/.venv",
-        (
-            (
-                Path(__file__).parent.parent.joinpath(
-                    "docs",
-                    "pip-tools.in",
-                ),
-                "docs/pip-tools.in",
-            ),
-        ),
-        ("docs/pip-tools",),
-        pytest.raises(MissingRequirementsFoldersFiles),
-        2,
-    ),
-)
-ids_venv_get_reqs = (
-    "venvs.pyproject_toml .venv",
-    "venvs.pyproject_toml .doc/.venv",
-    "tool.wreck.venvs section no requirements",
-    "venv_path unsupported type expected str",
-    "missing top level docs/requirement requirement file",
-)
-
-
 @pytest.mark.parametrize(
     (
         "relpath_pyproject_toml, venv_relpath, seq_reqs, base_relpaths, "
         "expectation, expected_req_file_count"
     ),
-    testdata_venv_get_reqs,
-    ids=ids_venv_get_reqs,
+    (
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".venv",
+            (
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "dev.in",
+                    ),
+                    "requirements/dev.in",
+                ),
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "prod.unlock",
+                    ),
+                    "requirements/prod.in",
+                ),
+            ),
+            (
+                "docs/pip-tools",
+                "docs/requirements",
+                "requirements/pip-tools",
+                "requirements/pip",
+                "requirements/prod",
+                "requirements/kit",
+                "requirements/tox",
+                "requirements/mypy",
+                "requirements/manage",
+                "requirements/dev",
+            ),
+            does_not_raise(),
+            8,
+            id="venvs.pyproject_toml-.venv",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".doc/.venv",
+            (
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "docs",
+                        "pip-tools.in",
+                    ),
+                    "docs/pip-tools.in",
+                ),
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "requirements",
+                        "pins.shared.in",
+                    ),
+                    "requirements/pins.shared.in",
+                ),
+            ),
+            (
+                "docs/pip-tools",
+                "docs/requirements",
+            ),
+            does_not_raise(),
+            2,
+            id="venvs.pyproject_toml-.doc-.venv",
+        ),
+        pytest.param(
+            Path("_requirements_none").joinpath("requires-none.pyproject_toml"),
+            ".venv",
+            (),
+            (),
+            does_not_raise(),
+            0,
+            id="tool.wreck.venvs-section-no-requirements",
+        ),
+        pytest.param(
+            Path("_requirements_none").joinpath("requires-none.pyproject_toml"),
+            0.1234,
+            (),
+            (),
+            pytest.raises(TypeError),
+            0,
+            id="venv_path-unsupported-type-expected-str",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            ".doc/.venv",
+            (
+                (
+                    Path(__file__).parent.parent.joinpath(
+                        "docs",
+                        "pip-tools.in",
+                    ),
+                    "docs/pip-tools.in",
+                ),
+            ),
+            ("docs/pip-tools",),
+            pytest.raises(MissingRequirementsFoldersFiles),
+            2,
+            id="missing-top-level-docs-requirement-requirement-file",
+        ),
+    ),
 )
 def test_venv_get_reqs(
     relpath_pyproject_toml: "Path",
@@ -385,8 +373,8 @@ def test_venv_get_reqs(
     prepare_folders_files: "Callable[[Union[Sequence[Union[str, Path]], MutableSet[Union[str, Path]]], Path], set[Path]]",
 ) -> None:
     """Test get_reqs"""
-    # pytest --showlocals --log-level INFO -k "test_venv_get_reqs" tests
-    # pytest --showlocals --log-level INFO tests/test_pep518_venvs.py::test_venv_get_reqs[tool.wreck.venvs\ section\ no\ requirements]
+    # pytest -s --verbose --showlocals --log-level INFO -k "test_venv_get_reqs" tests
+    # pytest --showlocals --log-level INFO "tests/test_pep518_venvs.py::test_venv_get_reqs[tool.wreck.venvs section no requirements]"
     abspath_tests_dir = request.path.parent
     path_pyproject_toml = abspath_tests_dir.joinpath(relpath_pyproject_toml)
     # prepare
@@ -460,57 +448,51 @@ def test_venv_get_reqs(
     ignore_excs = (MissingRequirementsFoldersFiles,)
     if isinstance(expectation, does_not_raise) or (
         not isinstance(expectation, does_not_raise)
-        and expectation.expected_exception not in ignore_excs
+        and expectation.excinfo.type not in ignore_excs
     ):
-        with expectation:
+        with expectation as excinfo:
             venvs = VenvMap(
                 loader,
                 parse_venv_relpath=venv_relpath,
                 check_suffixes=suffixes,
             )
             reqs = venvs.reqs(venv_relpath)
-            if isinstance(expectation, does_not_raise):
-                actual_req_file_count_c = len(reqs)
-                assert actual_req_file_count_c == expected_req_file_count
-            else:
-                # skipped which Exception?
-                expectation_exc = expectation.expected_exception  # noqa: F841
-
-
-testdata_check_venv_relpath = (
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        0,
-        Path("pyproject.toml"),
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        1,
-        Path("pyproject.toml"),
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        "pyproject.toml",
-        Path("pyproject.toml"),
-    ),
-    (
-        Path("_req_files").joinpath("venvs.pyproject_toml"),
-        Path("pyproject.toml"),
-        Path("pyproject.toml"),
-    ),
-)
-ids_check_venv_relpath = (
-    "abspath Path",
-    "abspath str",
-    "relpath str",
-    "relpath Path",
-)
+        if isinstance(expectation, does_not_raise):
+            actual_req_file_count_c = len(reqs)
+            assert actual_req_file_count_c == expected_req_file_count
+        else:
+            # skipped which Exception?
+            expectation_exc = excinfo.value  # noqa: F841
 
 
 @pytest.mark.parametrize(
     "relpath_pyproject_toml, optpath_dest_config, expected",
-    testdata_check_venv_relpath,
-    ids=ids_check_venv_relpath,
+    (
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            0,
+            Path("pyproject.toml"),
+            id="abspath-Path",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            1,
+            Path("pyproject.toml"),
+            id="abspath-str",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            "pyproject.toml",
+            Path("pyproject.toml"),
+            id="relpath-str",
+        ),
+        pytest.param(
+            Path("_req_files").joinpath("venvs.pyproject_toml"),
+            Path("pyproject.toml"),
+            Path("pyproject.toml"),
+            id="relpath-Path",
+        ),
+    ),
 )
 def test_check_venv_relpath(
     relpath_pyproject_toml: "Path",

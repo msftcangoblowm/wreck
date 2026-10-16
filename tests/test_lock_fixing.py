@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -s -vv --showlocals tests/test_lock_fixing.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -52,97 +58,6 @@ if TYPE_CHECKING:
     )
     from typing import Union
 
-testdata_resolve_resolvable_conflicts = (
-    (
-        Path("_unresolvable_conflict").joinpath(
-            "constraints-unresolvable.pyproject_toml"
-        ),
-        ".venv",
-        (),
-        (
-            Path("_unresolvable_conflict").joinpath("pip-lt.unlock"),
-            Path("_unresolvable_conflict").joinpath("pip-lt.lock"),
-            Path("_unresolvable_conflict").joinpath("pip-ge.unlock"),
-            Path("_unresolvable_conflict").joinpath("pip-ge.lock"),
-        ),
-        0,
-        1,
-    ),
-    (
-        Path("_unsynced").joinpath("unsynced.pyproject_toml"),
-        ".venv",
-        (),
-        (
-            Path("_unsynced").joinpath("unsynced_0.unlock"),
-            Path("_unsynced").joinpath("unsynced_0.lock"),
-            Path("_unsynced").joinpath("unsynced_1.unlock"),
-            Path("_unsynced").joinpath("unsynced_1.lock"),
-        ),
-        1,
-        0,
-    ),
-    (
-        Path("_transitive_conflict").joinpath("transitive.pyproject_toml"),
-        ".venv",
-        (),
-        (
-            Path("_transitive_conflict").joinpath("transitive_0.unlock"),
-            Path("_transitive_conflict").joinpath("transitive_0.lock"),
-            Path("_transitive_conflict").joinpath("transitive_1.unlock"),
-            Path("_transitive_conflict").joinpath("transitive_1.lock"),
-        ),
-        1,
-        0,
-    ),
-    (
-        Path("_arbitrary_equality").joinpath("invalid_operator.pyproject_toml"),
-        ".venv",
-        (),
-        (
-            Path("_arbitrary_equality").joinpath("invalid_operator_0.unlock"),
-            Path("_arbitrary_equality").joinpath("invalid_operator_0.lock"),
-            Path("_arbitrary_equality").joinpath("invalid_operator_1.unlock"),
-            Path("_arbitrary_equality").joinpath("invalid_operator_1.lock"),
-        ),
-        0,
-        1,
-    ),
-    (
-        Path("_too_many_specifiers").joinpath("too_many_specifiers.pyproject_toml"),
-        ".venv",
-        (),
-        (
-            Path("_too_many_specifiers").joinpath("too_many_specifiers_0.unlock"),
-            Path("_too_many_specifiers").joinpath("too_many_specifiers_0.lock"),
-            Path("_too_many_specifiers").joinpath("too_many_specifiers_1.unlock"),
-            Path("_too_many_specifiers").joinpath("too_many_specifiers_1.lock"),
-        ),
-        0,
-        1,
-    ),
-    (
-        Path("_invalid_specifier").joinpath("invalid_specifier.pyproject_toml"),
-        ".venv",
-        (),
-        (
-            Path("_invalid_specifier").joinpath("invalid_specifier_0.unlock"),
-            Path("_invalid_specifier").joinpath("invalid_specifier_0.lock"),
-            Path("_invalid_specifier").joinpath("invalid_specifier_1.unlock"),
-            Path("_invalid_specifier").joinpath("invalid_specifier_1.lock"),
-        ),
-        1,
-        0,
-    ),
-)
-ids_resolve_resolvable_conflicts = (
-    "pip ge 24.2 pip lt 24.2 unresolvable conflict",
-    "unsynced lock files bring into sync",
-    "no package in .in conflict in .lock",
-    "invalid operator arbitrary equality",
-    "too many specifiers more than 2",
-    "invalid specifier found, line is ignored. No warning",
-)
-
 
 @pytest.mark.logging_package_name(g_app_name)
 @pytest.mark.parametrize(
@@ -151,8 +66,95 @@ ids_resolve_resolvable_conflicts = (
         "to_requirements_dir, expected_resolvable_count, "
         "expected_unresolvable_count"
     ),
-    testdata_resolve_resolvable_conflicts,
-    ids=ids_resolve_resolvable_conflicts,
+    # testcases same as test_fix_requirements_lock
+    (
+        pytest.param(
+            Path("_unresolvable_conflict").joinpath(
+                "constraints-unresolvable.pyproject_toml"
+            ),
+            ".venv",
+            (),
+            (
+                Path("_unresolvable_conflict").joinpath("pip-lt.unlock"),
+                Path("_unresolvable_conflict").joinpath("pip-lt.lock"),
+                Path("_unresolvable_conflict").joinpath("pip-ge.unlock"),
+                Path("_unresolvable_conflict").joinpath("pip-ge.lock"),
+            ),
+            0,
+            1,
+            id="pip-ge-24.2=pip-lt-24.2-unresolvable-conflict",
+        ),
+        pytest.param(
+            Path("_unsynced").joinpath("unsynced.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_unsynced").joinpath("unsynced_0.unlock"),
+                Path("_unsynced").joinpath("unsynced_0.lock"),
+                Path("_unsynced").joinpath("unsynced_1.unlock"),
+                Path("_unsynced").joinpath("unsynced_1.lock"),
+            ),
+            1,
+            0,
+            id="unsynced=lock-files-bring-into-sync",
+        ),
+        pytest.param(
+            Path("_transitive_conflict").joinpath("transitive.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_transitive_conflict").joinpath("transitive_0.unlock"),
+                Path("_transitive_conflict").joinpath("transitive_0.lock"),
+                Path("_transitive_conflict").joinpath("transitive_1.unlock"),
+                Path("_transitive_conflict").joinpath("transitive_1.lock"),
+            ),
+            1,
+            0,
+            id="no-package-in-.in-conflict-in-.lock",
+        ),
+        pytest.param(
+            Path("_arbitrary_equality").joinpath("invalid_operator.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_arbitrary_equality").joinpath("invalid_operator_0.unlock"),
+                Path("_arbitrary_equality").joinpath("invalid_operator_0.lock"),
+                Path("_arbitrary_equality").joinpath("invalid_operator_1.unlock"),
+                Path("_arbitrary_equality").joinpath("invalid_operator_1.lock"),
+            ),
+            0,
+            1,
+            id="invalid-operator-arbitrary-equality",
+        ),
+        pytest.param(
+            Path("_too_many_specifiers").joinpath("too_many_specifiers.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_0.unlock"),
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_0.lock"),
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_1.unlock"),
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_1.lock"),
+            ),
+            0,
+            1,
+            id="too-many-specifiers-more-than-2",
+        ),
+        pytest.param(
+            Path("_invalid_specifier").joinpath("invalid_specifier.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_invalid_specifier").joinpath("invalid_specifier_0.unlock"),
+                Path("_invalid_specifier").joinpath("invalid_specifier_0.lock"),
+                Path("_invalid_specifier").joinpath("invalid_specifier_1.unlock"),
+                Path("_invalid_specifier").joinpath("invalid_specifier_1.lock"),
+            ),
+            1,
+            0,
+            id="invalid-specifier-found-line-is-ignored.-No-warning",
+        ),
+    ),
 )
 def test_locks_before_fix(
     relpath_pyproject_toml: "Path",
@@ -293,8 +295,95 @@ def test_locks_before_fix(
         "to_requirements_dir, expected_resolvable_count, "
         "expected_unresolvable_count"
     ),
-    testdata_resolve_resolvable_conflicts,
-    ids=ids_resolve_resolvable_conflicts,
+    # testcases same as test_locks_before_fix
+    (
+        pytest.param(
+            Path("_unresolvable_conflict").joinpath(
+                "constraints-unresolvable.pyproject_toml"
+            ),
+            ".venv",
+            (),
+            (
+                Path("_unresolvable_conflict").joinpath("pip-lt.unlock"),
+                Path("_unresolvable_conflict").joinpath("pip-lt.lock"),
+                Path("_unresolvable_conflict").joinpath("pip-ge.unlock"),
+                Path("_unresolvable_conflict").joinpath("pip-ge.lock"),
+            ),
+            0,
+            1,
+            id="pip-ge-24.2=pip-lt-24.2-unresolvable-conflict",
+        ),
+        pytest.param(
+            Path("_unsynced").joinpath("unsynced.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_unsynced").joinpath("unsynced_0.unlock"),
+                Path("_unsynced").joinpath("unsynced_0.lock"),
+                Path("_unsynced").joinpath("unsynced_1.unlock"),
+                Path("_unsynced").joinpath("unsynced_1.lock"),
+            ),
+            1,
+            0,
+            id="unsynced=lock-files-bring-into-sync",
+        ),
+        pytest.param(
+            Path("_transitive_conflict").joinpath("transitive.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_transitive_conflict").joinpath("transitive_0.unlock"),
+                Path("_transitive_conflict").joinpath("transitive_0.lock"),
+                Path("_transitive_conflict").joinpath("transitive_1.unlock"),
+                Path("_transitive_conflict").joinpath("transitive_1.lock"),
+            ),
+            1,
+            0,
+            id="no-package-in-.in-conflict-in-.lock",
+        ),
+        pytest.param(
+            Path("_arbitrary_equality").joinpath("invalid_operator.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_arbitrary_equality").joinpath("invalid_operator_0.unlock"),
+                Path("_arbitrary_equality").joinpath("invalid_operator_0.lock"),
+                Path("_arbitrary_equality").joinpath("invalid_operator_1.unlock"),
+                Path("_arbitrary_equality").joinpath("invalid_operator_1.lock"),
+            ),
+            0,
+            1,
+            id="invalid-operator-arbitrary-equality",
+        ),
+        pytest.param(
+            Path("_too_many_specifiers").joinpath("too_many_specifiers.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_0.unlock"),
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_0.lock"),
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_1.unlock"),
+                Path("_too_many_specifiers").joinpath("too_many_specifiers_1.lock"),
+            ),
+            0,
+            1,
+            id="too-many-specifiers-more-than-2",
+        ),
+        pytest.param(
+            Path("_invalid_specifier").joinpath("invalid_specifier.pyproject_toml"),
+            ".venv",
+            (),
+            (
+                Path("_invalid_specifier").joinpath("invalid_specifier_0.unlock"),
+                Path("_invalid_specifier").joinpath("invalid_specifier_0.lock"),
+                Path("_invalid_specifier").joinpath("invalid_specifier_1.unlock"),
+                Path("_invalid_specifier").joinpath("invalid_specifier_1.lock"),
+            ),
+            1,
+            0,
+            id="invalid-specifier-found-line-is-ignored.-No-warning",
+        ),
+    ),
 )
 def test_fix_requirements_lock(
     relpath_pyproject_toml: "Path",
@@ -389,74 +478,72 @@ def test_fix_requirements_lock(
     assert isinstance(msgs_shared, list)
 
 
-testdata_outmessages = (
+@pytest.mark.parametrize(
+    "last_suffix, append_a_last_suffix, item",
     (
-        OutLastSuffix.LOCK,
-        OutLastSuffix.LOCK,
-        UnResolvable(".venv", "pip", "", set(), Version("24.2"), set(), set()),
-    ),
-    (
-        OutLastSuffix.LOCK,
-        OutLastSuffix.LOCK,
-        (
-            SUFFIX_LOCKED,
-            Resolvable(
-                ".venv", "pip", '; python_version <= "3.10"', "pip>=24.2", "pip>=24.3"
+        pytest.param(
+            OutLastSuffix.LOCK,
+            OutLastSuffix.LOCK,
+            UnResolvable(".venv", "pip", "", set(), Version("24.2"), set(), set()),
+            id="UnResolvable-LOCK",
+        ),
+        pytest.param(
+            OutLastSuffix.LOCK,
+            OutLastSuffix.LOCK,
+            (
+                SUFFIX_LOCKED,
+                Resolvable(
+                    ".venv",
+                    "pip",
+                    '; python_version <= "3.10"',
+                    "pip>=24.2",
+                    "pip>=24.3",
+                ),
+                PinDatum(
+                    Path(__file__).parent.joinpath(
+                        "_qualifier_conflicts",
+                        "qualifier_1.unlock",
+                    ),
+                    "pip",
+                    '"pip>=24.2',
+                    [">=24.2"],
+                    [],
+                ),
             ),
-            PinDatum(
+            id="tuple-LOCK",
+        ),
+        pytest.param(
+            OutLastSuffix.LOCK,
+            OutLastSuffix.LOCK,
+            ResolvedMsg(
+                ".venv",
                 Path(__file__).parent.joinpath(
                     "_qualifier_conflicts",
                     "qualifier_1.unlock",
                 ),
-                "pip",
                 '"pip>=24.2',
-                [">=24.2"],
-                [],
             ),
+            id="ResolvedMsg-LOCK",
+        ),
+        pytest.param(
+            OutLastSuffix.LOCK,
+            None,
+            UnResolvable(".venv", "pip", "", set(), Version("24.2"), set(), set()),
+            id="UnResolvable-LOCK-append-type-None",
+        ),
+        pytest.param(
+            OutLastSuffix.LOCK,
+            OutLastSuffix.LOCK,
+            None,
+            id="msg-is-None",
+        ),
+        pytest.param(
+            OutLastSuffix.LOCK,
+            OutLastSuffix.LOCK,
+            1.1234,
+            id="non-None-unsupported-item-type",
         ),
     ),
-    (
-        OutLastSuffix.LOCK,
-        OutLastSuffix.LOCK,
-        ResolvedMsg(
-            ".venv",
-            Path(__file__).parent.joinpath(
-                "_qualifier_conflicts",
-                "qualifier_1.unlock",
-            ),
-            '"pip>=24.2',
-        ),
-    ),
-    (
-        OutLastSuffix.LOCK,
-        None,
-        UnResolvable(".venv", "pip", "", set(), Version("24.2"), set(), set()),
-    ),
-    (
-        OutLastSuffix.LOCK,
-        OutLastSuffix.LOCK,
-        None,
-    ),
-    (
-        OutLastSuffix.LOCK,
-        OutLastSuffix.LOCK,
-        1.1234,
-    ),
-)
-ids_outmessages = (
-    "UnResolvable LOCK",
-    "tuple LOCK",
-    "ResolvedMsg LOCK",
-    "UnResolvable LOCK append type None",
-    "msg is None",
-    "non-None unsupported item type",
-)
-
-
-@pytest.mark.parametrize(
-    "last_suffix, append_a_last_suffix, item",
-    testdata_outmessages,
-    ids=ids_outmessages,
 )
 def test_outmessages(
     last_suffix: "OutLastSuffix",
@@ -475,26 +562,22 @@ def test_outmessages(
     assert isinstance(out_msgs.fixed_issues, list)
 
 
-testdata_check_in_includes_lock = (
-    (
-        Path("_warn_include_lock").joinpath("prod_and_dev.pyproject_toml"),
-        ".venv",
-        (
-            Path("_warn_include_lock").joinpath("dev.in"),
-            Path("_warn_include_lock").joinpath("prod.in"),
-            Path("_warn_include_lock").joinpath("dev.lock"),
-            Path("_warn_include_lock").joinpath("prod.lock"),
-        ),
-        1,
-    ),
-)
-ids_check_in_includes_lock = ("An .in file includes constraint to .lock file",)
-
-
 @pytest.mark.parametrize(
     "relpath_pyproject_toml, venv_path, to_requirements_dir, msgs_count_expected",
-    testdata_check_in_includes_lock,
-    ids=ids_check_in_includes_lock,
+    (
+        pytest.param(
+            Path("_warn_include_lock").joinpath("prod_and_dev.pyproject_toml"),
+            ".venv",
+            (
+                Path("_warn_include_lock").joinpath("dev.in"),
+                Path("_warn_include_lock").joinpath("prod.in"),
+                Path("_warn_include_lock").joinpath("dev.lock"),
+                Path("_warn_include_lock").joinpath("prod.lock"),
+            ),
+            1,
+            id="An-.in-file-includes-constraint-to-.lock-file",
+        ),
+    ),
 )
 def test_check_in_includes_lock(
     relpath_pyproject_toml: "Path",

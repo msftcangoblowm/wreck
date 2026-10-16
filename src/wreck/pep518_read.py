@@ -44,40 +44,19 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
+
+from logging_strict.util.check_type import is_ok
 
 __package__ = "wreck"
+
+if TYPE_CHECKING:
+    from typing import Any
+
 __all__ = (
     "find_project_root",
     "find_pyproject_toml",
 )
-
-
-def _is_ok(test):
-    """Check if non-empty str.
-
-    Edge case: contains only whitespace --> False
-
-    :param test: variable to test
-    :type test: typing.Any | None
-    :returns: True if non-empty str otherwise False
-    :rtype: bool
-
-    .. note::
-
-       Vendored logging-strict.util.check_type.is_ok, so current module
-       can be stand alone
-
-    """
-    ret = False
-    if test is not None and isinstance(test, str):
-        # Edge case: contains only whitespace
-        str_stripped = test.strip()
-        ret = len(str_stripped) != 0
-    else:
-        ret = False
-
-    return ret
 
 
 def find_project_root(srcs, stdin_filename=None):
@@ -128,7 +107,7 @@ def find_project_root(srcs, stdin_filename=None):
 
     """
 
-    def is_sequence_empty(some_sequence: Sequence[Any] | None) -> bool:
+    def is_sequence_empty(some_sequence: "Sequence[Any] | None") -> bool:
         """Empty sequence check.
 
         :param some_sequence: Check if not None and an empty sequence
@@ -143,7 +122,7 @@ def find_project_root(srcs, stdin_filename=None):
         )
         return ret
 
-    def is_none(arg: Any) -> bool:
+    def is_none(arg: "Any") -> bool:
         """None check.
 
         :param arg: A value to check. True if is None.
@@ -152,7 +131,7 @@ def find_project_root(srcs, stdin_filename=None):
         ret = arg is None
         return ret
 
-    def is_sequence_none(some_sequence: Sequence[Any] | None) -> bool:
+    def is_sequence_none(some_sequence: "Sequence[Any] | None") -> bool:
         """Non-empty sequence of len 1.
 
         :param some_sequence: Check if not None and a sequence with one item.
@@ -179,7 +158,7 @@ def find_project_root(srcs, stdin_filename=None):
         """Signature is intended to be Sequence[str], but assume
         Sequence[Any]. Filter out non-str, including None and str
         containing only whitespace"""
-        srcs = [src for src in srcs if _is_ok(src)]
+        srcs = [src for src in srcs if is_ok(src)]
 
         if stdin_filename is not None and len(srcs) != 0:
             srcs = list(stdin_filename if s == "-" else s for s in srcs)
@@ -258,7 +237,7 @@ def find_pyproject_toml(path_search_start, stdin_filename=None):
             else:  # pragma: no cover
                 is_found = False
 
-            if is_found is False:  # pragma: no branch
+            if not is_found:  # pragma: no branch
                 """2nd item, reason, is string describing the method by which the project
                 root was discovered"""
                 try:

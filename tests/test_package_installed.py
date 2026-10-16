@@ -3,7 +3,13 @@
 
 Checks if a Python package is installed
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_package_installed.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -18,26 +24,21 @@ import pytest
 from wreck._package_installed import is_package_installed
 from wreck.constants import g_app_name
 
-testdata_is_package_installed = (
-    (
-        "blarneys_blowup_doll",
-        False,
-    ),
-    (
-        g_app_name,
-        True,
-    ),
-)
-ids_is_package_installed = (
-    "no such package",
-    "package exists",
-)
-
 
 @pytest.mark.parametrize(
     "app_name, is_installed",
-    testdata_is_package_installed,
-    ids=ids_is_package_installed,
+    (
+        pytest.param(
+            "blarneys_blowup_doll",
+            False,
+            id="no-such-package",
+        ),
+        pytest.param(
+            g_app_name,
+            True,
+            id="package-exists",
+        ),
+    ),
 )
 def test_is_package_installed(app_name: str, is_installed: bool) -> None:
     """Check if package is installed or not"""

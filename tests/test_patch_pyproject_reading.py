@@ -1,7 +1,13 @@
 """
 .. moduleauthor:: Dave Faulkmore <https://mastodon.social/@msftcangoblowme>
 
-Unit test -- Module
+Without coverage
+
+.. code-block:: shell
+
+   python -m pytest -vv --showlocals tests/test_patch_pyproject_reading.py
+
+With coverage
 
 .. code-block:: shell
 
@@ -11,7 +17,7 @@ Unit test -- Module
 
 """
 
-import sys
+import tomllib
 from collections.abc import Sequence
 from contextlib import nullcontext as does_not_raise
 from pathlib import (
@@ -30,11 +36,6 @@ from wreck.monkey.patch_pyproject_reading import (
 )
 from wreck.monkey.pyproject_reading import load_toml_or_inline_map
 
-if sys.version_info >= (3, 11):  # pragma: no cover py-gte-311-else
-    import tomllib
-else:  # pragma: no cover py-gte-311
-    import tomli as tomllib
-
 if TYPE_CHECKING:
     import logging
     from collections.abc import Callable
@@ -45,36 +46,27 @@ if TYPE_CHECKING:
 
     from tests.typing_only import DOES_NOT_OR_DOES
 
-    testdata_pyproject_data: Sequence[
-        tuple[str, dict[str, str], dict[str, str], dict[str, str], str]
-    ]
-
-testdata_pyproject_data = (
-    (
-        "hope",
-        {},
-        {"name": "bob"},
-        {},
-        "bob",
-    ),
-    (
-        "hope.bob",
-        {"citizenship": "usa", "occupation": "actor", "country-of-birth": "uk"},
-        {"name": "famous"},
-        {"parents-resident-state": "ohio"},
-        "famous",
-    ),
-)
-ids_pyproject_data = (
-    "empty section, pyproject.toml contains only name",
-    "dotted section with parent section",
-)
-
 
 @pytest.mark.parametrize(
     "tool_name, section, project, section_parent, expected_project_name",
-    testdata_pyproject_data,
-    ids=ids_pyproject_data,
+    (
+        pytest.param(
+            "hope",
+            {},
+            {"name": "bob"},
+            {},
+            "bob",
+            id="empty-section-pyproject.toml-contains-only-name",
+        ),
+        pytest.param(
+            "hope.bob",
+            {"citizenship": "usa", "occupation": "actor", "country-of-birth": "uk"},
+            {"name": "famous"},
+            {"parents-resident-state": "ohio"},
+            "famous",
+            id="dotted-section-with-parent-section",
+        ),
+    ),
 )
 def test_pyproject_data(
     tool_name: str,
@@ -93,58 +85,56 @@ def test_pyproject_data(
     assert actual_section_parent == section_parent
 
 
-testdata_read_pyproject_normal = (
-    (
-        "drain-swamp",
-        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
-        does_not_raise(),
-        "drain-swamp",
-    ),
-    (
-        ("drain-swamp",),
-        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
-        does_not_raise(),
-        "drain-swamp",
-    ),
-    (
-        "drain-swamp",
-        Path("_unsynced").joinpath("unsynced_1.lock"),
-        pytest.raises(tomllib.TOMLDecodeError),
-        "drain-swamp",
-    ),
-    (
-        ("wreck.venvs", 7),
-        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
-        does_not_raise(),
-        "wreck.venvs",
-    ),
-    (
-        ("wreck.venvs", "   "),
-        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
-        does_not_raise(),
-        "wreck.venvs",
-    ),
-    (
-        "wreck.venvs",
-        Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
-        does_not_raise(),
-        "wreck.venvs",
-    ),
-)
-ids_read_pyproject_normal = (
-    "tool_name str",
-    "tool_name Sequence[str]",
-    "not a toml file",
-    "unsupported type ignored",
-    "empty str or whitespace ignored",
-    "tool name with multiple periods",
-)
-
-
 @pytest.mark.parametrize(
     "tool_name, relpath_toml_file, expectation, expected_tool_name",
-    testdata_read_pyproject_normal,
-    ids=ids_read_pyproject_normal,
+    (
+        pytest.param(
+            "drain-swamp",
+            Path("_good_files").joinpath(
+                "complete-manage-pip-prod-unlock.pyproject_toml"
+            ),
+            does_not_raise(),
+            "drain-swamp",
+            id="tool_name-str",
+        ),
+        pytest.param(
+            ("drain-swamp",),
+            Path("_good_files").joinpath(
+                "complete-manage-pip-prod-unlock.pyproject_toml"
+            ),
+            does_not_raise(),
+            "drain-swamp",
+            id="tool_name-Sequence[str]",
+        ),
+        pytest.param(
+            "drain-swamp",
+            Path("_unsynced").joinpath("unsynced_1.lock"),
+            pytest.raises(tomllib.TOMLDecodeError),
+            "drain-swamp",
+            id="not-a-toml-file",
+        ),
+        pytest.param(
+            ("wreck.venvs", 7),
+            Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
+            does_not_raise(),
+            "wreck.venvs",
+            id="unsupported-type-ignored",
+        ),
+        pytest.param(
+            ("wreck.venvs", "   "),
+            Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
+            does_not_raise(),
+            "wreck.venvs",
+            id="empty-str-or-whitespace-ignored",
+        ),
+        pytest.param(
+            "wreck.venvs",
+            Path("_duplicate_line").joinpath("prod_and_dev.pyproject_toml"),
+            does_not_raise(),
+            "wreck.venvs",
+            id="tool-name-with-multiple-periods",
+        ),
+    ),
 )
 def test_read_pyproject_normal(
     tool_name: "Union[str, tuple[Any, ...]]",
@@ -175,50 +165,50 @@ def test_read_pyproject_normal(
         assert data.tool_name == expected_tool_name
 
 
-testdata_read_pyproject_copyright_and_version = (
-    (
-        "Bob",
-        Path("_good_files").joinpath("full-course-meal-and-shower.pyproject_toml"),
-        pytest.raises(LookupError),
-        False,
-        False,
-    ),
-    (
-        "Bob",
-        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
-        pytest.raises(LookupError),
-        False,
-        True,
-    ),
-    (
-        "drain-swamp",
-        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
-        does_not_raise(),
-        True,
-        True,
-    ),
-    (
-        [
-            "drain-swamp",
-        ],
-        Path("_good_files").joinpath("complete-manage-pip-prod-unlock.pyproject_toml"),
-        does_not_raise(),
-        True,
-        True,
-    ),
-)
-ids_read_pyproject_copyright_and_version = (
-    "Nonexistent pyproject.toml",
-    "No such section [tool.Bob]",
-    "str",
-    "Sequence[str]",
-)
-
-
 @pytest.mark.parametrize(
     "tool_name, p_toml_file, expectation, in_keys_version_file, in_keys_copyright",
-    testdata_read_pyproject_copyright_and_version,
-    ids=ids_read_pyproject_copyright_and_version,
+    (
+        pytest.param(
+            "Bob",
+            Path("_good_files").joinpath("full-course-meal-and-shower.pyproject_toml"),
+            pytest.raises(LookupError),
+            False,
+            False,
+            id="Nonexistent-pyproject.toml",
+        ),
+        pytest.param(
+            "Bob",
+            Path("_good_files").joinpath(
+                "complete-manage-pip-prod-unlock.pyproject_toml"
+            ),
+            pytest.raises(LookupError),
+            False,
+            True,
+            id="No-such-section-[tool.Bob]",
+        ),
+        pytest.param(
+            "drain-swamp",
+            Path("_good_files").joinpath(
+                "complete-manage-pip-prod-unlock.pyproject_toml"
+            ),
+            does_not_raise(),
+            True,
+            True,
+            id="str",
+        ),
+        pytest.param(
+            [
+                "drain-swamp",
+            ],
+            Path("_good_files").joinpath(
+                "complete-manage-pip-prod-unlock.pyproject_toml"
+            ),
+            does_not_raise(),
+            True,
+            True,
+            id="Sequence[str]",
+        ),
+    ),
 )
 def test_read_pyproject_copyright_and_version(
     tool_name: "Union[str, Sequence[str]]",
@@ -252,93 +242,7 @@ def test_update_dict_strict() -> None:
     d_a = {"root": "the root"}
     d_b = {"dist_name": "george"}
     ReadPyprojectStrict().update(d_a, d_b)
-    assert "dist_name" in d_a.keys()
-
-
-testdata_toml_array_of_tables = (
-    (
-        (
-            "[project]\n"
-            """name = 'whatever'\n"""
-            """version = '0.0.1'\n"""
-            "[[tool.wreck.venvs]]\n"
-            """venv_base_path = '.doc/.venv'\n"""
-            "reqs = [\n"
-            """   'docs/pip-tools',\n"""
-            """   'docs/requirements',\n"""
-            "]\n"
-            "[[tool.wreck.venvs]]\n"
-            """venv_base_path = '.venv'\n"""
-            "reqs = [\n"
-            """   'requirements/pip-tools',\n"""
-            """   'requirements/pip',\n"""
-            """   'requirements/prod.shared',\n"""
-            """   'requirements/kit',\n"""
-            """   'requirements/tox',\n"""
-            """   'requirements/mypy',\n"""
-            """   'requirements/manage',\n"""
-            """   'requirements/dev',\n"""
-            "]\n"
-        ),
-        f"{g_app_name}.venvs",
-        "venv_base_path",
-        does_not_raise(),
-        2,
-    ),
-    (
-        (
-            "[project]\n"
-            """name = 'whatever'\n"""
-            """version = '0.0.1'\n"""
-            "[[tool.wreck.venvs]]\n"
-            """venv_base_path = '.doc/.venv'\n"""
-            "reqs = [\n"
-            """   'docs/pip-tools',\n"""
-            """   'docs/requirements',\n"""
-            "]\n"
-            "[[tool.wreck.venvs]]\n"
-            """venv_base_path = '.venv'\n"""
-            "reqs = [\n"
-            """   'requirements/pip-tools',\n"""
-            """   'requirements/pip',\n"""
-            """   'requirements/prod.shared',\n"""
-            """   'requirements/kit',\n"""
-            """   'requirements/tox',\n"""
-            """   'requirements/mypy',\n"""
-            """   'requirements/manage',\n"""
-            """   'requirements/dev',\n"""
-            "]\n"
-            "[[tool.wreck.venvs]]\n"
-            """venv_base_path = '.doc/.venv'\n"""
-            "reqs = [\n"
-            """   'docs/pip-tools',\n"""
-            """   'docs/requirements',\n"""
-            "]\n"
-        ),
-        f"{g_app_name}.venvs",
-        "venv_base_path",
-        does_not_raise(),
-        2,
-    ),
-    (
-        (
-            "[project]\n"
-            """name = 'whatever'\n"""
-            """version = '0.0.1'\n"""
-            "[tool.wreck.venvs]\n"
-            """venv_base_path = '.doc/.venv'\n"""
-        ),
-        f"{g_app_name}.venvs",
-        "venv_base_path",
-        pytest.raises(LookupError),
-        0,
-    ),
-)
-ids_toml_array_of_tables = (
-    "two items",
-    "3rd item updates 1st",
-    "one table rather than array of tables. Result would not be a list",
-)
+    assert "dist_name" in d_a
 
 
 @pytest.mark.logging_package_name(g_app_name)
@@ -347,8 +251,88 @@ ids_toml_array_of_tables = (
         "toml_contents, tool_name, key_name, expectation, "
         "expected_section_items_count"
     ),
-    testdata_toml_array_of_tables,
-    ids=ids_toml_array_of_tables,
+    (
+        pytest.param(
+            (
+                "[project]\n"
+                """name = 'whatever'\n"""
+                """version = '0.0.1'\n"""
+                "[[tool.wreck.venvs]]\n"
+                """venv_base_path = '.doc/.venv'\n"""
+                "reqs = [\n"
+                """   'docs/pip-tools',\n"""
+                """   'docs/requirements',\n"""
+                "]\n"
+                "[[tool.wreck.venvs]]\n"
+                """venv_base_path = '.venv'\n"""
+                "reqs = [\n"
+                """   'requirements/pip-tools',\n"""
+                """   'requirements/pip',\n"""
+                """   'requirements/prod.shared',\n"""
+                """   'requirements/kit',\n"""
+                """   'requirements/tox',\n"""
+                """   'requirements/mypy',\n"""
+                """   'requirements/manage',\n"""
+                """   'requirements/dev',\n"""
+                "]\n"
+            ),
+            f"{g_app_name}.venvs",
+            "venv_base_path",
+            does_not_raise(),
+            2,
+            id="two-items",
+        ),
+        pytest.param(
+            (
+                "[project]\n"
+                """name = 'whatever'\n"""
+                """version = '0.0.1'\n"""
+                "[[tool.wreck.venvs]]\n"
+                """venv_base_path = '.doc/.venv'\n"""
+                "reqs = [\n"
+                """   'docs/pip-tools',\n"""
+                """   'docs/requirements',\n"""
+                "]\n"
+                "[[tool.wreck.venvs]]\n"
+                """venv_base_path = '.venv'\n"""
+                "reqs = [\n"
+                """   'requirements/pip-tools',\n"""
+                """   'requirements/pip',\n"""
+                """   'requirements/prod.shared',\n"""
+                """   'requirements/kit',\n"""
+                """   'requirements/tox',\n"""
+                """   'requirements/mypy',\n"""
+                """   'requirements/manage',\n"""
+                """   'requirements/dev',\n"""
+                "]\n"
+                "[[tool.wreck.venvs]]\n"
+                """venv_base_path = '.doc/.venv'\n"""
+                "reqs = [\n"
+                """   'docs/pip-tools',\n"""
+                """   'docs/requirements',\n"""
+                "]\n"
+            ),
+            f"{g_app_name}.venvs",
+            "venv_base_path",
+            does_not_raise(),
+            2,
+            id="3rd-item-updates-1st",
+        ),
+        pytest.param(
+            (
+                "[project]\n"
+                """name = 'whatever'\n"""
+                """version = '0.0.1'\n"""
+                "[tool.wreck.venvs]\n"
+                """venv_base_path = '.doc/.venv'\n"""
+            ),
+            f"{g_app_name}.venvs",
+            "venv_base_path",
+            pytest.raises(LookupError),
+            0,
+            id="one-table-rather-than-array-of-tables.-Result-would-not-be-a-list",
+        ),
+    ),
 )
 def test_toml_array_of_tables(
     toml_contents: str,
@@ -387,45 +371,35 @@ def test_toml_array_of_tables(
     pass
 
 
-if TYPE_CHECKING:
-    testdata_load_toml_or_inline_map: Sequence[
-        tuple[Union[str, None], dict[str, dict[str, str]]]
-    ]
-testdata_load_toml_or_inline_map = (
-    (
-        None,
-        {},
-    ),
-    (
-        "",
-        {},
-    ),
-    (
-        "    ",
-        {},
-    ),
-    (
-        '{project = {name = "proj", version = "0.0.1"}}',
-        {"project": {"name": "proj", "version": "0.0.1"}},
-    ),
-    (
-        ("""[project]\n""" """name = 'proj'\n""" """version = '0.0.1'\n"""),
-        {"project": {"name": "proj", "version": "0.0.1"}},
-    ),
-)
-ids_load_toml_or_inline_map = (
-    "None",
-    "Empty str",
-    "nonsense white space. Actually empty str",
-    "TOML str embedded within a inline dict",
-    "Actual TOML data",
-)
-
-
 @pytest.mark.parametrize(
     "str_in, d_expected",
-    testdata_load_toml_or_inline_map,
-    ids=ids_load_toml_or_inline_map,
+    (
+        pytest.param(
+            None,
+            {},
+            id="None",
+        ),
+        pytest.param(
+            "",
+            {},
+            id="Empty-str",
+        ),
+        pytest.param(
+            "    ",
+            {},
+            id="nonsense-white-space.-Actually-empty-str",
+        ),
+        pytest.param(
+            '{project = {name = "proj", version = "0.0.1"}}',
+            {"project": {"name": "proj", "version": "0.0.1"}},
+            id="TOML-str-embedded-within-a-inline-dict",
+        ),
+        pytest.param(
+            ("""[project]\n""" """name = 'proj'\n""" """version = '0.0.1'\n"""),
+            {"project": {"name": "proj", "version": "0.0.1"}},
+            id="Actual-TOML-data",
+        ),
+    ),
 )
 def test_load_toml_or_inline_map(
     str_in: "Union[str, None]",
