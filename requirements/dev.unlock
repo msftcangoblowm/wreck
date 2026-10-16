@@ -17,7 +17,6 @@ pytest-logging-strict>=0.2.3
 pytest-regressions
 pytest>=7.1
 tomli>=2.4; python_version<"3.11"
-twine
 types-setuptools>=78.1.0.20250329
 typing-extensions; python_version<"3.11"
 validate-pyproject>=0.24.1

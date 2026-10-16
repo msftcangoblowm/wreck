@@ -116,6 +116,8 @@ Changelog
    Commit items for NEXT VERSION
    ..............................
 
+   - ci: pypy3.11 support by remove rust dependency
+   - chore: dev environment keep rust free remove twine
    - fix: pin pip-tools pip-tools#2436
    - refactor: remove is_ok functions logging-strict implementation has TypeGuard
    - refactor: follow refurb suggestions

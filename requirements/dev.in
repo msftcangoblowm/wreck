@@ -16,4 +16,3 @@ flake8-pyproject
 # registry implementation
 logging-strict>=1.6.1
 coverage
-twine
