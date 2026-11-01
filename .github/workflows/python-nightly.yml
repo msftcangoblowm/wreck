@@ -72,7 +72,7 @@ jobs:
         echo "tag=$(git describe --tags)" >> $GITHUB_OUTPUT
 
     - name: Install ${{ matrix.python-version }} with deadsnakes
-      uses: deadsnakes/action@158b00b4c02a7c8c501fce569f02f7e1948bb5be
+      uses: deadsnakes/action@1739fc024473bd7cced390c3e69e173e30853dc2
       if: "!startsWith(matrix.python-version, 'pypy-')"
       with:
         python-version: ${{ matrix.python-version }}
